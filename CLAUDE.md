@@ -30,11 +30,11 @@ Team rules for every Claude session:
   and team-level blockers.
 
 ## Our choices (fill in at kickoff, keep current)
-- Project name: TBD
-- One-line pitch: TBD
-- Main track: TBD   (Agentic Payments & AI | DeFi & Onchain | Consumer)
-- Chain award: TBD  (Solana | Arc | None)
-- Bounties: TBD     (Gemini Prediction Markets | ElevenLabs | QuickNode Streams | Grok Bot)
+- Project name: Deposit Keeper (working title)
+- One-line pitch: Rental deposits held in a neutral USDC escrow on Arc; an AI compares move-in vs move-out photos and drafts the itemized deductions; the tenant gets the undisputed amount back the same day, the rest needs their OK or a ruling.
+- Main track: Consumer
+- Chain award: Arc
+- Bounties: None
 - Network: devnet/testnet ONLY. Never mainnet.
 
 ## Live state
