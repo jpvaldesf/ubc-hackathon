@@ -16,7 +16,6 @@ Run the gauntlet:
 ### Round 1: Generate (wide)
 Produce 15 ideas. Spread them across the 3 main tracks, both chains, and the bounties. Each idea is one line:
 `Name: [who] can [do what] because [crypto/AI mechanism]. Track · Chain · Bounties`.
-At least 3 ideas must stack the Gemini Prediction Markets bounty naturally (1st place = $2,500 + a finalist slot).
 
 ### Round 2: Kill (harsh)
 Score each idea 1–5 on:
