@@ -9,13 +9,22 @@
 5. Tenant accepts; $120 releases to landlord (tx); simulated interest shown.
 
 ## Done
+- Roles assigned (Nov 13, 5 PM): Pablo onchain+backend, Marcus frontend, Luka AI vision+demo.
 - Project chosen: Deposit Keeper (D-001). Explainer: https://claude.ai/artifact/UvpoQrNT1K8KoYQJAAEaxZ
 
 ## Next (max 5, in priority order)
-1. Luka: vision spike: 5 before/after pairs (2 clean, 2 damaged, 1 lighting-only); pass = flags damage only. GO/NO-GO.
-2. Pablo: escrow contract spike on Arc testnet: deposit, propose, accept/appeal, release; one release tx.
-3. Marcus: clickable mock of the move-out report screen.
-4. Team: fill in names/lanes and Stack in CLAUDE.md (frontend framework, Python backend framework, Foundry vs Hardhat).
+1. Luka: vision spike, 5 pairs (2 clean, 2 damaged, 1 lighting-only). GO/NO-GO at Sat Nov 14, 1 PM sync.
+2. Pablo: escrow spike on Arc testnet (deposit, propose, accept/appeal, release). Pass = one release tx link.
+3. Marcus: clickable mock of the move-out report screen, then scaffold app/ with the 5 demo screens.
+4. Sat Nov 14, 1 PM sync (all): GO/NO-GO, confirm stack, agree docs/API.md, record with /decide.
+
+## Milestones (our deadline: submitted Tue Nov 17, 11:59 PM PT · detail: docs/PLAN.md)
+- Fri night: contract deployed + release tx; app scaffold + report screen; photos shot.
+- Sat 1 PM: vision GO/NO-GO; API, schema and stack frozen (/decide). Sat night: Circle tx or fallback; server + vision packaged.
+- Sun: pieces connected; first full run-through at 9 PM.
+- Mon 2 PM: full demo path works end to end on testnet. Then hosting, judge-panel, fixes.
+- Tue: freeze at noon, README + video, /submit-check, submit by 11:59 PM.
+- Wed to Thu: buffer only (bug fixes, pitch drills). Sat 21: pitch in person.
 
 ## Blockers / open questions (for office hours, Telegram, or mentor)
 - Verify AB 2801 effective dates and the bad-faith deposit penalty against the statute text before putting them in the pitch.
