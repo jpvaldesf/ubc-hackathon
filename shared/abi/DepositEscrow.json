@@ -11,9 +11,32 @@
         "name": "appealWindow_",
         "type": "uint64",
         "internalType": "uint64"
+      },
+      {
+        "name": "proposeWindow_",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "resolveWindow_",
+        "type": "uint64",
+        "internalType": "uint64"
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "MIN_WINDOW",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -121,6 +144,19 @@
   },
   {
     "type": "function",
+    "name": "expireAppeal",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "finalize",
     "inputs": [
       {
@@ -170,6 +206,16 @@
           },
           {
             "name": "appealDeadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "moveOutAt",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "resolveDeadline",
             "type": "uint64",
             "internalType": "uint64"
           },
@@ -241,6 +287,32 @@
   },
   {
     "type": "function",
+    "name": "proposeWindow",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "reclaim",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "resolve",
     "inputs": [
       {
@@ -256,6 +328,19 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "resolveWindow",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -282,6 +367,25 @@
       },
       {
         "name": "paidToLandlord",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "AppealExpired",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "paidToTenant",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -453,6 +557,25 @@
   },
   {
     "type": "event",
+    "name": "Reclaimed",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "paidToTenant",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Resolved",
     "inputs": [
       {
@@ -533,7 +656,17 @@
   },
   {
     "type": "error",
+    "name": "ProposeWindowOpen",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ResolveWindowOpen",
     "inputs": []
   },
   {
@@ -546,6 +679,11 @@
         "internalType": "address"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "WindowTooShort",
+    "inputs": []
   },
   {
     "type": "error",

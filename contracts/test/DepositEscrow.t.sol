@@ -24,6 +24,8 @@ contract DepositEscrowTest is Test {
     uint256 constant DEPOSIT = 10e6;
     uint256 constant DEDUCTION = 1.2e6;
     uint64 constant WINDOW = 7 days;
+    uint64 constant PROPOSE_WINDOW = 21 days;
+    uint64 constant RESOLVE_WINDOW = 14 days;
 
     MockUSDC usdc;
     DepositEscrow escrow;
@@ -39,7 +41,7 @@ contract DepositEscrowTest is Test {
 
     function setUp() public {
         usdc = new MockUSDC();
-        escrow = new DepositEscrow(IERC20(address(usdc)), WINDOW);
+        escrow = new DepositEscrow(IERC20(address(usdc)), WINDOW, PROPOSE_WINDOW, RESOLVE_WINDOW);
         usdc.mint(tenant, DEPOSIT);
         vm.prank(tenant);
         usdc.approve(address(escrow), type(uint256).max);
@@ -153,6 +155,65 @@ contract DepositEscrowTest is Test {
         escrow.finalize(id);
         assertEq(usdc.balanceOf(landlord), DEDUCTION);
         assertEq(usdc.balanceOf(stranger), 0);
+    }
+
+    // ---------------------------------------------------------------- nothing stays locked
+
+    function test_TenantReclaimsIfLandlordNeverProposes() public {
+        uint256 id = _photosDone();
+        vm.expectRevert(DepositEscrow.ProposeWindowOpen.selector);
+        escrow.reclaim(id);
+
+        vm.warp(block.timestamp + PROPOSE_WINDOW + 1);
+        vm.prank(stranger); // anyone can trigger; funds still go only to the tenant
+        escrow.reclaim(id);
+        assertEq(usdc.balanceOf(tenant), DEPOSIT);
+        assertEq(uint8(_status(id)), uint8(DepositEscrow.Status.Closed));
+
+        vm.prank(landlord); // and the landlord can no longer propose
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DepositEscrow.WrongStatus.selector, DepositEscrow.Status.Funded, DepositEscrow.Status.Closed
+            )
+        );
+        escrow.proposeDeductions(id, DEDUCTION, REPORT);
+    }
+
+    function test_ReclaimNeedsMoveOutPhotos() public {
+        uint256 id = _funded();
+        vm.warp(block.timestamp + PROPOSE_WINDOW + 1);
+        vm.expectRevert(DepositEscrow.MoveOutMissing.selector);
+        escrow.reclaim(id);
+    }
+
+    function test_SilentArbiterRefundsTenant() public {
+        uint256 id = _proposed();
+        vm.prank(tenant);
+        escrow.appeal(id);
+        vm.expectRevert(DepositEscrow.ResolveWindowOpen.selector);
+        escrow.expireAppeal(id);
+
+        vm.warp(block.timestamp + RESOLVE_WINDOW + 1);
+        escrow.expireAppeal(id);
+        assertEq(usdc.balanceOf(tenant), DEPOSIT);
+        assertEq(usdc.balanceOf(address(escrow)), 0);
+
+        vm.prank(arbiter); // a late ruling can't move money again
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DepositEscrow.WrongStatus.selector, DepositEscrow.Status.Appealed, DepositEscrow.Status.Closed
+            )
+        );
+        escrow.resolve(id, DEDUCTION);
+    }
+
+    function test_WindowsHaveAMinimum() public {
+        vm.expectRevert(DepositEscrow.WindowTooShort.selector);
+        new DepositEscrow(IERC20(address(usdc)), 0, PROPOSE_WINDOW, RESOLVE_WINDOW);
+        vm.expectRevert(DepositEscrow.WindowTooShort.selector);
+        new DepositEscrow(IERC20(address(usdc)), WINDOW, 59 minutes, RESOLVE_WINDOW);
+        vm.expectRevert(DepositEscrow.WindowTooShort.selector);
+        new DepositEscrow(IERC20(address(usdc)), WINDOW, PROPOSE_WINDOW, 0);
     }
 
     // ---------------------------------------------------------------- access control

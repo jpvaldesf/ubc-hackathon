@@ -15,6 +15,9 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 ///  - The undisputed part (deposit - deduction) goes to the tenant in the same tx as the proposal.
 ///  - The deduction goes to the landlord only if the tenant accepts, the appeal window passes
 ///    without an appeal, or the arbiter rules. The arbiter can award at most the disputed amount.
+///  - Nothing stays locked: if the landlord never proposes within `proposeWindow` of the move-out
+///    photos, the tenant can reclaim the full deposit; if the arbiter never rules within
+///    `resolveWindow` of an appeal, the disputed amount returns to the tenant.
 ///  - Every state change emits an event. State is updated before any transfer (CEI) and every
 ///    fund-moving function is nonReentrant.
 contract DepositEscrow is ReentrancyGuard {
@@ -40,6 +43,8 @@ contract DepositEscrow is ReentrancyGuard {
         address arbiter;
         Status status;
         uint64 appealDeadline;
+        uint64 moveOutAt; // when move-out photos were committed (starts the propose window)
+        uint64 resolveDeadline; // arbiter must rule by this time after an appeal
         uint256 amount; // deposit, USDC base units (6 decimals)
         uint256 deduction; // proposed deduction, USDC base units
         bytes32 moveInHash; // hash of the move-in photo manifest
@@ -49,6 +54,9 @@ contract DepositEscrow is ReentrancyGuard {
 
     IERC20 public immutable usdc;
     uint64 public immutable appealWindow;
+    uint64 public immutable proposeWindow;
+    uint64 public immutable resolveWindow;
+    uint64 public constant MIN_WINDOW = 1 hours;
 
     uint256 public leaseCount;
     mapping(uint256 => Lease) private _leases;
@@ -65,6 +73,8 @@ contract DepositEscrow is ReentrancyGuard {
     event Finalized(uint256 indexed id, uint256 paidToLandlord);
     event Appealed(uint256 indexed id);
     event Resolved(uint256 indexed id, uint256 paidToLandlord, uint256 paidToTenant);
+    event Reclaimed(uint256 indexed id, uint256 paidToTenant);
+    event AppealExpired(uint256 indexed id, uint256 paidToTenant);
 
     error NotLandlord();
     error NotTenant();
@@ -80,11 +90,19 @@ contract DepositEscrow is ReentrancyGuard {
     error DeductionTooHigh();
     error AppealWindowOpen();
     error AppealWindowClosed();
+    error WindowTooShort();
+    error ProposeWindowOpen();
+    error ResolveWindowOpen();
 
-    constructor(IERC20 usdc_, uint64 appealWindow_) {
+    constructor(IERC20 usdc_, uint64 appealWindow_, uint64 proposeWindow_, uint64 resolveWindow_) {
         if (address(usdc_) == address(0)) revert InvalidAddress();
+        if (appealWindow_ < MIN_WINDOW || proposeWindow_ < MIN_WINDOW || resolveWindow_ < MIN_WINDOW) {
+            revert WindowTooShort();
+        }
         usdc = usdc_;
         appealWindow = appealWindow_;
+        proposeWindow = proposeWindow_;
+        resolveWindow = resolveWindow_;
     }
 
     // ------------------------------------------------------------------ views
@@ -139,6 +157,7 @@ contract DepositEscrow is ReentrancyGuard {
             if (l.moveInHash == bytes32(0)) revert MoveInMissing();
             if (l.moveOutHash != bytes32(0)) revert AlreadyCommitted();
             l.moveOutHash = manifestHash;
+            l.moveOutAt = uint64(block.timestamp);
         }
         emit PhotosCommitted(id, phase, manifestHash, msg.sender);
     }
@@ -187,7 +206,37 @@ contract DepositEscrow is ReentrancyGuard {
         if (block.timestamp > l.appealDeadline) revert AppealWindowClosed();
 
         l.status = Status.Appealed;
+        l.resolveDeadline = uint64(block.timestamp) + resolveWindow;
         emit Appealed(id);
+    }
+
+    /// @notice If the landlord never proposes within `proposeWindow` of the move-out photos,
+    /// anyone can return the full deposit to the tenant.
+    function reclaim(uint256 id) external nonReentrant {
+        Lease storage l = _leases[id];
+        _requireStatus(l, Status.Funded);
+        if (l.moveOutHash == bytes32(0)) revert MoveOutMissing();
+        if (block.timestamp <= uint256(l.moveOutAt) + proposeWindow) revert ProposeWindowOpen();
+
+        uint256 toTenant = l.amount;
+        l.status = Status.Closed;
+        emit Reclaimed(id, toTenant);
+
+        usdc.safeTransfer(l.tenant, toTenant);
+    }
+
+    /// @notice If the arbiter never rules within `resolveWindow` of the appeal, anyone can return
+    /// the disputed amount to the tenant.
+    function expireAppeal(uint256 id) external nonReentrant {
+        Lease storage l = _leases[id];
+        _requireStatus(l, Status.Appealed);
+        if (block.timestamp <= l.resolveDeadline) revert ResolveWindowOpen();
+
+        uint256 toTenant = l.deduction;
+        l.status = Status.Closed;
+        emit AppealExpired(id, toTenant);
+
+        usdc.safeTransfer(l.tenant, toTenant);
     }
 
     /// @notice After the window passes with no appeal, anyone can release the deduction to the
