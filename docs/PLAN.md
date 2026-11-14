@@ -1,15 +1,27 @@
-# Build plan: Deposit Keeper (written Fri Nov 13, 5 PM PT)
+# Build plan: Deposit Keeper (revised Fri Nov 13, evening): everything done by Mon night
 
-Deadline: **Fri Nov 20, 10:00 AM PT**. Our target: **submitted Thu Nov 19 night.** Pitch in person Sat Nov 21.
-Every task below should move the 5-step demo path in `docs/STATUS.md`. If it doesn't, it waits until after Tue.
+Official deadline: **Fri Nov 20, 10:00 AM PT.** Our deadline: **submitted on Devpost Mon Nov 16, 11:59 PM PT.**
+Tue to Thu is **buffer only**: bug fixes, pitch practice, and small edits to the submission. No new features after Monday.
+Pitch in person Sat Nov 21.
+
+To fit 3½ days, we cut scope on purpose (see "What we cut"). Every task must move the 5-step demo path in `docs/STATUS.md`.
 
 ## Team rhythm
-- **Daily standup 10:00 AM, 15 min** (`/standup`). Each person says yesterday's evidence, today's goal and blockers.
-- **Evening check 9:00 PM, 5 min** in chat: one line each with a link (tx, PR, screenshot).
-- **Sat Nov 14, 2:00 PM decision sync (all three, 45 min):** vision results so far, stack, `docs/API.md`, findings schema, demo-item swap (see Luka). Record each decision with `/decide`.
-- Branch per task, PR into `main`, `security-auditor` before every PR. Never commit `.env` or wallet keys.
+- **Standup 9:30 AM, 10 min** (`/standup`), Sat to Mon.
+- **Check-ins at 2 PM and 9 PM:** one line each in chat, with a link (tx, PR, screenshot).
+- **Sat Nov 14, 1:00 PM decision sync (30 min):** vision GO/NO-GO, stack, `docs/API.md`, findings schema, demo item. Record each decision with `/decide`.
+- Branch per task, small PRs into `main`, `security-auditor` before each PR. Merge often: integration is Sunday, not Monday.
 
-## Handoffs between lanes (drafts, agree at Sat sync)
+## What we cut to finish by Monday
+| Item | Before | Now |
+|---|---|---|
+| Circle wallets | Full integration | **4-hour timebox Sat afternoon.** If there's no tx by 6 PM, use server-held testnet keys and say so in the README. |
+| Appeal path | Full UI + arbiter flow | Contract supports it and is tested. In the UI, Appeal shows "Sent to a neutral reviewer". The arbiter ruling runs from a script. |
+| Photo capture | Camera with move-in overlay | Upload or camera through a plain file input, plus a shot list. The overlay is a Tue stretch goal. |
+| Polish | Wed | Mon morning, half a day |
+| Video + README | Wed | Mon afternoon |
+
+## Handoffs between lanes (draft now, frozen at the Sat 1 PM sync)
 
 **1. AI findings JSON** (Luka produces, Pablo stores and hashes, Marcus renders):
 ```json
@@ -35,186 +47,182 @@ Every task below should move the 5-step demo path in `docs/STATUS.md`. If it doe
 ```
 Rules: `category` is `damage | normal_wear | no_change`. `normal_wear` always costs 0. Costs come only from the fixed price table, never from the model. Below the confidence threshold, the finding is dropped and not charged.
 
-**2. Contract interface** (Pablo, frozen after the Sat sync because the backend and frontend depend on it):
+**2. Contract interface** (Pablo):
 `createLease(tenant, landlord, arbiter, amount)` → `deposit()` → `commitPhotos(phase, manifestHash)` → `proposeDeductions(amount, reportHash)` (pays the undisputed part to the tenant immediately) → `accept()` (deduction goes to the landlord) or `appeal()` → `resolve(amountToLandlord)` by the arbiter. No admin withdrawal. Funds can only go to the tenant or the landlord.
 
-**3. API** (Pablo writes it in `docs/API.md`, Marcus builds against mock JSON of the same shape until it's live).
+**3. API:** Pablo writes it in `docs/API.md` by Sat 1 PM. Marcus builds against mock JSON of the same shape until it's live.
 
 ---
 
 ## Pablo: onchain + backend
 Owns `contracts/`, `server/`, `shared/abi/`, `shared/addresses.json`. Branch first: `feat/escrow-spike`.
 
-### Fri night (5–11 PM): escrow spike → one release tx
+### Fri night (5 PM–midnight): escrow contract, nearly final
 1. Look up in the arc-docs MCP, not from memory: RPC URL, chain ID, explorer URL, USDC token address and its **decimals**, and whether gas is paid in USDC. Write them into `.env` (and `.env.example` as placeholders).
-2. Make 3 test wallets (deployer/landlord, tenant, arbiter). Fund them at faucet.circle.com.
-3. `forge init spikes/escrow`. Write a minimal `DepositEscrow.sol` with the interface above.
-4. Forge tests. These four are enough for now:
+2. Make 3 test wallets (landlord/deployer, tenant, arbiter). Fund them at faucet.circle.com.
+3. Write `DepositEscrow.sol` **straight in `contracts/`**. Skip the throwaway spike folder: there's no time to write it twice. Build it right from the start:
+   - checks-effects-interactions
+   - SafeERC20
+   - events for every state change
+   - a short appeal window
+4. Forge tests:
    - happy path (deposit → propose → accept)
    - appeal path (arbiter resolves)
    - a stranger can't move funds
    - can't release twice
-5. Deploy to Arc testnet and run a script: deposit 10 USDC → propose 1.20 → accept.
-   **Done =** release tx link pasted into "Proven integrations" in `docs/STATUS.md`.
+5. Deploy to Arc testnet and run a script: deposit → propose → accept.
+   **Done =** release tx link in "Proven integrations" in `docs/STATUS.md`.
 
 ### Sat Nov 14
-- **Morning:** finish the spike if it's not done. Draft `docs/API.md` for the 2 PM sync:
-  - `POST /leases`
-  - `POST /leases/{id}/deposit`
-  - `POST /leases/{id}/photos?phase=in|out`
-  - `POST /leases/{id}/report`
-  - `POST /leases/{id}/accept`
-  - `POST /leases/{id}/appeal`
-  - `GET /leases/{id}`
-- **2 PM:** sync.
-- **Afternoon: Circle dev-controlled wallets spike on ARC-TESTNET.** Look up current docs through the circle MCP first.
+- **9:30–1 PM:**
+  - Fix anything from last night and redeploy once.
+  - Put the ABI in `shared/abi/` and the address in `shared/addresses.json`.
+  - Draft `docs/API.md`:
+    - `POST /leases`
+    - `POST /leases/{id}/deposit`
+    - `POST /leases/{id}/photos?phase=in|out`
+    - `POST /leases/{id}/report`
+    - `POST /leases/{id}/accept`
+    - `POST /leases/{id}/appeal`
+    - `GET /leases/{id}`
+- **1 PM:** sync. Freeze the API and the contract interface.
+- **2–6 PM: Circle wallets (timeboxed).** Look up current docs through the circle MCP first.
   1. Register the entity secret and create a wallet set.
-  2. Create one wallet each for the tenant and the landlord.
-  3. Make an `approve` + `deposit` call to the escrow through `contractExecution`. A plain transfer would bypass the escrow.
+  2. Create the tenant and landlord wallets.
+  3. Make an `approve` + `deposit` call through `contractExecution`.
 
-  **Done =** tx link from a Circle-managed wallet. This is what lets us say "no seed phrases, no gas" for the Consumer track.
+  If there's no tx by 6 PM, stop and fall back to server-held keys.
+- **6 PM–midnight: FastAPI skeleton in `server/`.**
+  - SQLite, photos on local disk
+  - SHA-256 per photo, plus a manifest hash committed onchain
+  - all endpoints returning the agreed shapes
+  - deposit and photo commit working against the real contract
 
-### Sun Nov 15: real contract + server skeleton
-- Move the contract to `contracts/`. Then harden it:
-  - checks-effects-interactions
-  - SafeERC20
-  - events for every state change
-  - an appeal-window deadline (short in the demo, e.g. 2 minutes)
-- Deploy, then put the ABI in `shared/abi/` and the address in `shared/addresses.json`.
-- FastAPI in `server/`:
-  - SQLite for leases and photos
-  - photos on local disk
-  - SHA-256 of each photo, plus a manifest hash committed onchain
-- Endpoints return the agreed shapes, even if some are still stubbed.
+### Sun Nov 15: integration day
+- **Morning:** call Luka's `analyze()` from `POST /report`, store the findings JSON, and commit its hash with `proposeDeductions`. Accept and appeal work. Return explorer links in every response.
+- **Afternoon:**
+  - Deploy the server on Render, Railway or Fly; pick one in the first 15 minutes.
+  - Point Marcus's app at it.
+  - Write the **demo reset script**: one command makes a fresh lease with a funded tenant.
+- **9 PM: the full demo path works on testnet, end to end.** Treat this as a hard checkpoint.
 
-### Mon Nov 16: wire the money flow
-- Call Luka's `analyze()` from `POST /report`. Store the findings JSON and commit its hash with `proposeDeductions`.
-- Payout and accept/appeal go through the Circle wallets. Return explorer links in the API, which Marcus shows as "Proof".
-- **Demo reset script:** one command makes a fresh lease with a funded tenant, so we can rerun the demo in a minute.
-
-### Tue Nov 17: end to end
-- Deploy the server so we have a public link for Devpost (Render, Railway or Fly; whichever is fastest).
-- Run the full demo path with Marcus on testnet. Run `security-auditor` on the contract and server.
-
-### Wed–Thu
-- README sections: contract addresses, how Arc is used (USDC as gas, predictable fees), safety (no admin withdraw).
-- Freeze the contract Wed noon: no redeploys after that. Bug fixes only Thu.
-
-**Fallbacks:**
-- **Circle wallets fight us past Sun noon:** keep server-held testnet keys for the demo and say so honestly in the README.
-- **Appeal path is late:** demo the accept path only and show appeal in the contract tests.
+### Mon Nov 16: finish
+- **Morning:**
+  - Fix whatever broke in last night's run.
+  - Run `security-auditor` on the contract and server.
+  - **Contract frozen at noon:** no redeploys after this.
+- **Afternoon:** README sections:
+  - contract addresses
+  - how Arc is used (USDC as gas, predictable fees)
+  - safety (no admin withdrawal, funds only to the tenant or landlord)
+  - setup steps
+- **Evening:** be on call while Luka records. Rerun the reset script as needed.
 
 ---
 
 ## Marcus: frontend + product
 Owns `app/`. Branch first: `feat/report-mock`.
 
-### Fri night (5–11 PM): the move-out report screen
-Build it **directly as a Next.js page with hardcoded data**, not in Figma, so the mock becomes the real screen. The screen:
-- **Header:** "Move-out report · 2 items found"
-- **One card per finding:**
-  - before/after photos side by side, with the flagged region outlined
-  - label: **Damage · $120** (red) or **Normal wear · $0** (grey) with a "Why?" tooltip
-- **Summary:** Deposit $1,000 · Withheld $120 · **$880 sent to you today** (green banner)
-- **Buttons:** **Accept $120** and **Appeal**, plus "Not charged: 1 low-confidence item"
-- **No crypto words.** Say dollars, not USDC, wallet, gas or tx. The explorer link is a small "Proof" link.
-
-**Done =** screenshot in chat at 9 PM, plus a mobile-width check.
+### Fri night (5 PM–midnight): app scaffold + report screen
+- Scaffold `app/` in Next.js now, not Saturday. The first real page is the **move-out report**, with hardcoded data:
+  - **Header:** "Move-out report · 2 items found"
+  - **One card per finding:**
+    - before/after photos side by side, with the flagged region outlined
+    - label: **Damage · $120** (red) or **Normal wear · $0** (grey) with a "Why?" tooltip
+  - **Summary:** Deposit $1,000 · Withheld $120 · **$880 sent to you today** (green banner)
+  - **Buttons:** **Accept $120** and **Appeal**, plus "Not charged: 1 low-confidence item"
+- **No crypto words.** Say dollars, not USDC, wallet, gas or tx. Explorer links show as a small "Proof" link.
+- **Done =** screenshot at 9 PM, plus a mobile-width check.
 
 ### Sat Nov 14
-- **Morning:** scaffold the 5 demo screens with mock JSON that matches the findings schema above:
+- **9:30–1 PM:** stub the other 4 screens with mock JSON in the findings and API shapes above:
   1. Create lease (landlord)
   2. Pay deposit (tenant)
   3. Move-in photos
-  4. Move-out report
-  5. Payout timeline
-- Add a **persona switch** (Tenant ⇄ Landlord) in the header. The demo needs both sides in one browser.
-- **2 PM:** sync. Bring the screens: the team agrees the API around what you need to render.
+  4. Payout timeline
 
-### Sun Nov 15: guided photo capture
-- Use the phone camera through `<input type="file" accept="image/*" capture="environment">`.
-- Work from a shot list (e.g. "Living room: carpet, toward window").
-- At move-out, show the **move-in photo as a faded overlay** so the angle matches. This directly improves the AI's accuracy, so tell Luka it exists.
+  Add a **persona switch** (Tenant ⇄ Landlord) in the header.
+- **1 PM:** sync. Bring the screens: the API gets agreed around what you need to render.
+- **2 PM–midnight:**
+  - **Photo screens:** a shot list (e.g. "Living room: carpet, toward window") with an upload/camera input per shot.
+  - **Deposit screen:** "Pay $1,000 into neutral escrow", then "Held safely: neither you nor your landlord can take it alone."
+  - **Payout timeline:** deposited → move-in recorded → report → $880 paid → $120 settled. Each step gets a "Proof" link.
+  - **"Analyzing photos…" state:** the vision call may take 20–60 s. Show progress room by room.
 
-### Mon Nov 16
-- **Deposit screen:** "Pay $1,000 into neutral escrow", then "Held safely: neither you nor your landlord can take it alone."
-- **Payout timeline:** deposited → move-in recorded → report → $880 paid → $120 settled. Each step gets a "Proof" link.
-- **"Analyzing photos…" state:** the vision call may take 20–60 s. Show progress, room by room.
+### Sun Nov 15: integration day
+- **Morning:** swap the mock JSON for Pablo's endpoints, one screen at a time, in demo-path order. Add loading, error and empty states.
+- **Afternoon:** point at the deployed server and run the full flow on your phone.
+- **9 PM: full demo path works end to end** (with Pablo and Luka).
 
-### Tue Nov 17: wire to the real API
-- Replace the mock JSON with Pablo's live endpoints. Add loading, error and empty states everywhere.
-- Run the full demo path with Pablo.
+### Mon Nov 16: finish
+- **Morning, polish:** spacing, type, contrast, one-hand use on a phone. Run the `qa-demo-tester` agent and fix what it finds.
+- **UI frozen at 2 PM.**
+- **Afternoon:** record clean screen captures with Luka for the video. Deploy the frontend (Vercel) and send the link to Luka for Devpost.
 
-### Wed–Thu
-- **Polish:** spacing, type, contrast, and one-hand use on a phone.
-- Run the `qa-demo-tester` agent and fix what it finds.
-- Freeze the UI Wed night. Record clean screen captures with Luka for the video.
-
-**Fallback:** if the API is late Tue, the frontend runs on recorded real API responses for the video, and the live demo uses whatever is wired. Don't fake tx links: show only real ones.
+**Rule:** never fake a tx link. If something isn't wired by Sun 9 PM, the demo skips that step rather than showing made-up proof.
 
 ---
 
 ## Luka: AI vision + integrations + demo
 Owns `integrations/`, `docs/`, `README.md`, demo assets. Branch first: `feat/vision-spike`.
 
-### Fri night (5–11 PM): photos + first model runs
-1. **Pick the vision provider in the first hour** (Gemini, Claude, GPT; whichever key we can get tonight). Look up the current image-input and structured-output API in docs. Key goes in `.env` only.
-2. **Shoot the test set in one real room:** 5 pairs, same spot and angle for each pair (mark the floor with tape or use a tripod).
+### Fri night (5 PM–midnight): photos + model runs
+1. **Pick the vision provider in the first 30 minutes** (whichever key we can get tonight). Look up the current image-input and structured-output API in docs. Key goes in `.env` only.
+2. **Shoot the test set in one real room:** 5 pairs, same spot and angle for each pair (tape on the floor or a tripod).
    - 2 clean pairs (nothing changed)
    - 2 damaged pairs (removable fake damage: a stain on a towel or rug, painter's-tape "scuff", a sticky note "hole")
-   - 1 lighting-only pair (lamp on vs off, blinds open vs closed)
-3. **Spike in `spikes/vision/`:** send both images, the shot description and the price table. Ask for JSON in the findings schema above. Run each pair 3 times to check consistency.
+   - 1 lighting-only pair (lamp on vs off)
 
-### Sat Nov 14: GO/NO-GO
-- **Morning:** iterate on the prompt and record pass/fail per pair. Ideas if it struggles:
+   **Shoot the demo pair tonight too** (the carpet stain plus the normal-wear item) so we never have to reshoot.
+3. **Spike in `spikes/vision/`:** send both images, the shot description and the price table. Ask for JSON in the findings schema. Run each pair 3 times.
+
+### Sat Nov 14: GO/NO-GO by 1 PM (moved up from end of day)
+- **9:30–1 PM:** iterate on the prompt. Ideas if it struggles:
   - crop to the shot area
   - ask the model to describe each image first, then compare
   - require a region for every finding
   - raise the confidence threshold
-- **2 PM sync:** show early results.
-- **Bring the demo-item question to the sync:** "faded paint" is hard to photograph convincingly. Propose swapping it for something we can stage, e.g. a few small nail holes, which also count as normal wear in CA. Changing the demo path needs the team's OK.
-- **9 PM: GO/NO-GO note in `docs/STATUS.md`.**
+- **1 PM sync: GO/NO-GO.**
   - Pass = flags both damaged pairs, nothing on the clean or lighting-only pairs, in at least 2 of 3 runs.
-  - NO-GO = switch to Skin in the Game (D-001).
-- **Side task (pitch accuracy):** check the AB 2801 effective dates and the bad-faith penalty (Civil Code 1950.5) on leginfo.legislature.ca.gov. Then clear that blocker in STATUS.
-
-### Sun Nov 15: package the pipeline
-- `integrations/vision/` gets `analyze(pairs, price_table) -> Report` (findings JSON).
-- Add:
+  - NO-GO = switch to Skin in the Game (D-001) immediately. It still fits by Monday only if we switch at 1 PM, not later.
+- **Also at the sync:** swap "faded paint" in the demo for something we can stage (e.g. small nail holes, normal wear in CA).
+- **2–7 PM: package the pipeline** in `integrations/vision/`:
+  - `analyze(pairs, price_table) -> Report`
   - `price_table.json`
-  - a timeout
-  - a retry
-  - a per-report spend cap
-- Turn the 5 pairs into a **regression test**. Rerun it after every prompt change so we know nothing broke.
-- Hand off to Pablo: one function call, plus a sample output file.
+  - a timeout, a retry and a spend cap
+  - the 5 pairs as a regression test
+  - a sample output file for Pablo and Marcus
+- **7 PM–midnight:**
+  - **Check the law:** AB 2801 dates and the bad-faith penalty (Civil Code 1950.5) on leginfo.legislature.ca.gov. Clear that blocker in STATUS.
+  - **Write the video script** (2–3 min) with `/demo-script`.
 
-### Mon Nov 16: story + docs skeleton
-- `/demo-script`: a 2–3 min video script and a 5 min pitch outline. Open with the USC renter's problem, not with the blockchain.
-- `/readme` skeleton: problem, architecture diagram, how the AI decides (normal wear never charged, costs from the table, low confidence dropped, tenant can always appeal), setup steps.
+### Sun Nov 15: integration day + docs
+- **Morning:** help Pablo wire `analyze()` into the server. Rerun the regression test on the server path.
+- **Afternoon:**
+  - `/readme`: problem, architecture diagram, how the AI decides (normal wear never charged, costs from the table, low confidence dropped, tenant can always appeal), setup steps.
+  - Draft the Devpost written answers: what we built, the problem, how it works, what's unique, what's next.
+- **9 PM:** full demo path run with the team. Then run the `judge-panel` agent and turn its top 3 complaints into Monday-morning tasks.
 
-### Tue Nov 17
-- **Shoot the final demo photos** (the carpet stain and the normal-wear item) with Marcus's capture screen, so they look exactly like the live demo.
-- Run the `judge-panel` agent on the working demo. Turn its top 3 complaints into tasks for the team.
-
-### Wed Nov 18
-- **Record the 2–3 min demo video** (screen capture with voiceover). Upload it to YouTube unlisted and **check it in an incognito window**.
-- Make a backup recording of the full live demo, in case the Wi-Fi dies on Saturday.
-- Draft the Devpost written answers: what we built, the problem, how it works, what's unique, what's next.
-
-### Thu Nov 19: submit
-- Run `/submit-check` and fix the gaps. **Submit Thu night**, with Consumer track and Arc chain award selected.
-- Run `/pitch-drill` with the whole team: timed 5 min, plus 2 min Q&A practice.
-
-**Fallback:** if the model is shaky on some room types, limit v1 to the shots it handles well. Say that plainly in the README instead of hiding it.
+### Mon Nov 16: video + submit
+- **Morning:** finish the README with Pablo's contract section. Make the pitch outline (5 min).
+- **2–6 PM: record the demo video** with screen capture and voiceover. Upload it to YouTube unlisted and **check it in an incognito window**. Also record a backup of the full live demo.
+- **6–9 PM:** run `/submit-check` and fix the gaps.
+- **By 11:59 PM: submit on Devpost.** Consumer track, Arc chain award, all three members listed.
 
 ---
 
-## Checkpoints (if one slips, tell the team at standup that day)
+## Tue Nov 17 to Thu Nov 19: buffer (not a schedule)
+- Fix bugs that came up after submitting. Update the submission if Devpost allows edits before the deadline (check on Monday night).
+- `/pitch-drill` every day: timed 5 min, plus 2 min of Q&A.
+- Stretch goals, only if everything above is solid: camera overlay for move-out photos, arbiter UI.
+- Fri Nov 20, 10 AM PT: hard deadline. We should already be done.
+
+## Checkpoints (if one slips, raise it at the next check-in, not the next day)
 | When | Must be true |
 |---|---|
-| Fri 11 PM | Escrow tx on testnet; report screen exists; 5 photo pairs shot |
-| Sat 9 PM | GO/NO-GO decided; API + schema + stack recorded with `/decide`; Circle wallet tx |
-| Mon 9 PM | Each lane's piece works on its own against the real interfaces |
-| Tue 9 PM | **Full demo path works on testnet, end to end** |
-| Wed 9 PM | Video recorded, README done, UI frozen |
-| Thu night | Submitted on Devpost |
+| Fri midnight | Contract deployed with a release tx; app scaffold + report screen; all photos shot; first model runs |
+| Sat 1 PM | **GO/NO-GO**; API + schema + stack frozen with `/decide` |
+| Sat midnight | Circle tx (or fallback chosen); server skeleton talking to the contract; vision packaged; all 5 screens built on mock data |
+| **Sun 9 PM** | **Full demo path works on testnet, end to end** |
+| Mon 2 PM | Contract and UI frozen; README done |
+| **Mon 11:59 PM** | **Submitted on Devpost** |

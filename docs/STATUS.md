@@ -13,18 +13,17 @@
 - Project chosen: Deposit Keeper (D-001). Explainer: https://claude.ai/artifact/UvpoQrNT1K8KoYQJAAEaxZ
 
 ## Next (max 5, in priority order)
-1. Luka: vision spike, 5 pairs (2 clean, 2 damaged, 1 lighting-only). GO/NO-GO by Sat Nov 14 EOD.
+1. Luka: vision spike, 5 pairs (2 clean, 2 damaged, 1 lighting-only). GO/NO-GO at Sat Nov 14, 1 PM sync.
 2. Pablo: escrow spike on Arc testnet (deposit, propose, accept/appeal, release). Pass = one release tx link.
 3. Marcus: clickable mock of the move-out report screen, then scaffold app/ with the 5 demo screens.
-4. Sat Nov 14 sync (all): GO/NO-GO, confirm stack, agree docs/API.md, record with /decide.
+4. Sat Nov 14, 1 PM sync (all): GO/NO-GO, confirm stack, agree docs/API.md, record with /decide.
 
-## Milestones (deadline Fri Nov 20, 10:00 AM PT) · per-person detail: docs/PLAN.md
-- Sat 14: spikes done, GO/NO-GO, API + stack agreed.
-- Sun 15 to Mon 16: real contract deployed, Circle wallets, FastAPI server, frontend wired to the API.
-- Tue 17: demo path works end to end on testnet. Run judge-panel.
-- Wed 18: polish, README, qa-demo-tester run, record the backup demo video.
-- Thu 19: submit on Devpost tonight (/submit-check), pitch drill.
-- Sat 21: pitch in person.
+## Milestones (our deadline: submitted Mon Nov 16, 11:59 PM PT · detail: docs/PLAN.md)
+- Fri night: contract deployed + release tx; app scaffold + report screen; photos shot.
+- Sat 1 PM: vision GO/NO-GO; API, schema and stack frozen (/decide). Sat night: Circle tx or fallback; server + vision packaged.
+- Sun 9 PM: full demo path works end to end on testnet.
+- Mon: polish, README, video, /submit-check, submit by 11:59 PM.
+- Tue to Thu: buffer only (bug fixes, pitch drills). Sat 21: pitch in person.
 
 ## Blockers / open questions (for office hours, Telegram, or mentor)
 - Verify AB 2801 effective dates and the bad-faith deposit penalty against the statute text before putting them in the pitch.
