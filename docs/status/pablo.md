@@ -6,7 +6,7 @@
 **Branch:** feat/escrow-spike
 
 ## Done (with evidence: tx hash, PR link, screenshot)
--
+- Sat 11:50: docs/API.md drafted for 1 PM sync (branch docs/api-draft, 4408c1e). 5 open questions at the bottom.
 
 ## Next (max 3)
 1. Fri night: escrow contract straight in `contracts/` (Foundry, hardened from the start): deposit USDC → propose split → tenant accept / appeal → release. Pass = release tx link. Look up Arc USDC address, RPC, chain ID via arc-docs MCP first.
