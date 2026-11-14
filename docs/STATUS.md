@@ -2,21 +2,23 @@
 
 **Today's one goal:** Prove the AI move-out comparison works (5 photo pairs) and get one escrow release tx on Arc testnet.
 **Demo path:**
-1. Landlord creates a lease; tenant deposits $1,000 USDC into escrow (tx on Arc explorer).
+1. Landlord creates a lease; tenant deposits $10 USDC (testnet scale 1:100, D-002) into escrow (tx on Arc explorer).
 2. Move-in photos taken in-app; fingerprints committed onchain.
-3. Move-out photos taken; AI report flags carpet stain ($120, damage) and faded paint (normal wear, $0).
-4. Undisputed $880 pays out to tenant immediately (tx).
-5. Tenant accepts; $120 releases to landlord (tx); simulated interest shown.
+3. Move-out photos taken; AI report flags carpet stain ($1.20, damage) and small nail holes (normal wear, $0); landlord reviews and sends the report (D-004).
+4. Undisputed $8.80 pays out to tenant immediately (tx).
+5. Tenant accepts; $1.20 releases to landlord (tx); simulated interest shown.
 
 ## Done
 - Roles assigned (Nov 13, 5 PM): Pablo onchain+backend, Marcus frontend, Luka AI vision+demo.
 - Project chosen: Deposit Keeper (D-001). Explainer: https://claude.ai/artifact/UvpoQrNT1K8KoYQJAAEaxZ
+- Sat 2:30 PM: sync skipped; decisions D-002…D-008 recorded (amounts in cents, 1:100 demo scale, landlord 48 h review, per-shot upload, contract timeouts, stack). docs/API.md frozen.
+- Escrow contract written, 18 forge tests pass; ABI in shared/abi/. Not deployed yet.
 
 ## Next (max 5, in priority order)
 1. Luka: vision spike, 5 pairs (2 clean, 2 damaged, 1 lighting-only). GO/NO-GO at Sat Nov 14, 1 PM sync.
-2. Pablo: escrow spike on Arc testnet (deposit, propose, accept/appeal, release). Pass = one release tx link.
+2. Pablo: deploy escrow + DemoRun on Arc testnet → release tx link here. Then FastAPI skeleton tonight.
 3. Marcus: clickable mock of the move-out report screen, then scaffold app/ with the 5 demo screens.
-4. Sat Nov 14, 1 PM sync (all): GO/NO-GO, confirm stack, agree docs/API.md, record with /decide.
+4. Everyone: read D-002…D-008 in docs/DECISIONS.md and switch mocks to cents + the frozen docs/API.md. Luka: post vision GO/NO-GO here by 6 PM.
 
 ## Milestones (our deadline: submitted Tue Nov 17, 11:59 PM PT · detail: docs/PLAN.md)
 - Fri night: contract deployed + release tx; app scaffold + report screen; photos shot.
