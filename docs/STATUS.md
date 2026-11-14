@@ -18,12 +18,13 @@
 3. Marcus: clickable mock of the move-out report screen, then scaffold app/ with the 5 demo screens.
 4. Sat Nov 14, 1 PM sync (all): GO/NO-GO, confirm stack, agree docs/API.md, record with /decide.
 
-## Milestones (our deadline: submitted Mon Nov 16, 11:59 PM PT · detail: docs/PLAN.md)
+## Milestones (our deadline: submitted Tue Nov 17, 11:59 PM PT · detail: docs/PLAN.md)
 - Fri night: contract deployed + release tx; app scaffold + report screen; photos shot.
 - Sat 1 PM: vision GO/NO-GO; API, schema and stack frozen (/decide). Sat night: Circle tx or fallback; server + vision packaged.
-- Sun 9 PM: full demo path works end to end on testnet.
-- Mon: polish, README, video, /submit-check, submit by 11:59 PM.
-- Tue to Thu: buffer only (bug fixes, pitch drills). Sat 21: pitch in person.
+- Sun: pieces connected; first full run-through at 9 PM.
+- Mon 2 PM: full demo path works end to end on testnet. Then hosting, judge-panel, fixes.
+- Tue: freeze at noon, README + video, /submit-check, submit by 11:59 PM.
+- Wed to Thu: buffer only (bug fixes, pitch drills). Sat 21: pitch in person.
 
 ## Blockers / open questions (for office hours, Telegram, or mentor)
 - Verify AB 2801 effective dates and the bad-faith deposit penalty against the statute text before putting them in the pitch.
