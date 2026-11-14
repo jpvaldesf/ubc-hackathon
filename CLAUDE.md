@@ -15,9 +15,9 @@ project by the deadline, not writing the most code.
 ## Team (3 people; fill in names, keep current)
 | Person | Lane | Owns these folders |
 |---|---|---|
-| NAME_1 | On-chain + backend | contracts/ or programs/, server/, shared/abi/, shared/addresses.json |
-| NAME_2 | Frontend + product | app/ (or web/) |
-| NAME_3 | Integrations + demo | integrations/, docs/, README.md, demo assets |
+| Pablo | On-chain + backend | contracts/, server/, shared/abi/, shared/addresses.json |
+| Marcus | Frontend + product | app/ |
+| Luka | AI vision + integrations + demo | integrations/ (vision pipeline), docs/, README.md, demo assets |
 
 Team rules for every Claude session:
 - Work only in the folders of the person running this session. For a change in another lane, write a short
@@ -43,9 +43,9 @@ Per-person status: `docs/status/*.md` (read them with `cat docs/status/*.md`).
 Architecture decisions live in @docs/DECISIONS.md. Read it before proposing a change that contradicts an earlier decision.
 
 ## Stack (fill in)
-- Frontend: TBD
-- Onchain: TBD (Anchor/Rust on Solana, or Foundry/Hardhat on Arc)
-- Agent/backend: TBD
+- Frontend: Next.js (React, TypeScript), mobile-first web: PROPOSED, confirm at Sat sync with /decide
+- Onchain: Solidity + Foundry on Arc testnet; Circle dev-controlled wallets so users never see keys or gas: PROPOSED
+- Agent/backend: Python + FastAPI (server/), vision pipeline as a Python module in integrations/: PROPOSED
 - Package manager & commands:
   - install: TBD
   - dev: TBD
