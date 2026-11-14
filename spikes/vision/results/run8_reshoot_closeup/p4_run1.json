@@ -1,0 +1,27 @@
+{
+  "pair": "p4",
+  "run": 1,
+  "before": "p4_before.jpg",
+  "after": "p4_after.jpg",
+  "model": "claude-sonnet-5-5",
+  "request_id": "req_011Ch2MWf4fxn5qdcX69gCVR",
+  "stop_reason": "end_turn",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "global",
+    "input_tokens": 8549,
+    "output_tokens": 144,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  },
+  "latency_s": 2.7,
+  "raw_text": "{\"findings\":[{\"area\":\"Painted brick wall above bed\",\"type\":\"damage\",\"description\":\"A red paint/marker-like mark (approx. palm-sized smear with drips) is on the painted brick wall that was not present in the BEFORE photo. The small pre-existing chip/hole in the wall higher up is present in both photos and is unchanged.\",\"repair_type\":\"repaint\",\"cost_usd\":150,\"confidence\":0.9}]}"
+}

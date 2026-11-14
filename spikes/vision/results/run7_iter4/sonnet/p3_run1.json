@@ -1,0 +1,27 @@
+{
+  "pair": "p3",
+  "run": 1,
+  "before": "p3_before.jpg",
+  "after": "p3_after.jpg",
+  "model": "claude-sonnet-5-5",
+  "request_id": "req_011Ch2M4Qtf9TZysn1CvQpfp",
+  "stop_reason": "end_turn",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "global",
+    "input_tokens": 8549,
+    "output_tokens": 315,
+    "output_tokens_details": {
+      "thinking_tokens": 305
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  },
+  "latency_s": 4.3,
+  "raw_text": "{\"findings\":[]}"
+}

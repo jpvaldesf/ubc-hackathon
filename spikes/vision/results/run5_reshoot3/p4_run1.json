@@ -1,0 +1,27 @@
+{
+  "pair": "p4",
+  "run": 1,
+  "before": "p4_before.jpg",
+  "after": "p4_after.jpg",
+  "model": "claude-sonnet-5-5",
+  "request_id": "req_011Ch2LKz4W6SQ4BNjhrkE95",
+  "stop_reason": "end_turn",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "global",
+    "input_tokens": 8489,
+    "output_tokens": 122,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  },
+  "latency_s": 2.8,
+  "raw_text": "{\"findings\":[{\"area\":\"Painted brick wall above bed\",\"type\":\"damage\",\"description\":\"A red paint/marker-like smear or stain appears on the painted brick wall in the move-out photo that was not present at move-in. It is a localized mark that likely needs repainting to cover.\",\"repair_type\":\"repaint\",\"cost_usd\":150,\"confidence\":0.8}]}"
+}

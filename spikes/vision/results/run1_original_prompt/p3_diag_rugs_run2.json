@@ -1,0 +1,5 @@
+{
+  "request_id": "req_011Ch2GWaBeyEiRVkEUQdzLZ",
+  "variant": "prompt + floor-coverings sentence",
+  "raw_text": "{\"findings\":[{\"area\":\"Floor rug, center-right of the rug near the chair\",\"type\":\"damage\",\"description\":\"A light, whitish spot or splotch about the size of a palm appears on the rug in the move-out photo. It is not in the move-in photo, where the rug pattern is uniform. It looks like a stain, residue or possible discoloration.\",\"repair_type\":\"carpet_cleaning\",\"cost_usd\":120,\"confidence\":0.7}]}"
+}
