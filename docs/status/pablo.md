@@ -2,6 +2,7 @@
 
 **Lane:** on-chain + backend (contracts/, server/, shared/abi/, shared/addresses.json)
 **Today's lane goal (Fri Nov 13):** Escrow contract spike on Arc testnet → one real release tx on the explorer.
+**Full plan:** docs/PLAN.md (your section)
 **Branch:** feat/escrow-spike
 
 ## Done (with evidence: tx hash, PR link, screenshot)

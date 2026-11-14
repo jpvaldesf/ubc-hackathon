@@ -2,6 +2,7 @@
 
 **Lane:** AI vision + integrations + demo (integrations/, docs/, README.md, demo assets)
 **Today's lane goal (Fri Nov 13):** Vision spike results on 5 photo pairs. GO/NO-GO is due Sat Nov 14 end of day (D-001).
+**Full plan:** docs/PLAN.md (your section)
 **Branch:** feat/vision-spike
 
 ## Done (with evidence: tx hash, PR link, screenshot)

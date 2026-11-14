@@ -18,7 +18,7 @@
 3. Marcus: clickable mock of the move-out report screen, then scaffold app/ with the 5 demo screens.
 4. Sat Nov 14 sync (all): GO/NO-GO, confirm stack, agree docs/API.md, record with /decide.
 
-## Milestones (deadline Fri Nov 20, 10:00 AM PT)
+## Milestones (deadline Fri Nov 20, 10:00 AM PT) · per-person detail: docs/PLAN.md
 - Sat 14: spikes done, GO/NO-GO, API + stack agreed.
 - Sun 15 to Mon 16: real contract deployed, Circle wallets, FastAPI server, frontend wired to the API.
 - Tue 17: demo path works end to end on testnet. Run judge-panel.

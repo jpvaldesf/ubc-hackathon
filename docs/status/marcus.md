@@ -2,6 +2,7 @@
 
 **Lane:** frontend + product (app/)
 **Today's lane goal (Fri Nov 13):** Clickable mock of the move-out report screen (the screen judges will remember).
+**Full plan:** docs/PLAN.md (your section)
 **Branch:** feat/report-mock
 
 ## Done (with evidence: tx hash, PR link, screenshot)
