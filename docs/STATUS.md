@@ -2,11 +2,11 @@
 
 **Today's one goal:** Prove the AI move-out comparison works (5 photo pairs) and get one escrow release tx on Arc testnet.
 **Demo path:**
-1. Landlord creates a lease; tenant deposits $1,000 USDC into escrow (tx on Arc explorer).
+1. Landlord creates a lease; tenant deposits $10 USDC (testnet scale 1:100; faucet caps at 20 USDC, confirm at sync) into escrow (tx on Arc explorer).
 2. Move-in photos taken in-app; fingerprints committed onchain.
-3. Move-out photos taken; AI report flags carpet stain ($120, damage) and faded paint (normal wear, $0).
-4. Undisputed $880 pays out to tenant immediately (tx).
-5. Tenant accepts; $120 releases to landlord (tx); simulated interest shown.
+3. Move-out photos taken; AI report flags carpet stain ($1.20, damage) and faded paint (normal wear, $0).
+4. Undisputed $8.80 pays out to tenant immediately (tx).
+5. Tenant accepts; $1.20 releases to landlord (tx); simulated interest shown.
 
 ## Done
 - Roles assigned (Nov 13, 5 PM): Pablo onchain+backend, Marcus frontend, Luka AI vision+demo.
