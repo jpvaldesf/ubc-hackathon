@@ -17,4 +17,4 @@
 - API shape (Sat sync). Work from mock JSON until then.
 
 ## Requests from others (teammates write here instead of editing your files)
--
+- Sat 2:30 PM, from Pablo: docs/API.md is frozen (D-005). Money is integer cents (`deposit_cents`, `cost_cents`), demo is $10 / $1.20 / $8.80 with a visible "Testnet demo: amounts scaled 1:100" note (`demo_scale: 100`, never multiply). New screen: landlord reviews the AI draft and taps "Send report" (can only remove findings or lower costs, D-004). Photos upload one shot at a time (PUT per shot) plus a "Done" commit call per phase.

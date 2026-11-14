@@ -43,13 +43,13 @@ Per-person status: `docs/status/*.md` (read them with `cat docs/status/*.md`).
 Architecture decisions live in @docs/DECISIONS.md. Read it before proposing a change that contradicts an earlier decision.
 
 ## Stack (fill in)
-- Frontend: Next.js (React, TypeScript), mobile-first web: PROPOSED, confirm at Sat sync with /decide
-- Onchain: Solidity + Foundry on Arc testnet; Circle dev-controlled wallets so users never see keys or gas: PROPOSED
-- Agent/backend: Python + FastAPI (server/), vision pipeline as a Python module in integrations/: PROPOSED
+- Frontend: Next.js (React, TypeScript), mobile-first web (D-008)
+- Onchain: Solidity + Arc Foundry on Arc testnet (D-008); server-held testnet keys now, Circle dev-controlled wallets if the Sun AM timebox lands (D-007)
+- Agent/backend: Python + FastAPI (server/), vision pipeline as a Python module in integrations/ (D-008)
 - Package manager & commands:
   - install: TBD
   - dev: TBD
-  - test: TBD
+  - test: contracts: `cd contracts && arc-forge test`; others TBD
   - build: TBD
 
 ## How we work

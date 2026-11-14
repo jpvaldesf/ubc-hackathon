@@ -46,19 +46,19 @@ Every task must move the 5-step demo path in `docs/STATUS.md`. We cut scope on p
       "description": "Dark stain about 20 cm wide, not visible at move-in",
       "confidence": 0.91,
       "price_key": "carpet_spot_clean",
-      "cost_usd": 120
+      "cost_cents": 120
     }
   ],
   "dropped_low_confidence": 1,
-  "total_deduction_usd": 120
+  "total_deduction_cents": 120
 }
 ```
-Rules: `category` is `damage | normal_wear | no_change`. `normal_wear` always costs 0. Costs come only from the fixed price table, never from the model. Below the confidence threshold, the finding is dropped and not charged.
+Rules: `category` is `damage | normal_wear | no_change`. `normal_wear` always costs 0. All money is integer cents (D-003); demo amounts are scaled 1:100 (D-002). Costs come only from the fixed price table, never from the model. Below the confidence threshold, the finding is dropped and not charged.
 
 **2. Contract interface** (Pablo):
 `createLease(tenant, landlord, arbiter, amount)` → `deposit()` → `commitPhotos(phase, manifestHash)` → `proposeDeductions(amount, reportHash)` (pays the undisputed part to the tenant immediately) → `accept()` (deduction goes to the landlord) or `appeal()` → `resolve(amountToLandlord)` by the arbiter. No admin withdrawal. Funds can only go to the tenant or the landlord.
 
-**3. API:** Pablo writes it in `docs/API.md` by Sat 1 PM. Marcus builds against mock JSON of the same shape until it's live.
+**3. API:** frozen in `docs/API.md` (D-005). Marcus builds against mock JSON of the same shape until it's live.
 
 ---
 
