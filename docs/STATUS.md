@@ -14,8 +14,8 @@
 - Vision spike: **GO** against the PLAN.md bar (Sat Nov 14, Luka). claude-sonnet-5-5 at the 0.7 cutoff flagged both damaged pairs in 3/3 runs (p3 @0.90, p4 @0.80–0.85) with no false positives on p1, p2 and p5. Caveats: both are staged wall marks charged as repaint; carpet stain unproven; small test set; p3 before photo reused from an earlier shot. Full note: docs/status/luka.md · evidence: spikes/vision/README.md.
 
 ## Next (max 5, in priority order)
-1. Luka: present the vision conditional GO at the Sat 1 PM sync, then wrap the pipeline as `analyze(before, after) -> findings` (location TBD at sync). A close-up permanent-mark reshoot for a second damage type is next but not blocking.
-2. Everyone: push a branch tonight, even if WIP. As of Fri 8 PM PT there is no code on any branch.
+1. Luka: vision GO presented. Next: wrap the pipeline as `analyze(before, after) -> findings` (location not yet recorded in DECISIONS.md), then prove a carpet stain as a second damage type (not blocking).
+2. Everyone: push your branch, even if WIP. As of Sat Nov 14 night, `feat/vision-spike` is about to be pushed; no contract, server or app code is on the remote yet.
 3. Sat 1 PM sync (all): GO/NO-GO, confirm stack, agree docs/API.md + finding JSON schema, record with /decide.
 
 ## Milestones (our deadline: submitted Tue Nov 17, 11:59 PM PT · detail: docs/PLAN.md)
@@ -28,7 +28,7 @@
 
 ## Blockers / open questions (for office hours, Telegram, or mentor)
 - Verify AB 2801 effective dates and the bad-faith deposit penalty against the statute text before putting them in the pitch.
-- No code pushed yet by anyone (Fri 8 PM PT); the Fri-night milestone is at risk.
+- As of Sat Nov 14 night the remote has docs only; the vision spike branch is about to be pushed. No contract or app code yet, so the Fri-night milestone slipped and Sat midnight is at risk.
 - For the Sat 1 PM sync (from the vision spike): how to treat a tenant's own rug vs built-in carpet (the model calls area rugs belongings even when told otherwise); where the pipeline code lives (server/ vs integrations/); who owns the API.
 - Open product decisions: where interest goes, who pays the fee, appeal window length, price-table costs in v1.
 - Demo path step 3 uses a carpet stain, but the vision spike has only proven wall marks (repaint). Decide: prove a carpet stain, or switch the demo damage item to a wall mark.
