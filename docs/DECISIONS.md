@@ -11,6 +11,20 @@ One entry per decision that would be expensive to reverse. Newest at the top. `/
 - Revisit if: the condition that would make us change our mind
 -->
 
+## D-010 · Separate confidence cutoffs: normal wear 0.5, damage 0.7 · 2026-11-15, 12:30 PST
+- Context: the p7 nail-hole pair was correctly read as normal_wear/nail_holes in 3/3 runs, but at 0.60, so the single 0.7 cutoff hid it. Demo step 3 needs the nail holes to show as a visible "normal wear, $0" line.
+- Options considered: keep one 0.7 cutoff (nail holes stay hidden) / lower the cutoff for everything (risks new charges) / separate cutoffs per category.
+- Decision: normal_wear findings use a 0.5 confidence cutoff; damage stays at 0.7. For the 3-findings-per-pair cap, damage findings rank first regardless of confidence, then normal_wear, each group by confidence, so a $0 line can never push out a charge.
+- Why: normal wear is always $0 in code, so a lower bar can only add visible $0 lines, never a charge. Validated on p1–p7 ×3 (21 runs): no new findings on the clean or lighting-only pairs (p1, p2, p5), p3/p4 damage unchanged at 0.90, p7 nail hole kept at $0 in 3/3, p6 still empty.
+- Revisit if: clean pairs start showing normal-wear lines. The cutoff was chosen after seeing p7, so it is tuned on the same data it was tested on.
+
+## D-009 · Demo damage item: wall mark instead of carpet stain · 2026-11-15, 11:54 PST
+- Context: D-002 made a carpet stain the $1.20 demo deduction, but the vision pipeline has only proven wall marks, and a carpet stain can't be staged.
+- Options considered: keep trying to stage and prove a carpet stain / switch the demo damage item to a wall mark.
+- Decision: the demo damage item is a wall mark, price key `wall_mark_repaint`, 120 cents. The deduction is still $1.20, so $8.80 still goes back to the tenant; all amounts are unchanged. This replaces the carpet stain in D-002; the normal-wear item (small nail holes, $0) stays.
+- Why: wall marks are tested: flagged as damage at 0.88–0.93 confidence across runs (p3 and p4, Nov 15), with no false positives on the clean and lighting-only pairs. The carpet stain can't be staged.
+- Revisit if: the wall mark stops passing (below the 0.7 cutoff, or a false positive on the clean pairs).
+
 ## D-008 · Stack confirmed · 2026-11-14, 14:30 PST
 - Context: the Sat 1 PM sync didn't happen; Pablo asked Claude to decide and publish so the team stays unblocked.
 - Decision: Next.js (TypeScript) mobile-first web in app/ · Solidity + Arc Foundry on Arc testnet in contracts/ · Python + FastAPI + SQLite in server/ · vision pipeline as a Python module in integrations/vision/.
@@ -50,6 +64,7 @@ One entry per decision that would be expensive to reverse. Newest at the top. `/
 - Revisit if: never.
 
 ## D-002 · Demo amounts scaled 1:100 · 2026-11-14, 14:30 PST
+- **Superseded in part by D-009:** the $1.20 damage item is now a wall mark, not a carpet stain. Amounts and scale are unchanged.
 - Context: the Circle faucet gives 20 testnet USDC per wallet, so a $1,000 deposit isn't possible.
 - Options: ask the Arc rep for 1,000+ USDC / show $1,000 in the UI over a smaller onchain amount / scale everything down and say so.
 - Decision: the demo deposit is $10.00, the stain deduction $1.20, and $8.80 goes back to the tenant, all real onchain. The UI shows these exact amounts plus a visible "Testnet demo: amounts scaled 1:100" note. The pitch can say "on a real $1,000 deposit, that's $880 back the same day." The normal-wear item is small nail holes ($0), which we can stage; Luka can swap it if something else stages better.
