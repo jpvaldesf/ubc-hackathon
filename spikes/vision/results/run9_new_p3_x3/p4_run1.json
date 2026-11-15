@@ -1,0 +1,27 @@
+{
+  "pair": "p4",
+  "run": 1,
+  "before": "p4_before.jpg",
+  "after": "p4_after.jpg",
+  "model": "claude-sonnet-5-5",
+  "request_id": "req_011Ch4CrCY1Gpmw275pB8ucT",
+  "stop_reason": "end_turn",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "global",
+    "input_tokens": 8549,
+    "output_tokens": 337,
+    "output_tokens_details": {
+      "thinking_tokens": 207
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  },
+  "latency_s": 4.7,
+  "raw_text": "{\"findings\":[{\"area\":\"Painted brick wall behind bed\",\"type\":\"damage\",\"description\":\"A red paint, marker or similar smudge with small drips is on the painted brick wall below the existing chip. It is not in the move-in photo. The chip higher on the wall is in both photos, so it is not reported.\",\"repair_type\":\"repaint\",\"cost_usd\":150,\"confidence\":0.85}]}"
+}

@@ -1,0 +1,27 @@
+{
+  "pair": "p4",
+  "run": 1,
+  "before": "p4_before.jpg",
+  "after": "p4_after.jpg",
+  "model": "claude-sonnet-5-5",
+  "request_id": "req_011Ch4DG8dnH2BDC3b2AVYif",
+  "stop_reason": "end_turn",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "global",
+    "input_tokens": 8549,
+    "output_tokens": 137,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  },
+  "latency_s": 2.7,
+  "raw_text": "{\"findings\":[{\"area\":\"Painted brick wall above bed\",\"type\":\"damage\",\"description\":\"A red paint/marker-like smear or stain is on the painted brick wall near the bed that was not present in the BEFORE photo. The small chipped hole at the upper wall is visible in both photos, so it is unchanged and not reported.\",\"repair_type\":\"repaint\",\"cost_usd\":150,\"confidence\":0.85}]}"
+}

@@ -1,0 +1,27 @@
+{
+  "pair": "p4",
+  "run": 2,
+  "before": "p4_before.jpg",
+  "after": "p4_after.jpg",
+  "model": "claude-sonnet-5-5",
+  "request_id": "req_011Ch4DGL2NdaYLcpdJQGdqP",
+  "stop_reason": "end_turn",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "global",
+    "input_tokens": 8549,
+    "output_tokens": 126,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  },
+  "latency_s": 2.4,
+  "raw_text": "{\"findings\":[{\"area\":\"Painted brick wall above bed\",\"type\":\"damage\",\"description\":\"A red mark or smear (paint, marker or similar substance) is on the painted brick wall above the bed headboard area. It was not there in the BEFORE photo, where the wall was clean in this spot.\",\"repair_type\":\"repaint\",\"cost_usd\":150,\"confidence\":0.85}]}"
+}

@@ -1,0 +1,27 @@
+{
+  "pair": "p3",
+  "run": 2,
+  "before": "p3_before.jpg",
+  "after": "p3_after.jpg",
+  "model": "claude-sonnet-5-5",
+  "request_id": "req_011Ch4CqRGTDqrv8KEhhx1qj",
+  "stop_reason": "end_turn",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "global",
+    "input_tokens": 8549,
+    "output_tokens": 359,
+    "output_tokens_details": {
+      "thinking_tokens": 237
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  },
+  "latency_s": 5.0,
+  "raw_text": "{\"findings\":[{\"area\":\"Wall next to light switch (painted brick wall)\",\"type\":\"damage\",\"description\":\"A thin vertical blue line, apparently pen or chalk, is on the wall just below and to the right of the light switch plate. It was not there in the move-in photo.\",\"repair_type\":\"wall_repair\",\"cost_usd\":80,\"confidence\":0.55}]}"
+}

@@ -1,0 +1,27 @@
+{
+  "pair": "p3",
+  "run": 2,
+  "before": "p3_before.jpg",
+  "after": "p3_after.jpg",
+  "model": "claude-sonnet-5-5",
+  "request_id": "req_011Ch4Dd2dTALrPPpqT2dHXg",
+  "stop_reason": "end_turn",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "global",
+    "input_tokens": 8549,
+    "output_tokens": 120,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  },
+  "latency_s": 2.5,
+  "raw_text": "{\"findings\":[{\"area\":\"Wall next to light switch (white brick wall)\",\"type\":\"damage\",\"description\":\"In the AFTER photo there is a light blue paint or liquid drip streak running down the white brick wall below the light switch. It was not present in the BEFORE photo.\",\"repair_type\":\"repaint\",\"cost_usd\":150,\"confidence\":0.9}]}"
+}

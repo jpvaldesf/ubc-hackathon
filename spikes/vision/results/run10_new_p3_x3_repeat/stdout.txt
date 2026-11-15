@@ -1,0 +1,29 @@
+anthropic 2.8.0 · model claude-sonnet-5-5 · pairs ['p1', 'p2', 'p3', 'p4', 'p5']
+
+pair run expected  raw model output             after 0.7 cutoff             verdict
+p1   1   none      none                         none                         PASS
+p2   1   none      none                         none                         PASS
+p3   1   damage    damage:repaint:$150@0.60     none                         FAIL (missed)
+p3   2   damage    damage:repaint:$150@0.60     none                         FAIL (missed)
+p3   3   damage    damage:wall_repair:$80@0.60  none                         FAIL (missed)
+p4   1   damage    damage:repaint:$150@0.85     damage:repaint:$150@0.85     PASS
+p4   2   damage    damage:repaint:$150@0.85     damage:repaint:$150@0.85     PASS
+p4   3   damage    damage:repaint:$150@0.80     damage:repaint:$150@0.80     PASS
+p5   1   none      none                         none                         PASS
+p5   2   none      none                         none                         PASS
+p5   3   none      none                         none                         PASS
+
+8/11 runs PASS. Raw responses in spikes/vision/results/run10_new_p3_x3_repeat
+
+Raw model JSON:
+  p1 run1: {"findings":[]}
+  p2 run1: {"findings":[]}
+  p3 run1: {"findings":[{"area":"Wall next to light switch (painted brick wall)","type":"damage","description":"A thin vertical blue marking, likely chalk or marker, runs down the wall below the light switch. It is not in the move-in photo.","repair_type":"repaint","cost_usd":150,"confidence":0.6}]}
+  p3 run2: {"findings":[{"area":"Wall next to door, below light switch","type":"damage","description":"A thin vertical blue line, possibly marker or chalk, is on the painted brick wall below the light switch. It was not there in the move-in photo.","repair_type":"repaint","cost_usd":150,"confidence":0.6}]}
+  p3 run3: {"findings":[{"area":"Wall below light switch (painted brick wall)","type":"damage","description":"A faint vertical blue line, like a chalk or marker streak, runs down the wall below the light switch. It was not in the move-in photo.","repair_type":"wall_repair","cost_usd":80,"confidence":0.6}]}
+  p4 run1: {"findings":[{"area":"Painted brick wall above bed","type":"damage","description":"A red paint/marker-like smear or stain is on the painted brick wall near the bed that was not present in the BEFORE photo. The small chipped hole at the upper wall is visible in both photos, so it is unchanged and not reported.","repair_type":"repaint","cost_usd":150,"confidence":0.85}]}
+  p4 run2: {"findings":[{"area":"Painted brick wall above bed","type":"damage","description":"A red mark or smear (paint, marker or similar substance) is on the painted brick wall above the bed headboard area. It was not there in the BEFORE photo, where the wall was clean in this spot.","repair_type":"repaint","cost_usd":150,"confidence":0.85}]}
+  p4 run3: {"findings":[{"area":"Painted brick wall above bed","type":"damage","description":"A red mark or smear (looks like paint, marker or similar) is on the painted brick wall below the small chip. It is absent in the BEFORE photo. The small chip or hole in the wall is visible in both photos, so it is not new.","repair_type":"repaint","cost_usd":150,"confidence":0.8}]}
+  p5 run1: {"findings":[]}
+  p5 run2: {"findings":[]}
+  p5 run3: {"findings":[]}

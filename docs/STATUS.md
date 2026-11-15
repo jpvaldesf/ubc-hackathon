@@ -11,14 +11,12 @@
 ## Done
 - Roles assigned (Nov 13, 5 PM): Pablo onchain+backend, Marcus frontend, Luka AI vision+demo.
 - Project chosen: Deposit Keeper (D-001). Explainer: https://claude.ai/artifact/UvpoQrNT1K8KoYQJAAEaxZ
-- Vision spike: **conditional GO** (Fri Nov 13, Luka). claude-sonnet-5-5 flagged a staged wall mark as damage in 5/5 real-photo runs (0.80–0.90). Zero false damage charges on the clean and lighting-only pairs in 8 runs. A second, permanent damage type is not yet proven. Full note: docs/status/luka.md · evidence: spikes/vision/.
+- Vision spike: **GO** against the PLAN.md bar (Sat Nov 14, Luka). claude-sonnet-5-5 at the 0.7 cutoff flagged both damaged pairs in 3/3 runs (p3 @0.90, p4 @0.80–0.85) with no false positives on p1, p2 and p5. Caveats: both are staged wall marks charged as repaint; carpet stain unproven; small test set; p3 before photo reused from an earlier shot. Full note: docs/status/luka.md · evidence: spikes/vision/README.md.
 
 ## Next (max 5, in priority order)
 1. Luka: present the vision conditional GO at the Sat 1 PM sync, then wrap the pipeline as `analyze(before, after) -> findings` (location TBD at sync). A close-up permanent-mark reshoot for a second damage type is next but not blocking.
-2. Pablo: escrow contract in `contracts/` on Arc testnet; get faucet USDC first. Pass = one release tx link pasted here.
-3. Marcus: clickable mock of the move-out report screen (mock JSON), then stub the 5 demo screens.
-4. Everyone: push a branch tonight, even if WIP. As of Fri 8 PM PT there is no code on any branch.
-5. Sat 1 PM sync (all): GO/NO-GO, confirm stack, agree docs/API.md + finding JSON schema, record with /decide.
+2. Everyone: push a branch tonight, even if WIP. As of Fri 8 PM PT there is no code on any branch.
+3. Sat 1 PM sync (all): GO/NO-GO, confirm stack, agree docs/API.md + finding JSON schema, record with /decide.
 
 ## Milestones (our deadline: submitted Tue Nov 17, 11:59 PM PT · detail: docs/PLAN.md)
 - Fri night: contract deployed + release tx; app scaffold + report screen; photos shot.
@@ -33,11 +31,12 @@
 - No code pushed yet by anyone (Fri 8 PM PT); the Fri-night milestone is at risk.
 - For the Sat 1 PM sync (from the vision spike): how to treat a tenant's own rug vs built-in carpet (the model calls area rugs belongings even when told otherwise); where the pipeline code lives (server/ vs integrations/); who owns the API.
 - Open product decisions: where interest goes, who pays the fee, appeal window length, price-table costs in v1.
+- Demo path step 3 uses a carpet stain, but the vision spike has only proven wall marks (repaint). Decide: prove a carpet stain, or switch the demo damage item to a wall mark.
 
 ## Proven integrations (with evidence)
 | Integration | Status | Evidence (tx sig / response / link) |
 |---|---|---|
-| Claude vision (claude-sonnet-5-5, structured JSON) | Conditional GO: 1 damage scene proven, 2nd pending | spikes/vision/results/run8_reshoot_closeup/p4_run1.json (damage/repaint @0.90, req_011Ch2MWf4fxn5qdcX69gCVR); summary: spikes/vision/README.md |
+| Claude vision (claude-sonnet-5-5, structured JSON) | GO: 2 staged wall-mark pairs flagged 3/3 at 0.7 cutoff, 0 false positives; carpet stain unproven | spikes/vision/results/run11_p3_reshoot_bold_x3/p3_run1.json (damage/repaint @0.90, req_011Ch4Dcp8squfvzcHUqzwm7); run8_reshoot_closeup/p4_run1.json (damage/repaint @0.90, req_011Ch2MWf4fxn5qdcX69gCVR); runs 9–10 for p4 3/3 and clean pairs; summary: spikes/vision/README.md |
 
 ## Judge runs (date · Tech/UX/Innov/Impact/Demo · verdict)
 -
