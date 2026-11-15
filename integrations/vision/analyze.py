@@ -7,7 +7,8 @@ Every money rule is enforced here in code, not only in the prompt:
 - the model never sees or returns money; cost_cents comes only from price_table[price_key]
 - normal_wear always costs 0
 - damage with a price_key not in the table is dropped and counted (dropped_unknown_price_key)
-- confidence below MIN_CONFIDENCE is dropped and counted (dropped_low_confidence)
+- confidence below the category's cutoff (MIN_CONFIDENCE: damage 0.7, normal_wear 0.5) is dropped
+  and counted (dropped_low_confidence)
 - no_change items are discarded, so "nothing changed" gives findings: []
 Any failure the server should surface as 502 vision_error raises VisionError.
 """
@@ -33,7 +34,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PRICE_TABLE_PATH = Path(__file__).with_name("price_table.json")
 
 MODEL = "claude-sonnet-5-5"
-MIN_CONFIDENCE = 0.7
+# Per-category cutoffs. normal_wear is always $0, so a lower bar only adds visible $0 lines
+# (e.g. nail holes at ~0.6); damage costs money and keeps the stricter 0.7.
+MIN_CONFIDENCE = {"damage": 0.7, "normal_wear": 0.5}
 MAX_TOKENS = 1024
 TIMEOUT_S = 60
 MAX_RETRIES = 2  # SDK-level retries for transport/5xx/429
@@ -138,6 +141,7 @@ def _prompt(pair: dict, price_keys: list[str]) -> str:
         "carpet and floor covering as landlord property; a mark on one is a stain unless it is clearly a "
         "loose object. Report only actual changes; never output items for unchanged areas. "
         "Marks, scuffs or paint on doors, walls and trim count as damage. "
+        "Small pin, nail or screw holes in a wall are normal_wear with price_key nail_holes. "
         "Classify each change as damage or normal_wear. "
         f"For each change pick a price_key from: {', '.join(price_keys)}; use \"none\" if none fits. "
         "Name the affected item (e.g. wall, carpet, door) and describe the change in one short sentence "
@@ -245,7 +249,7 @@ def _apply_rules(raw_findings: list[dict], price_table: dict[str, int]) -> tuple
             continue  # no_change or anything unexpected: not a finding
         conf = f.get("confidence")
         if isinstance(conf, bool) or not isinstance(conf, (int, float)) or not math.isfinite(conf) \
-                or conf < MIN_CONFIDENCE:
+                or conf < MIN_CONFIDENCE[category]:
             low += 1
             continue
         key = f.get("price_key")
@@ -275,7 +279,8 @@ def _apply_rules(raw_findings: list[dict], price_table: dict[str, int]) -> tuple
 
 def _limit_per_pair(kept: list[dict]) -> list[dict]:
     """Anti-padding (audit, medium): one damage finding per price_key per photo pair, and at most
-    MAX_FINDINGS_PER_PAIR findings. Highest confidence wins; original order is kept."""
+    MAX_FINDINGS_PER_PAIR findings. For the cap, damage findings rank first regardless of confidence,
+    then normal_wear; each group by confidence. Original order is kept."""
     best: dict[str, dict] = {}
     for f in kept:
         if f["category"] == "damage":
@@ -284,7 +289,7 @@ def _limit_per_pair(kept: list[dict]) -> list[dict]:
                 best[k] = f
     deduped = [f for f in kept if f["category"] != "damage" or best[f["price_key"]] is f]
     if len(deduped) > MAX_FINDINGS_PER_PAIR:
-        top = sorted(deduped, key=lambda f: f["confidence"], reverse=True)[:MAX_FINDINGS_PER_PAIR]
+        top = sorted(deduped, key=lambda f: (f["category"] != "damage", -f["confidence"]))[:MAX_FINDINGS_PER_PAIR]
         deduped = [f for f in deduped if any(f is t for t in top)]
     if len(deduped) < len(kept):
         log.warning("limited findings for one pair: %d -> %d (duplicate price_key or over cap)",

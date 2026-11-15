@@ -108,6 +108,40 @@ def test_confidence_cutoff(photos, fake):
     assert report["total_deduction_cents"] == 120
 
 
+
+def test_normal_wear_at_0_6_is_kept_at_zero_cost(photos, fake):
+    report, _ = run(photos, fake, resp({"findings": [
+        finding(category="normal_wear", price_key="nail_holes", confidence=0.6)]}))
+    assert len(report["findings"]) == 1
+    f = report["findings"][0]
+    assert (f["category"], f["price_key"], f["cost_cents"], f["confidence"]) == ("normal_wear", "nail_holes", 0, 0.6)
+    assert report["dropped_low_confidence"] == 0
+    assert report["total_deduction_cents"] == 0
+
+
+def test_normal_wear_at_0_45_is_dropped(photos, fake):
+    report, _ = run(photos, fake, resp({"findings": [
+        finding(category="normal_wear", price_key="nail_holes", confidence=0.45)]}))
+    assert report["findings"] == []
+    assert report["dropped_low_confidence"] == 1
+
+
+def test_damage_at_0_6_is_still_dropped(photos, fake):
+    report, _ = run(photos, fake, resp({"findings": [finding(category="damage", confidence=0.6)]}))
+    assert report["findings"] == []
+    assert report["dropped_low_confidence"] == 1
+    assert report["total_deduction_cents"] == 0
+
+
+def test_cap_keeps_damage_ahead_of_higher_confidence_normal_wear(photos, fake):
+    wear = [finding(category="normal_wear", price_key="nail_holes", confidence=0.9, description=f"hole {i}")
+            for i in range(3)]
+    report, _ = run(photos, fake, resp({"findings": wear + [finding(confidence=0.71, description="paint mark")]}))
+    assert len(report["findings"]) == A.MAX_FINDINGS_PER_PAIR
+    assert any(f["category"] == "damage" and f["confidence"] == 0.71 for f in report["findings"])
+    assert report["total_deduction_cents"] == 120
+
+
 # ---- rule: nothing changed -> [] ----
 
 @pytest.mark.parametrize("payload", [{"findings": []},
