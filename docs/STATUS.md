@@ -13,10 +13,10 @@
 - Project chosen: Deposit Keeper (D-001). Explainer: https://claude.ai/artifact/UvpoQrNT1K8KoYQJAAEaxZ
 - Sat 2:30 PM: sync skipped; decisions D-002…D-008 recorded (amounts in cents, 1:100 demo scale, landlord 48 h review, per-shot upload, contract timeouts, stack). docs/API.md frozen.
 - Escrow contract written, 18 forge tests pass; ABI in shared/abi/. Not deployed yet.
-- Vision spike: **GO** against the PLAN.md bar (Sat Nov 14, Luka). claude-sonnet-5-5 at the 0.7 cutoff flagged both damaged pairs in 3/3 runs (p3 @0.90, p4 @0.80–0.85) with no false positives on p1, p2 and p5. Caveats: both are staged wall marks charged as repaint; carpet stain unproven; small test set; p3 before photo reused from an earlier shot. Full note: docs/status/luka.md · evidence: spikes/vision/README.md.
+- Vision spike: **GO** against the PLAN.md bar (Sat Nov 14, Luka). claude-sonnet-5-5 at the 0.7 cutoff flagged both damaged pairs in 3/3 runs (re-confirmed by the packaged pipeline on Nov 15: p3 @0.88–0.90, p4 @0.88–0.93) with no false positives on p1, p2 and p5. Caveats: both are staged wall marks charged as repaint; carpet stain unproven; small test set; p3 before photo reused from an earlier shot. Full note: docs/status/luka.md · evidence: spikes/vision/README.md.
 
 ## Next (max 5, in priority order)
-1. Luka: `analyze()` is packaged in integrations/vision/ (Sun Nov 15, branch feat/vision-pipeline, PR pending): 37 unit tests and a real 5/5 run pass, and sample_report.json is in place for Pablo and Marcus. Demo damage item is the wall mark (D-009), proven at 0.88–0.93 confidence; still to be run through the full flow.
+1. Luka: `analyze()` is packaged in integrations/vision/ (Sun Nov 15, branch feat/vision-pipeline, PR pending): 43 unit tests and a real 5/5 run pass, and sample_report.json is in place for Pablo and Marcus. Demo damage item is the wall mark (D-009), proven at 0.88–0.93 confidence; still to be run through the full flow.
 2. Pablo: deploy escrow + DemoRun on Arc testnet → release tx link here. Then FastAPI skeleton tonight.
 3. Marcus: clickable mock of the move-out report screen, then scaffold app/ with the 5 demo screens.
 4. Everyone: read D-002…D-008 in docs/DECISIONS.md and switch mocks to cents + the frozen docs/API.md.
