@@ -22,10 +22,10 @@ The output has **one extra field** beyond the frozen schema: `dropped_unknown_pr
 - The model never sees or returns money. `cost_cents` = `price_table[price_key]`, nothing else.
 - `normal_wear` always costs 0.
 - `damage` with a `price_key` not in the table: dropped, counted in `dropped_unknown_price_key`.
-- `confidence < 0.7`: dropped, counted in `dropped_low_confidence`.
+- Confidence cutoffs: `damage` below 0.7 and `normal_wear` below 0.5 are dropped, counted in `dropped_low_confidence`. Normal wear gets a lower bar because it's always $0, so it can only add visible $0 lines, never a charge.
 - `no_change` items are discarded, so nothing changed gives `findings: []`.
 - Region is clamped to the photo; a malformed region becomes `null` (finding kept). Confidence is capped at 1.0.
-- Anti-padding: at most one damage finding per `price_key` per photo pair (highest confidence wins) and at most 3 findings per pair, so text in a photo can't multiply charges.
+- Anti-padding: at most one damage finding per `price_key` per photo pair (highest confidence wins) and at most 3 findings per pair (damage ranked ahead of normal wear for the cap), so text in a photo can't multiply charges.
 
 ## Safety limits
 - `max_tokens=1024`, 60 s timeout, SDK `max_retries=2`.
