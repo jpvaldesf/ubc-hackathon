@@ -1,0 +1,27 @@
+{
+  "pair": "p3",
+  "run": 1,
+  "before": "p3_before.jpg",
+  "after": "p3_after.jpg",
+  "model": "claude-sonnet-5-5",
+  "request_id": "req_011Ch2Ka9u7cqf5Rj65o6MHm",
+  "stop_reason": "end_turn",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "global",
+    "input_tokens": 8489,
+    "output_tokens": 165,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  },
+  "latency_s": 3.2,
+  "raw_text": "{\"findings\":[{\"area\":\"Floor carpet near center of room, beside the area rug\",\"type\":\"normal_wear\",\"description\":\"A small crumpled white item (tissue or paper scrap) is on the dark carpet in the AFTER photo. It is loose debris, not a change to the carpet, and no stain or damage is visible beneath it. The carpet is otherwise unchanged. The area rug is a tenant belonging.\",\"repair_type\":\"none\",\"cost_usd\":0,\"confidence\":0.6}]}"
+}

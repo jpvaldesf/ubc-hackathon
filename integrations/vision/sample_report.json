@@ -1,0 +1,26 @@
+{
+  "report_id": "r_d0fc7ef2",
+  "findings": [
+    {
+      "id": "f1",
+      "room": "living room",
+      "item": "wall",
+      "before_photo": "p_in_s2",
+      "after_photo": "p_out_s2",
+      "region": [
+        0.37,
+        0.43,
+        0.05,
+        0.4
+      ],
+      "category": "damage",
+      "description": "Blue paint or liquid drip streaks run down the white brick wall below the light switch, absent in the before photo.",
+      "confidence": 0.9,
+      "price_key": "wall_mark_repaint",
+      "cost_cents": 120
+    }
+  ],
+  "dropped_low_confidence": 0,
+  "dropped_unknown_price_key": 0,
+  "total_deduction_cents": 120
+}

@@ -1,0 +1,27 @@
+{
+  "pair": "p3",
+  "run": 3,
+  "before": "p3_before.jpg",
+  "after": "p3_after.jpg",
+  "model": "claude-sonnet-5-5",
+  "request_id": "req_011Ch4DFoKAne3M7AhGYUeNY",
+  "stop_reason": "end_turn",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "global",
+    "input_tokens": 8549,
+    "output_tokens": 332,
+    "output_tokens_details": {
+      "thinking_tokens": 218
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  },
+  "latency_s": 4.2,
+  "raw_text": "{\"findings\":[{\"area\":\"Wall below light switch (painted brick wall)\",\"type\":\"damage\",\"description\":\"A faint vertical blue line, like a chalk or marker streak, runs down the wall below the light switch. It was not in the move-in photo.\",\"repair_type\":\"wall_repair\",\"cost_usd\":80,\"confidence\":0.6}]}"
+}

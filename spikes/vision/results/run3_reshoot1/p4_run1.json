@@ -1,0 +1,27 @@
+{
+  "pair": "p4",
+  "run": 1,
+  "before": "p4_before.jpg",
+  "after": "p4_after.jpg",
+  "model": "claude-sonnet-5-5",
+  "request_id": "req_011Ch2JQJrEq6WJ2EaXTyP25",
+  "stop_reason": "end_turn",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "global",
+    "input_tokens": 8489,
+    "output_tokens": 485,
+    "output_tokens_details": {
+      "thinking_tokens": 340
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  },
+  "latency_s": 6.1,
+  "raw_text": "{\"findings\":[{\"area\":\"Painted brick wall, left of center, mid-height\",\"type\":\"normal_wear\",\"description\":\"Small faint scuff or smudge on the painted brick that was not visible in the move-in photo. It is minor and cosmetic, consistent with ordinary use. The chip near the top of the wall was already there at move-in and is unchanged.\",\"repair_type\":\"none\",\"cost_usd\":0,\"confidence\":0.4}]}"
+}

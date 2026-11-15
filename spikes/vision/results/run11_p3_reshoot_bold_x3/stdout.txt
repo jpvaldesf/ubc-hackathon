@@ -1,0 +1,13 @@
+anthropic 2.8.0 · model claude-sonnet-5-5 · pairs ['p3']
+
+pair run expected  raw model output          after 0.7 cutoff          verdict
+p3   1   damage    damage:repaint:$150@0.90  damage:repaint:$150@0.90  PASS
+p3   2   damage    damage:repaint:$150@0.90  damage:repaint:$150@0.90  PASS
+p3   3   damage    damage:repaint:$150@0.90  damage:repaint:$150@0.90  PASS
+
+3/3 runs PASS. Raw responses in spikes/vision/results/run11_p3_reshoot_bold_x3
+
+Raw model JSON:
+  p3 run1: {"findings":[{"area":"Wall next to light switch (white brick wall)","type":"damage","description":"In the AFTER photo, a light blue paint or liquid drip streak runs down the white painted brick wall from just below the light switch plate toward the baseboard. It was not present in the BEFORE photo.","repair_type":"repaint","cost_usd":150,"confidence":0.9}]}
+  p3 run2: {"findings":[{"area":"Wall next to light switch (white brick wall)","type":"damage","description":"In the AFTER photo there is a light blue paint or liquid drip streak running down the white brick wall below the light switch. It was not present in the BEFORE photo.","repair_type":"repaint","cost_usd":150,"confidence":0.9}]}
+  p3 run3: {"findings":[{"area":"Wall next to light switch (white brick wall)","type":"damage","description":"A light blue paint or liquid drip streak runs down the white brick wall below the light switch plate. It was not present in the BEFORE photo.","repair_type":"repaint","cost_usd":150,"confidence":0.9}]}
