@@ -16,7 +16,7 @@
 - Vision spike: **GO** against the PLAN.md bar (Sat Nov 14, Luka). claude-sonnet-5-5 at the 0.7 cutoff flagged both damaged pairs in 3/3 runs (p3 @0.90, p4 @0.80–0.85) with no false positives on p1, p2 and p5. Caveats: both are staged wall marks charged as repaint; carpet stain unproven; small test set; p3 before photo reused from an earlier shot. Full note: docs/status/luka.md · evidence: spikes/vision/README.md.
 
 ## Next (max 5, in priority order)
-1. Luka: vision GO posted here (Sat night, after the 6 PM ask). Next: package `analyze(pairs, price_table, on_progress=None) -> dict` in integrations/vision/ per docs/API.md (D-005, D-008), cents per D-003; then prove the $1.20 carpet stain (D-002), which is still unproven.
+1. Luka: `analyze()` is packaged in integrations/vision/ (Sun Nov 15, branch feat/vision-pipeline, PR pending): 37 unit tests and a real 5/5 run pass, and sample_report.json is in place for Pablo and Marcus. Next: prove the $1.20 carpet stain (D-002), which is still unproven.
 2. Pablo: deploy escrow + DemoRun on Arc testnet → release tx link here. Then FastAPI skeleton tonight.
 3. Marcus: clickable mock of the move-out report screen, then scaffold app/ with the 5 demo screens.
 4. Everyone: read D-002…D-008 in docs/DECISIONS.md and switch mocks to cents + the frozen docs/API.md.

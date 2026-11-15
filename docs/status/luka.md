@@ -6,6 +6,7 @@
 **Branch:** feat/vision-spike
 
 ## Done (with evidence: tx hash, PR link, screenshot)
+- Sun Nov 15: vision pipeline packaged in integrations/vision/ (`analyze()` per API.md, cents, rules in code, retry/timeout/spend cap). 37 unit tests pass; real 5-pair run 5/5 (p3 wall_mark_repaint @0.88, p4 @0.90, p1/p2/p5 clean). sample_report.json from p3 (privacy-checked). Not committed yet.
 - Fri Nov 13: picked the vision provider: Anthropic, `claude-sonnet-5-5` (researcher confirmed model ID + API).
 - Fri Nov 13: vision spike, 8 runs. Result: **conditional GO** (note below). Evidence: `spikes/vision/results/`, `spikes/vision/README.md`.
 - Sat Nov 14: vision spike runs 9–11. Result: **GO** against the PLAN.md bar (note below). Evidence: `spikes/vision/results/run9_*`, `run10_*`, `run11_*`; `spikes/vision/README.md`.
@@ -62,8 +63,8 @@ Evidence: raw responses in spikes/vision/results/ (run8_reshoot_closeup for p4);
 summary in spikes/vision/README.md.
 
 ## Next (max 3)
-1. Sat 1 PM: present the GO (with caveats); settle the rug question, pipeline location, and API owner (record with /decide).
-2. After the sync: wrap the pipeline as `analyze(before, after) -> findings` using the agreed finding JSON (add `no_change` per docs/PLAN.md), so Pablo's `POST /report` can call it.
+1. Get the vision pipeline reviewed (security-auditor) and opened as a PR from feat/vision-pipeline.
+2. Region boxes: p4 box landed ~9% of the height below the mark; decide if that's OK for the demo or needs a prompt tweak.
 3. Prove a second damage type: a stain on the built-in carpet (demo-path item), before and after shot together from the same spot; rerun the spike 3×.
 
 ## Blocked by / waiting on
