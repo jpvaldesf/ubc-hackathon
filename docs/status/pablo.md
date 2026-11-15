@@ -1,20 +1,23 @@
 # Pablo: status (your Claude session updates this after each task)
 
 **Lane:** on-chain + backend (contracts/, server/, shared/abi/, shared/addresses.json)
-**Today's lane goal (Fri Nov 13):** Escrow contract spike on Arc testnet → one real release tx on the explorer.
+**Today's lane goal (Sat Nov 14):** Escrow deployed on Arc testnet with a release tx; FastAPI skeleton talking to it by midnight.
 **Full plan:** docs/PLAN.md (your section)
-**Branch:** feat/escrow-spike
+**Branch:** feat/escrow-spike (merged via the Sat decisions PR)
 
 ## Done (with evidence: tx hash, PR link, screenshot)
-- Sat 11:50: docs/API.md drafted for 1 PM sync (branch docs/api-draft, 4408c1e). 5 open questions at the bottom.
+- Sat 11:50: docs/API.md drafted; frozen 2:30 PM as D-002…D-006.
+- Sat ~12:15: Arc testnet values in .env.example (chain 5042002, USDC 0x3600…0000, 6 dec ERC-20 / 18 native). Arc Foundry v0.8.0-4 installed.
+- Test wallets funded, 20 USDC each (faucet cap is 20). Landlord 0x86a4F488D30b1CAA5A4e6613994DFc530B191a36 · Tenant 0xFB2C0638628b7830e46F2e054d35bD058B9d4A6F · Arbiter 0x90b7F173B4aE279f9C7abb512a4cbDfeDb0D10c5
+- Sat 2 PM: DepositEscrow.sol + 14 forge tests passing (incl. fund-conservation fuzz), Deploy + DemoRun scripts, ABI in shared/abi/. Not deployed yet.
 
 ## Next (max 3)
-1. Fri night: escrow contract straight in `contracts/` (Foundry, hardened from the start): deposit USDC → propose split → tenant accept / appeal → release. Pass = release tx link. Look up Arc USDC address, RPC, chain ID via arc-docs MCP first.
-2. Sat: draft `docs/API.md` endpoints (create lease, upload photos, run report, accept/appeal, status) for the Sat sync; `/decide` once agreed.
-3. Sun: Circle dev-controlled wallets spike on ARC-TESTNET (one wallet per user, route through `contractExecution` so the escrow rules can't be skipped). Then the FastAPI server and deploying the real contract (address in shared/addresses.json + README).
+1. Deploy + DemoRun on Arc testnet → release tx link in docs/STATUS.md, address in shared/addresses.json.
+2. 6 PM–midnight: FastAPI skeleton in server/ per docs/API.md (SQLite, per-shot upload, cents, report draft + 48 h auto-send).
+3. Sun AM: Circle wallets, 2 h timebox (D-007). Fallback = server-held keys.
 
 ## Blocked by / waiting on
-- Testnet USDC from https://faucet.circle.com
+- Faucet caps at 20 USDC: demo scaled 1:100 (D-002). Optional: ask Arc rep for more.
 
 ## Requests from others (teammates write here instead of editing your files)
 -

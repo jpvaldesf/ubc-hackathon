@@ -2,21 +2,24 @@
 
 **Today's one goal (Fri Nov 13 night → Sat 1 PM sync):** By the sync, a judge could watch the AI flag the 2 damaged photo pairs (and nothing else), and click one Arc testnet release tx on the explorer.
 **Demo path:**
-1. Landlord creates a lease; tenant deposits $1,000 USDC into escrow (tx on Arc explorer).
+1. Landlord creates a lease; tenant deposits $10 USDC (testnet scale 1:100, D-002) into escrow (tx on Arc explorer).
 2. Move-in photos taken in-app; fingerprints committed onchain.
-3. Move-out photos taken; AI report flags carpet stain ($120, damage) and faded paint (normal wear, $0).
-4. Undisputed $880 pays out to tenant immediately (tx).
-5. Tenant accepts; $120 releases to landlord (tx); simulated interest shown.
+3. Move-out photos taken; AI report flags carpet stain ($1.20, damage) and small nail holes (normal wear, $0); landlord reviews and sends the report (D-004).
+4. Undisputed $8.80 pays out to tenant immediately (tx).
+5. Tenant accepts; $1.20 releases to landlord (tx); simulated interest shown.
 
 ## Done
 - Roles assigned (Nov 13, 5 PM): Pablo onchain+backend, Marcus frontend, Luka AI vision+demo.
 - Project chosen: Deposit Keeper (D-001). Explainer: https://claude.ai/artifact/UvpoQrNT1K8KoYQJAAEaxZ
+- Sat 2:30 PM: sync skipped; decisions D-002…D-008 recorded (amounts in cents, 1:100 demo scale, landlord 48 h review, per-shot upload, contract timeouts, stack). docs/API.md frozen.
+- Escrow contract written, 18 forge tests pass; ABI in shared/abi/. Not deployed yet.
 - Vision spike: **GO** against the PLAN.md bar (Sat Nov 14, Luka). claude-sonnet-5-5 at the 0.7 cutoff flagged both damaged pairs in 3/3 runs (p3 @0.90, p4 @0.80–0.85) with no false positives on p1, p2 and p5. Caveats: both are staged wall marks charged as repaint; carpet stain unproven; small test set; p3 before photo reused from an earlier shot. Full note: docs/status/luka.md · evidence: spikes/vision/README.md.
 
 ## Next (max 5, in priority order)
-1. Luka: vision GO presented. Next: wrap the pipeline as `analyze(before, after) -> findings` (location not yet recorded in DECISIONS.md), then prove a carpet stain as a second damage type (not blocking).
-2. Everyone: push your branch, even if WIP. As of Sat Nov 14 night, `feat/vision-spike` is about to be pushed; no contract, server or app code is on the remote yet.
-3. Sat 1 PM sync (all): GO/NO-GO, confirm stack, agree docs/API.md + finding JSON schema, record with /decide.
+1. Luka: vision GO posted here (Sat night, after the 6 PM ask). Next: package `analyze(pairs, price_table, on_progress=None) -> dict` in integrations/vision/ per docs/API.md (D-005, D-008), cents per D-003; then prove the $1.20 carpet stain (D-002), which is still unproven.
+2. Pablo: deploy escrow + DemoRun on Arc testnet → release tx link here. Then FastAPI skeleton tonight.
+3. Marcus: clickable mock of the move-out report screen, then scaffold app/ with the 5 demo screens.
+4. Everyone: read D-002…D-008 in docs/DECISIONS.md and switch mocks to cents + the frozen docs/API.md.
 
 ## Milestones (our deadline: submitted Tue Nov 17, 11:59 PM PT · detail: docs/PLAN.md)
 - Fri night: contract deployed + release tx; app scaffold + report screen; photos shot.
@@ -28,8 +31,8 @@
 
 ## Blockers / open questions (for office hours, Telegram, or mentor)
 - Verify AB 2801 effective dates and the bad-faith deposit penalty against the statute text before putting them in the pitch.
-- As of Sat Nov 14 night the remote has docs only; the vision spike branch is about to be pushed. No contract or app code yet, so the Fri-night milestone slipped and Sat midnight is at risk.
-- For the Sat 1 PM sync (from the vision spike): how to treat a tenant's own rug vs built-in carpet (the model calls area rugs belongings even when told otherwise); where the pipeline code lives (server/ vs integrations/); who owns the API.
+- Fri-night milestone slipped: contract is written and tested but not deployed; no app or server code on the remote yet (Sat Nov 14 night).
+- Open (from the vision spike): how to treat a tenant's own rug vs built-in carpet (the model calls area rugs belongings even when told otherwise). Pipeline location and API settled by D-005/D-008.
 - Open product decisions: where interest goes, who pays the fee, appeal window length, price-table costs in v1.
 - Demo path step 3 uses a carpet stain, but the vision spike has only proven wall marks (repaint). Decide: prove a carpet stain, or switch the demo damage item to a wall mark.
 
