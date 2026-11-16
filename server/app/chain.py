@@ -70,12 +70,14 @@ class Chain:
         if not acct:
             raise chain_error(f"server has no {role} wallet configured")
         with self._lock:
+            sent = False
             try:
                 nonce = max(self.w3.eth.get_transaction_count(acct.address, "pending"),
                             self._next_nonce.get(acct.address, 0))
                 tx = fn.build_transaction({"from": acct.address, "nonce": nonce, "chainId": self.s.chain_id})
                 signed = acct.sign_transaction(tx)
                 tx_hash = self.w3.eth.send_raw_transaction(signed.raw_transaction)
+                sent = True
                 self._next_nonce[acct.address] = nonce + 1
                 receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=60)
             except (ContractCustomError, ContractLogicError) as e:
@@ -83,8 +85,10 @@ class Chain:
             except TimeExhausted:
                 raise chain_error(f"{fn.fn_name}: no receipt after 60 s") from None
             except (Web3Exception, OSError, ValueError) as e:
-                self._next_nonce.pop(acct.address, None)  # resync from the RPC on the next send
-                log.warning("rpc failure in %s: %s: %s", fn.fn_name, type(e).__name__, str(e)[:200])
+                if not sent:
+                    self._next_nonce.pop(acct.address, None)  # tx never left: resync from the RPC next time
+                msg = str(e).replace(self.s.rpc_url, "<rpc>")[:200]
+                log.warning("rpc failure in %s (sent=%s): %s: %s", fn.fn_name, sent, type(e).__name__, msg)
                 raise chain_error(f"{fn.fn_name}: RPC failed ({type(e).__name__})") from None
         h = "0x" + receipt["transactionHash"].hex().removeprefix("0x")
         if receipt["status"] != 1:
