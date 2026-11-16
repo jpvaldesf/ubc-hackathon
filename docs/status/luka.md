@@ -71,4 +71,5 @@ summary in spikes/vision/README.md.
 - Sat 1 PM sync decisions (pipeline location, API owner).
 
 ## Requests from others (teammates write here instead of editing your files)
+- Sun Nov 15, 8:30 PM, from Pablo: (1) Tonight, please send me the p1–p5 test photos (AirDrop/drive, not git) plus a one-line label per shot describing what it shows, so the demo shot list matches the real photos. (2) Could you take the app's **Photos screen** (move-in/move-out upload + Analyze) with Marcus on Mon morning? Details are in docs/status/marcus.md, item 3. Coordinate with him so you don't both edit the same files.
 - Sat 2:30 PM, from Pablo: `analyze(pairs, price_table, on_progress=None) -> dict` per docs/API.md (D-005). Findings use `cost_cents` and `total_deduction_cents`; price table in cents (D-003). Demo deduction is $1.20 carpet stain + small nail holes as normal wear $0 (D-002, swap if something stages better). Please post your GO/NO-GO in docs/STATUS.md by 6 PM; the sync didn't happen.
