@@ -3,10 +3,14 @@
 **Lane:** frontend + product (app/)
 **Today's lane goal (Fri Nov 13):** Clickable mock of the move-out report screen (the screen judges will remember).
 **Full plan:** docs/PLAN.md (your section)
-**Branch:** feat/report-mock
+**Branch:** feat/frontend-deposit-keeper
 
 ## Done (with evidence: tx hash, PR link, screenshot)
--
+- `app/` added: Vite + React + TypeScript (note: D-008 says Next.js; see Blocked). Lease overview and deposit review screens, **sample data only**: `app/src/services/sample/` is simulated, and `app/src/services/live/` throws `integration_blocked` for every call.
+  Evidence: `npm ci`, `npm run typecheck`, `npm test` (74 tests), `npm run build` pass in `app/`.
+- **Live adapter (Nov 15, branch feat/frontend-deposit-keeper):** `app/src/services/live/` maps docs/API.md to the UI. Backend-connected buttons: tenant **Accept deductions** (`POST /accept`) and **Submit dispute** (`POST /appeal`); screens load via `GET /leases/{id}` (5 s polling). NOT connected, fail with `integration_blocked`: Request move-out, edit/save draft, landlord Submit proposal (the API only lets the landlord lower/remove at `/report/send`, and has no move-out request). Tests: 92 pass. Verified against the real FastAPI app with the repo's FakeChain (no wallet keys on my machine), so no live Arc tx yet. Browser-verified (Playwright MCP; gstack browse was killed on launch) against the same FakeChain server: lease load, tenant accept (POST /accept, then settled and still settled after refresh), appeal (POST /appeal, then Awaiting review), duplicate accept (409, friendly message), landlord view with no actions, and an up-front "not available in the app yet" notice for unsupported steps. Not reachable from the UI: a 403 (no button exists for the wrong role). The real Chain waits for the receipt and requires status 1 before a tx is returned and the timeline step is written (server/app/chain.py `_send`), so a timeline hash means a mined, successful tx on Arc; FakeChain gives no such guarantee. Run live: `VITE_ADAPTER=live VITE_API_URL=http://127.0.0.1:8000 npm run dev` with the server started with `DK_CORS_ORIGINS=http://127.0.0.1:5173`; open `/`, enter a server lease id; `?as=landlord_demo` switches the X-User-Id dev identity (not auth). Vercel stays `VITE_ADAPTER=sample`.
+- (Older note) **No real API call was made before this.** The UI's service interface (`app/src/services/types.ts`) predates docs/API.md and does not match it: it assumes proposal versions, `allowedActions`, fund buckets and idempotency keys; the API returns `status`, `payout`, `report.findings`, `timeline`, and uses `X-User-Id`.
+- Sample demo (simulated): https://deposit-keeper-demo.vercel.app (built from the earlier Smart_Renting checkout).
 
 ## Next (max 3)
 1. Fri night → Sat noon: clickable mock of the move-out report: before/after photo pairs, each finding marked "damage $120" or "normal wear $0", total withheld, "$880 sent to you" banner, Accept / Appeal buttons. Plain dollars only, no crypto words.
@@ -14,6 +18,9 @@
 3. Sun–Mon: guided photo capture (shot list: same room, same angle as move-in, with an outline overlay). Better photos make the AI work better, so this helps Luka too.
 
 ## Blocked by / waiting on
+- Decision needed (team sync, unchanged): the app is Vite, D-008 says Next.js. No migration done; needs agreement, then `/decide`.
+- Gaps the UI shows honestly: no proposal versions or idempotency keys in the API (not sent); photos render as placeholders; $0 normal-wear findings are not listed; after an appeal `GET /leases/{id}` returns no appeal reason/items.
+- Next real step: map `DepositService` to docs/API.md (POST /leases/{id}/accept, /appeal, GET /leases/{id} with 2 s polling), then run the server locally and check `GET /health`. Public API URL: not yet hosted (API.md says Mon); a hosted frontend must not call localhost.
 - API shape (Sat sync). Work from mock JSON until then.
 
 ## Requests from others (teammates write here instead of editing your files)

@@ -1,0 +1,1268 @@
+/* ---------- Layout ---------- */
+.page {
+  width: 100%;
+  max-width: calc(var(--content-max) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.main {
+  padding-block: var(--space-6) var(--space-12);
+}
+
+@media (min-width: 768px) {
+  .main {
+    padding-block: var(--space-8) 4rem;
+  }
+}
+
+.main:focus {
+  outline: none;
+}
+
+.stack {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.stack--tight {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.surface {
+  background: var(--color-surface);
+  border: var(--border);
+  border-radius: var(--radius-surface);
+  padding: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .surface {
+    padding: var(--space-6);
+  }
+}
+
+.section-title {
+  font-size: var(--text-section);
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+.small {
+  font-size: var(--text-small);
+}
+
+.amount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- Sticky top bar ---------- */
+/* Notice row plus header, always one compact block. Nothing inside it expands. */
+.site-top {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+/* ---------- Demo notice (sample mode only) ---------- */
+/* Visible but deliberately quiet: neutral, slim, and its controls stay closed. */
+.demo-bar {
+  background: var(--color-demo-bg);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-demo-text);
+}
+
+.demo-bar__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  min-height: 2.5rem;
+}
+
+.demo-bar__label {
+  padding: 0 var(--space-2);
+  border: 1px dashed currentColor;
+  border-radius: var(--radius-control);
+  font-size: var(--text-small);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.demo-bar__toggle {
+  margin-left: auto;
+  min-height: 2.5rem;
+  padding: 0 0 0 var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--color-demo-text);
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.demo-bar__group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.demo-bar__legend {
+  padding: 0;
+  font-weight: 600;
+}
+
+.demo-bar__radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+}
+
+.demo-bar__select {
+  min-height: var(--target-min);
+  max-width: 100%;
+  padding: 0 var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+}
+
+.demo-bar__list {
+  padding-left: var(--space-6);
+  list-style: disc;
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-small);
+}
+
+/* ---------- Header ---------- */
+.site-header {
+  background: var(--color-surface);
+  border-bottom: var(--border);
+}
+
+.site-header__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--target-min);
+}
+
+@media (min-width: 640px) {
+  .site-header__row {
+    gap: var(--space-6);
+  }
+}
+
+.site-header__brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  font-size: var(--text-large);
+  font-weight: 700;
+  color: var(--color-teal);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* The property shows in the header on wider screens. Narrow screens keep the header to one row
+   and show the property in the page instead (see .review-property). */
+.site-header__context {
+  display: none;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-muted);
+}
+
+@media (min-width: 640px) {
+  .site-header__context {
+    display: block;
+  }
+}
+
+/* ---------- Buttons ---------- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  padding: var(--space-2) var(--space-6);
+  border: 2px solid var(--color-teal);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-teal);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--color-teal-tint);
+}
+
+.button--primary {
+  background: var(--color-teal);
+  color: #ffffff;
+}
+
+.button--primary:hover:not(:disabled) {
+  background: var(--color-teal-dark);
+  border-color: var(--color-teal-dark);
+}
+
+.button--hero {
+  min-height: 3rem;
+  padding-inline: var(--space-8);
+  font-size: var(--text-large);
+}
+
+.button--small {
+  min-height: 2.25rem;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-small);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  border-color: var(--color-border);
+  background: var(--color-paper);
+  color: var(--color-muted);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+@media (max-width: 479px) {
+  .button-row > .button {
+    flex: 1 1 100%;
+  }
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--target-min);
+  font-weight: 600;
+}
+
+/* ---------- Page title and people ---------- */
+.page-title {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.page-title__heading {
+  font-size: var(--text-display);
+}
+
+
+/* ---------- Callouts and tags ---------- */
+.callout {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+}
+
+.callout--problem {
+  border-color: var(--color-problem);
+  background: var(--color-problem-tint);
+  color: #70241a;
+}
+
+.callout--caution {
+  border-color: #cfae63;
+  background: var(--color-caution-tint);
+  color: var(--color-caution);
+}
+
+.callout__title {
+  font-weight: 700;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-control);
+  font-size: var(--text-small);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tag--problem {
+  color: var(--color-problem);
+}
+
+.tag--muted {
+  color: var(--color-muted);
+}
+
+/* ---------- Review ---------- */
+/* The review is one centered column: heading, financial summary, then the evidence. */
+.review {
+  display: grid;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.review > * {
+  min-width: 0;
+}
+
+.finding {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.finding__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.finding__title {
+  font-size: var(--text-section);
+}
+
+.finding__amount {
+  font-size: var(--text-section);
+  font-weight: 700;
+}
+
+.finding--removed .finding__title,
+.finding--removed .finding__amount {
+  color: var(--color-muted);
+  text-decoration: line-through;
+}
+
+/* Evidence stays with its finding as a compact, labeled before/after comparison. */
+.compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  max-width: 34rem;
+}
+
+.compare__region {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+}
+
+.compare__label {
+  padding: var(--space-1) var(--space-3);
+  border-bottom: 1px dashed var(--color-border);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.compare__frame {
+  display: grid;
+  place-items: center;
+  min-height: 4.25rem;
+  padding: var(--space-2);
+  font-size: var(--text-small);
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.finding__notes {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.finding__note {
+  display: grid;
+  gap: 0;
+}
+
+.finding__note dt {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+.finding__note dd {
+  margin: 0;
+}
+
+@media (min-width: 640px) {
+  .finding__note {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
+  .finding__note dt {
+    padding-top: 0.15rem;
+  }
+}
+
+/* ---------- Forms ---------- */
+.field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.field__label {
+  font-weight: 600;
+}
+
+.field__hint {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+.field__control {
+  width: 100%;
+  min-height: var(--target-min);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+}
+
+.field__control--short {
+  max-width: 12rem;
+}
+
+.field__control[aria-invalid='true'] {
+  border-color: var(--color-problem);
+  border-width: 2px;
+}
+
+.field__error {
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-problem);
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-height: var(--target-min);
+  padding-block: var(--space-2);
+}
+
+.choice__input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.2rem;
+  flex: none;
+  accent-color: var(--color-teal);
+}
+
+.fieldset {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.fieldset__legend {
+  padding: 0;
+  font-weight: 700;
+  font-size: var(--text-large);
+}
+
+.form-actions {
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* ---------- Dialog ---------- */
+.dialog {
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: var(--space-6);
+  border: 0;
+  border-radius: var(--radius-surface);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 0 0 1px var(--color-border-strong);
+}
+
+.dialog::backdrop {
+  background: rgb(23 33 43 / 0.55);
+}
+
+.dialog__content {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.dialog__title {
+  font-size: var(--text-title);
+}
+
+.dialog__facts {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-paper);
+  border-radius: var(--radius-control);
+}
+
+.dialog__fact {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.lead {
+  font-size: var(--text-large);
+  max-width: 60ch;
+  color: var(--color-muted);
+}
+
+/* ---------- Lease overview ---------- */
+.overview {
+  display: grid;
+  gap: var(--space-6);
+  /* Children respond to this container's width, not the window's, so they stack exactly when cramped. */
+  container-type: inline-size;
+}
+
+.overview > * {
+  min-width: 0;
+}
+
+.overview__title {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.overview__property {
+  font-size: var(--text-title);
+}
+
+.overview__people {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+@container (min-width: 36rem) {
+  .overview__title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-6);
+  }
+}
+
+/* The one elevated surface on the page. Height follows its content. */
+.summary {
+  display: grid;
+  align-items: start;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-panel);
+}
+
+.summary__main {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  min-width: 0;
+}
+
+.summary__title {
+  display: grid;
+  gap: var(--space-1);
+  font-weight: 400;
+}
+
+/* Says what the amount is, so the number is never ambiguous. */
+.summary__label {
+  font-size: var(--text-body);
+  color: var(--color-muted);
+}
+
+.summary__figure {
+  font-size: clamp(2.25rem, 10.5vw, var(--text-figure));
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary__figure--outcome {
+  color: var(--color-teal);
+}
+
+.summary__detail {
+  max-width: 46ch;
+}
+
+.summary__waiting {
+  max-width: 46ch;
+  color: var(--color-muted);
+}
+
+.summary__aside {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-1) var(--space-4) var(--space-3);
+  background: var(--color-money);
+  border-radius: var(--radius-surface);
+}
+
+.facts {
+  display: grid;
+  margin: 0;
+}
+
+.fact {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fact:last-child {
+  border-bottom: 0;
+}
+
+.fact__label {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: var(--color-muted);
+}
+
+.fact__note {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+.fact__note--processing {
+  font-weight: 600;
+  color: var(--color-caution);
+}
+
+.fact__value {
+  margin: 0;
+  font-size: var(--text-large);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.summary__footnote {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+@container (min-width: 44rem) {
+  .summary {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: var(--space-10);
+    padding: var(--space-8);
+  }
+
+  /* No breakdown: the panel still fills the container. Amount on the left, sentence and action beside it. */
+  .summary--lean {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--space-6) var(--space-8);
+  }
+
+  .summary--lean .summary__main {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--space-10);
+    align-items: start;
+  }
+
+  .summary--lean .summary__lead {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+  }
+
+  .summary--lean .summary__detail,
+  .summary--lean .summary__waiting,
+  .summary--lean .summary__main > .button-row {
+    grid-column: 2;
+  }
+}
+
+/* The lifecycle as a connected timeline: filled = done, ringed = in progress, hollow = upcoming. */
+.timeline__list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+}
+
+.timeline__step {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 2px;
+  text-align: center;
+  line-height: 1.25;
+}
+
+/* The line runs from the previous node's centre to this node's centre, behind both nodes. */
+.timeline__step::before {
+  content: '';
+  position: absolute;
+  top: calc(0.625rem - 1px);
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--color-border);
+}
+
+.timeline__step:first-child::before {
+  display: none;
+}
+
+.timeline__step--done::before,
+.timeline__step--current::before {
+  background: var(--color-teal);
+}
+
+.timeline__node {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: #ffffff;
+}
+
+.timeline__step--done .timeline__node {
+  background: var(--color-teal);
+  border-color: var(--color-teal);
+}
+
+.timeline__step--current .timeline__node {
+  border-color: var(--color-teal);
+  background: var(--color-money);
+}
+
+.timeline__step--current .timeline__node::after {
+  content: '';
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--color-teal);
+}
+
+.timeline__label {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+.timeline__step--current .timeline__label {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.timeline__note {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+.timeline__summary {
+  display: none;
+  margin-top: var(--space-2);
+  font-size: var(--text-small);
+  color: var(--color-muted);
+  text-align: center;
+}
+
+/* Five labels need about 380px. Below that, write the current step out once instead. */
+@media (max-width: 379px) {
+  .timeline__label,
+  .timeline__note {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .timeline__summary {
+    display: block;
+  }
+}
+
+/* Evidence and activity: open rows with rules, not cards. */
+.folds {
+  display: grid;
+  gap: 0 var(--space-12);
+}
+
+.folds > * {
+  min-width: 0;
+}
+
+@container (min-width: 46rem) {
+  .folds {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .folds .fold:last-child {
+    border-bottom: 0;
+  }
+}
+
+.fold {
+  border-top: 1px solid var(--color-border);
+}
+
+.fold:last-child {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fold__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 3.25rem;
+  padding-block: var(--space-2);
+  cursor: pointer;
+  list-style: none;
+}
+
+.fold__summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold__title {
+  flex: none;
+  font-size: var(--text-large);
+  font-weight: 700;
+}
+
+.fold__meta {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+.fold__chevron {
+  flex: none;
+  margin-left: auto;
+  color: var(--color-teal);
+  transition: transform 120ms ease;
+}
+
+.fold[open] .fold__chevron {
+  transform: rotate(180deg);
+}
+
+.fold__body {
+  display: grid;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+}
+
+.fold__rows {
+  display: grid;
+}
+
+.fold__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-2);
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.fold__row:first-child {
+  border-top: 0;
+}
+
+.fold__row--stacked {
+  display: grid;
+  gap: 2px;
+}
+
+.fold__row-title {
+  font-weight: 600;
+}
+
+.fold__row-note {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+/* Disclosures outside the overview's two-column group carry their own bottom rule. */
+.fold.fold--standalone {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fold__heading {
+  margin-top: var(--space-2);
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.details {
+  display: grid;
+  margin: 0;
+}
+
+.details__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-2);
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.details__row:first-child {
+  border-top: 0;
+}
+
+.details dt {
+  color: var(--color-muted);
+}
+
+.details dd {
+  margin: 0;
+  text-align: right;
+}
+
+/* Narrow screens carry the property here, because the header stays a single row. */
+.review-property {
+  color: var(--color-muted);
+}
+
+@media (min-width: 640px) {
+  .review-property {
+    display: none;
+  }
+}
+
+/* Heading and lifecycle sit together, so the lease's stage is read with its name. */
+.overview__head {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* The teaser reads as the action word of the disclosure ("View timeline"). */
+.fold__meta--action {
+  font-weight: 600;
+  color: var(--color-teal);
+}
+
+/* ---------- Compact financial summary (review) ---------- */
+.fin {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--color-money);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-surface);
+}
+
+.fin__items {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.fin__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label value'
+    'note value';
+  align-items: baseline;
+  column-gap: var(--space-4);
+  padding-block: var(--space-2);
+}
+
+.fin__item + .fin__item {
+  border-top: 1px solid var(--color-border);
+}
+
+.fin__label {
+  grid-area: label;
+  color: var(--color-muted);
+}
+
+.fin__value {
+  grid-area: value;
+  margin: 0;
+  font-size: var(--text-large);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fin__item--lead .fin__label {
+  color: var(--color-text);
+}
+
+.fin__item--lead .fin__value {
+  font-size: var(--text-title);
+  font-weight: 700;
+}
+
+.fin__value--outcome {
+  color: var(--color-teal);
+}
+
+.fin__note {
+  grid-area: note;
+  margin: 0;
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+.fin__note--processing {
+  font-weight: 600;
+  color: var(--color-caution);
+}
+
+.fin__footnote {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+/* Wider screens lay the items out side by side, lead first. */
+@media (min-width: 720px) {
+  .fin {
+    padding: var(--space-4) var(--space-6);
+  }
+
+  .fin__items {
+    grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+    gap: var(--space-2) var(--space-6);
+  }
+
+  .fin__item {
+    grid-template-columns: none;
+    grid-template-areas:
+      'label'
+      'value'
+      'note';
+    align-content: start;
+    padding-block: 0;
+  }
+
+  .fin__item + .fin__item {
+    border-top: 0;
+  }
+}
+
+/* Photos sit beside the notes on desktop, so each finding reads as one compact unit. */
+.finding__evidence {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 860px) {
+  .finding__evidence {
+    grid-template-columns: minmax(0, 26rem) minmax(0, 1fr);
+    gap: var(--space-6);
+    align-items: start;
+  }
+}
+
+/* The amount, and when the original deposit is its only companion, a quiet line right beneath it. */
+.summary__lead {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.summary__quiet {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+/* ---------- Account button and menu ---------- */
+.account {
+  position: relative;
+  min-width: 0;
+}
+
+.account__button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 100%;
+  min-height: var(--target-min);
+  padding: 0 var(--space-2) 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.account__button:hover,
+.account__button[aria-expanded='true'] {
+  background: var(--color-teal-tint);
+}
+
+.account__button:focus-visible {
+  outline-offset: 2px;
+}
+
+.account__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--color-teal);
+  color: #ffffff;
+  font-size: var(--text-small);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.account__avatar--large {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: var(--text-body);
+}
+
+.account__text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.account__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.account__role {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+.account__chevron {
+  flex: none;
+  color: var(--color-muted);
+  transition: transform 120ms ease;
+}
+
+.account__button[aria-expanded='true'] .account__chevron {
+  transform: rotate(180deg);
+}
+
+.account__panel {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: 40;
+  display: grid;
+  gap: var(--space-3);
+  width: min(18rem, calc(100vw - 2rem));
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-surface);
+  box-shadow: 0 4px 16px rgb(23 33 43 / 0.12);
+}
+
+.account__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.account__identity-text {
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.account__identity-name {
+  font-weight: 700;
+}
+
+.account__identity-role,
+.account__identity-property {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+.account__actions {
+  display: grid;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.account__item {
+  display: flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-control);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 120ms ease;
+}
+
+.account__item:hover {
+  background: var(--color-teal-tint);
+}
+
+.account__item[aria-current='page'] {
+  color: var(--color-text);
+}
