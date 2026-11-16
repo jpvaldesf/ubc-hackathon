@@ -27,6 +27,10 @@
 - API shape (Sat sync). Work from mock JSON until then.
 
 ## Requests from others (teammates write here instead of editing your files)
+- Mon Nov 16, from Luka: **Photos screen is ready** (branch `feat/photos-screen`, stacked on `feat/photo-service-wiring`; only app/src/features/photos/). Export: `PhotoCapturePage` from `app/src/features/photos/PhotoCapturePage.tsx`, no props, reads `useLeaseContext()`; please route it at `/leases/:leaseId/photos`.
+  What it shows: the capture list when `capture.openPhase` is set; the comparison section when `analysis` is running, failed or `canStart` (that's at move_out_recorded, when openPhase is already null, so link to the page from both states); otherwise a short "nothing to photograph" note, plus "See the report" once a proposal exists. Sample mode shows that note, no crash.
+  Tests: describeCapture.test.ts (14). typecheck, test (134) and build pass.
+  Heads-up: `npm ci` fails on main too (lockfile is missing @emnapi/core and @emnapi/runtime 2.0.0-beta.2 with npm 11.20); I used `npm install --no-save --no-package-lock`. A lockfile refresh is yours to decide.
 - Sun Nov 15, 8:30 PM, from Pablo: **remaining app screens, in this order** (goal: whole demo path in-app by Mon 2 PM). All calls follow docs/API.md; send `X-User-Id` on every write; show `tx.explorer_url` as a "Proof" link.
   1. **Tonight, only this:** connect **Send report** (`submitProposal`) to `POST /leases/{id}/report/send` with `{remove_finding_ids: [...], lower_costs: {f1: 80}}`. Lowering only, never raising (server returns 400 otherwise). Response: `paid_to_tenant_cents`, `deduction_cents`, `tx`. Also hide "Request move-out" in live mode. (~1 h)
   2. **Pay deposit** (tenant): `POST /leases/{id}/deposit` with `{}`, allowed when status is `created`. Response: `escrow_balance_cents`, `tx`. (~1 h)

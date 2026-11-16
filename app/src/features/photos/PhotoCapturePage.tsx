@@ -1,0 +1,324 @@
+import { useId, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { useMutation } from '../../services/hooks';
+import { useServices } from '../../services/ServiceContext';
+import type { CaptureState, PhotoPhase, ProofLink } from '../../services/types';
+import { useLeaseContext } from '../lease/LeaseLayout';
+import {
+  ACCEPT_ATTR,
+  analysisCopy,
+  capturePhaseCopy,
+  doneHint,
+  idleCopy,
+  pageSections,
+  progressText,
+  shotRows,
+  uploadCount,
+  validateFile,
+  type AnalysisSection as AnalysisSectionKind,
+  type ShotRow,
+} from './describeCapture';
+
+function BackIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+interface Recorded {
+  phase: PhotoPhase;
+  proof?: ProofLink;
+}
+
+/**
+ * Move-in and move-out photos, one shot at a time, then (landlord) the AI comparison.
+ * Rendered at /leases/:leaseId/photos; everything comes from the lease context.
+ */
+export function PhotoCapturePage() {
+  const { lease, proposal } = useLeaseContext();
+  const sections = pageSections(lease, proposal);
+  // Kept at page level: committing closes the phase, which removes the capture section.
+  const [recorded, setRecorded] = useState<Recorded | null>(null);
+
+  const phase = sections.capturePhase;
+  const idle = idleCopy(lease, sections);
+  const { title, lead } = phase
+    ? capturePhaseCopy(phase)
+    : sections.analysis
+      ? { title: 'Photo comparison', lead: 'Move-in and move-out photos are recorded.' }
+      : { title: idle.title, lead: idle.body };
+
+  return (
+    <div className="review stack">
+      <Link className="back-link" to={`/leases/${lease.id}`}>
+        <BackIcon />
+        Back to overview
+      </Link>
+      <div className="page-title">
+        <h1 className="page-title__heading" tabIndex={-1}>
+          {title}
+        </h1>
+        <p className="review-property">{lease.property.label}</p>
+        <p className="lead">{lead}</p>
+      </div>
+
+      {recorded && (
+        <section className="proof" aria-label="Photos recorded">
+          <h2 className="proof__title">{recorded.phase === 'in' ? 'Move-in photos recorded' : 'Move-out photos recorded'}</h2>
+          {recorded.proof && (
+            <ul className="proof__list">
+              <li className="proof__item">
+                <span>{recorded.proof.label}</span>
+                <a
+                  href={recorded.proof.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`View proof: ${recorded.proof.label} (opens the block explorer)`}
+                >
+                  View proof
+                </a>
+              </li>
+            </ul>
+          )}
+        </section>
+      )}
+
+      {phase && lease.capture && (
+        <CaptureSection key={phase} capture={lease.capture} phase={phase} onRecorded={(proof) => setRecorded({ phase, proof })} />
+      )}
+
+      {sections.analysis && <AnalysisSection section={sections.analysis} />}
+
+      {!phase && !sections.analysis && sections.reviewReady && (
+        <div className="button-row">
+          <Link className="button button--primary" to={`/leases/${lease.id}/review`}>
+            See the report
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CaptureSection({ capture, phase, onRecorded }: { capture: CaptureState; phase: PhotoPhase; onRecorded: (proof?: ProofLink) => void }) {
+  const { service } = useServices().bundle;
+  const { lease, reloadNow } = useLeaseContext();
+  const upload = useMutation();
+  const commit = useMutation();
+  const [activeShot, setActiveShot] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<{ shotId: string; message: string } | null>(null);
+  const [confirming, setConfirming] = useState(false);
+
+  const rows = shotRows(capture, phase);
+  const { uploaded, total } = uploadCount(capture, phase);
+  const hint = doneHint(uploaded, total);
+  const busy = upload.pending || commit.pending;
+  const phaseName = phase === 'in' ? 'move-in' : 'move-out';
+
+  const onFile = async (shotId: string, file: File) => {
+    const invalid = validateFile(file);
+    if (invalid) {
+      setFileError({ shotId, message: invalid });
+      return;
+    }
+    setFileError(null);
+    setActiveShot(shotId);
+    await upload.run(async () => {
+      await service.uploadPhoto(lease.id, phase, shotId, file);
+      await reloadNow(); // the new photo and count come back from the server
+    });
+    setActiveShot(null);
+  };
+
+  const closeDialog = () => {
+    setConfirming(false);
+    if (commit.error) void reloadNow(); // e.g. already recorded elsewhere: show the current state
+    commit.clearError();
+  };
+
+  return (
+    <section className="stack" aria-label={`${phaseName} photos`}>
+      <p role="status" className="section-title">
+        {progressText(uploaded, total)}
+      </p>
+
+      {upload.error && (
+        <div role="alert" className="callout callout--problem">
+          <p>{upload.error.message}</p>
+        </div>
+      )}
+
+      <ul className="stack">
+        {rows.map((row) => (
+          <li key={row.shot.id}>
+            <ShotCard
+              row={row}
+              phase={phase}
+              disabled={busy}
+              uploading={activeShot === row.shot.id}
+              fileError={fileError?.shotId === row.shot.id ? fileError.message : undefined}
+              onFile={(file) => void onFile(row.shot.id, file)}
+            />
+          </li>
+        ))}
+      </ul>
+
+      <div className="surface stack--tight">
+        {hint && <p className="muted">{hint}</p>}
+        <div className="button-row">
+          <button type="button" className="button button--primary" disabled={hint !== null || busy || total === 0} onClick={() => setConfirming(true)}>
+            Done
+          </button>
+        </div>
+      </div>
+
+      <ConfirmDialog
+        open={confirming}
+        title={`Record ${phaseName} photos?`}
+        confirmLabel="Record photos"
+        busyLabel="Recording…"
+        busy={commit.pending}
+        error={commit.error && <p>{commit.error.message}</p>}
+        onCancel={closeDialog}
+        onConfirm={async () => {
+          let proof: ProofLink | undefined;
+          const ok = await commit.run(async () => {
+            proof = (await service.commitPhotos(lease.id, phase)).proof;
+            await reloadNow();
+          });
+          if (ok) {
+            setConfirming(false);
+            onRecorded(proof);
+          }
+        }}
+      >
+        <p>
+          This saves all {total} photos as the {phaseName} record. You can't change them afterward.
+        </p>
+      </ConfirmDialog>
+    </section>
+  );
+}
+
+function ShotCard({
+  row,
+  phase,
+  disabled,
+  uploading,
+  fileError,
+  onFile,
+}: {
+  row: ShotRow;
+  phase: PhotoPhase;
+  disabled: boolean;
+  uploading: boolean;
+  fileError?: string;
+  onFile: (file: File) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const titleId = useId();
+  const errorId = useId();
+  const { shot, photo } = row;
+  const phaseLabel = phase === 'in' ? 'Move-in' : 'Move-out';
+
+  return (
+    <article className="surface stack--tight" aria-labelledby={titleId}>
+      <h2 id={titleId} className="section-title">
+        {shot.room}
+      </h2>
+      <p>{shot.label}</p>
+      <div className="compare__frame">
+        {photo ? (
+          <img className="compare__img" src={photo.src} alt={`${phaseLabel} photo: ${shot.room}, ${shot.label}`} />
+        ) : (
+          <span>No photo yet</span>
+        )}
+      </div>
+      <input
+        ref={inputRef}
+        className="sr-only"
+        type="file"
+        accept={ACCEPT_ATTR}
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = ''; // picking the same file again still fires a change
+          if (file) onFile(file);
+        }}
+      />
+      {fileError && (
+        <p id={errorId} className="field__error" role="alert">
+          {fileError}
+        </p>
+      )}
+      <div className="button-row">
+        <button
+          type="button"
+          className="button"
+          disabled={disabled}
+          aria-busy={uploading}
+          aria-describedby={fileError ? errorId : undefined}
+          onClick={() => inputRef.current?.click()}
+        >
+          {uploading ? 'Uploading…' : photo ? 'Retake' : 'Add photo'}
+        </button>
+        {uploading && (
+          <span role="status" className="sr-only">
+            Uploading the {shot.room} photo
+          </span>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function AnalysisSection({ section }: { section: Exclude<AnalysisSectionKind, null> }) {
+  const { service } = useServices().bundle;
+  const { lease, reloadNow } = useLeaseContext();
+  const { run, pending, error } = useMutation();
+  const titleId = useId();
+  const analysis = lease.analysis!;
+  const copy = analysisCopy(analysis, section, lease.viewer.role);
+
+  return (
+    <section className="surface stack--tight" aria-labelledby={titleId}>
+      <h2 id={titleId} className="section-title">
+        {copy.title}
+      </h2>
+      {section === 'failed' ? (
+        <div role="alert" className="callout callout--problem">
+          <p>{copy.body}</p>
+        </div>
+      ) : (
+        <p role={section === 'running' ? 'status' : undefined}>{copy.body}</p>
+      )}
+      {error && (
+        <div role="alert" className="callout callout--problem">
+          <p>{error.message}</p>
+        </div>
+      )}
+      {copy.button && (
+        <div className="button-row">
+          <button
+            type="button"
+            className="button button--primary"
+            disabled={pending}
+            aria-busy={pending}
+            onClick={() =>
+              void run(async () => {
+                await service.startReport(lease.id);
+                await reloadNow(); // the lease moves to "comparing"; polling takes over
+              })
+            }
+          >
+            {pending ? 'Starting…' : copy.button}
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
