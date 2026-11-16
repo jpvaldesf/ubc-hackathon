@@ -178,6 +178,7 @@ export function createSampleService(options: SampleOptions = {}): { service: Dep
     uploadPhoto: async () => photosUnavailable(),
     commitPhotos: async () => photosUnavailable(),
     startReport: async () => photosUnavailable(),
+    payDeposit: async () => photosUnavailable(),
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);

@@ -21,6 +21,7 @@ export type Stage = 'setup' | 'move_in' | 'active' | 'move_out' | 'settlement';
 export type Phase = 'active' | 'move_out' | 'proposal_submitted' | 'accepted' | 'disputed' | 'settled';
 
 export type AllowedAction =
+  | 'pay_deposit'
   | 'request_move_out'
   | 'edit_proposal'
   | 'submit_proposal'
@@ -155,6 +156,11 @@ export interface CommitResult {
   proof?: ProofLink;
 }
 
+/** `proof` is set only when the transaction is verified as a real Arc testnet one. */
+export interface DepositResult {
+  proof?: ProofLink;
+}
+
 export interface ProofLink {
   id: string;
   label: string;
@@ -264,6 +270,8 @@ export interface DepositService {
   uploadPhoto(leaseId: string, phase: PhotoPhase, shotId: string, file: Blob): Promise<UploadResult>;
   /** Live mode only. The "Done" call for a phase: locks the photos and records their fingerprint onchain. */
   commitPhotos(leaseId: string, phase: PhotoPhase): Promise<CommitResult>;
+  /** Live mode only (sample mode throws `integration_blocked`). Tenant pays the deposit into escrow (POST /deposit). */
+  payDeposit(leaseId: string): Promise<DepositResult>;
   /** Live mode only. Landlord starts the AI comparison (returns once it is queued); poll via getLease. */
   startReport(leaseId: string): Promise<void>;
   /** Optional change notification (sample adapter now; live adapter may poll later). */

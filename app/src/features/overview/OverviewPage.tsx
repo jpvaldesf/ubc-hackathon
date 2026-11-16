@@ -1,11 +1,13 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProofLinks } from '../../components/ProofLinks';
 import { Disclosure } from '../../components/Disclosure';
 import { LifecycleStatus } from '../../components/LifecycleTimeline';
 import { formatDateTime, roleLabel } from '../../lib/format';
 import { counterpartyOf } from '../../lib/participants';
-import type { Lease } from '../../services/types';
+import { useMutation } from '../../services/hooks';
+import { useServices } from '../../services/ServiceContext';
+import type { Lease, ProofLink } from '../../services/types';
 import { useLeaseContext } from '../lease/LeaseLayout';
 import { DepositSummaryPanel } from './DepositSummaryPanel';
 import { describeLease, type ActionButton } from './describeLease';
@@ -64,12 +66,53 @@ export function OverviewPage() {
 }
 
 function ActionControl({ action }: { action: ActionButton }) {
+  if (action.kind === 'pay_deposit') return <PayDepositControl label={action.label} />;
   const className = `button button--hero${action.variant === 'primary' ? ' button--primary' : ''}`;
   return (
     <div className="button-row">
       <Link to={action.to} className={className}>
         {action.label}
       </Link>
+    </div>
+  );
+}
+
+function PayDepositControl({ label }: { label: string }) {
+  const { service } = useServices().bundle;
+  const { lease, reloadNow } = useLeaseContext();
+  const { run, pending, error } = useMutation();
+  const [proof, setProof] = useState<ProofLink | undefined>();
+  return (
+    <div className="stack--tight">
+      {error && (
+        <div role="alert" className="callout callout--problem">
+          <p>{error.message}</p>
+        </div>
+      )}
+      {proof && (
+        <p role="status">
+          Deposit paid.{' '}
+          <a href={proof.url} target="_blank" rel="noopener noreferrer" aria-label="View proof: Deposit paid (opens the block explorer)">
+            View proof
+          </a>
+        </p>
+      )}
+      <div className="button-row">
+        <button
+          type="button"
+          className="button button--hero button--primary"
+          disabled={pending}
+          aria-busy={pending}
+          onClick={() =>
+            void run(async () => {
+              setProof((await service.payDeposit(lease.id)).proof);
+              await reloadNow();
+            })
+          }
+        >
+          {pending ? 'Paying…' : label}
+        </button>
+      </div>
     </div>
   );
 }
