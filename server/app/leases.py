@@ -8,7 +8,7 @@ import secrets
 import threading
 from datetime import date, datetime, timedelta, timezone
 
-from .config import (CENTS_TO_UNITS, DEFAULT_SHOT_LIST, DEMO_SCALE, LANDLORD_ID, LANDLORD_NAME,
+from .config import (CENTS_TO_UNITS, MAX_DEPOSIT_CENTS, DEFAULT_SHOT_LIST, DEMO_SCALE, LANDLORD_ID, LANDLORD_NAME,
                      MAX_ANALYZE_ATTEMPTS, MAX_PHOTO_BYTES, REVIEW_HOURS, SIMULATED_APY, TENANT_ID, Settings)
 from .errors import bad_request, not_allowed, not_found, vision_error, wrong_state
 from .store import Store
@@ -81,6 +81,8 @@ class Service:
         deposit = body.get("deposit_cents")
         if not isinstance(deposit, int) or isinstance(deposit, bool) or deposit <= 0:
             raise bad_request("deposit_cents must be a positive integer")
+        if deposit > MAX_DEPOSIT_CENTS:
+            raise bad_request(f"deposit_cents is capped at {MAX_DEPOSIT_CENTS} on testnet")
         if body.get("tenant_id", TENANT_ID) != TENANT_ID:
             raise bad_request("tenant_id must be tenant_demo in v1")
         for f in ("address", "tenant_name"):
@@ -243,12 +245,16 @@ class Service:
         with self.store.locked(lease_id):
             lease = self.store.get(lease_id)
             lease["progress"] = None
+            if not error:
+                try:
+                    lease["report"] = self._draft(lease, result)
+                    lease["status"] = "report_draft"
+                except Exception:
+                    log.exception("bad analyze() output for %s", lease_id)
+                    error = "The photo comparison returned an unreadable report. Please try again."
             if error:
                 lease["status"] = "move_out_recorded"
                 lease["report"] = {"error": error}
-            else:
-                lease["report"] = self._draft(lease, result)
-                lease["status"] = "report_draft"
             self.store.put(lease)
 
     def _draft(self, lease: dict, result: dict) -> dict:
@@ -281,6 +287,8 @@ class Service:
         lower = body.get("lower_costs") or {}
         if not isinstance(remove, list) or not isinstance(lower, dict):
             raise bad_request("remove_finding_ids must be a list and lower_costs an object")
+        if not all(isinstance(i, str) for i in remove):
+            raise bad_request("remove_finding_ids must be a list of finding ids")
         with self.store.locked(lease_id):
             lease = self.store.get(lease_id)
             self._require(lease, "report_draft")
@@ -360,7 +368,7 @@ class Service:
         self._as(user, TENANT_ID, "appeal")
         ids = body.get("finding_ids") or []
         reason = body.get("reason")
-        if not isinstance(ids, list) or (reason is not None and not isinstance(reason, str)):
+        if not isinstance(ids, list) or not all(isinstance(i, str) for i in ids) or (reason is not None and not isinstance(reason, str)):
             raise bad_request("finding_ids must be a list and reason a string")
         with self.store.locked(lease_id):
             lease = self.store.get(lease_id)

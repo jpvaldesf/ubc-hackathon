@@ -282,3 +282,23 @@ def test_autosend_after_48h(env, monkeypatch):
     assert svc.autosend_due() == [lid]
     g = c.get(f"/leases/{lid}").json()
     assert g["status"] == "proposed" and g["report"]["sent_by"] == "auto"
+
+
+def test_audit_fixes(env):
+    c, _, svc = env
+    r = c.post("/leases", headers=L, json={"address": "x", "tenant_name": "y", "deposit_cents": 10_001})
+    assert r.status_code == 400 and "capped" in r.json()["error"]["message"]
+    r = c.put("/leases/l_x/photos/in/s1", headers={**T, "Content-Length": str(30 * 1024 * 1024)}, content=b"x")
+    assert r.status_code == 413
+    lid = new_lease(c)
+    svc._analyze_fn = lambda *a, **k: {"findings": [{"id": "f1", "category": "damage", "cost_cents": "lots"}]}
+    c.post(f"/leases/{lid}/deposit", headers=T)
+    photos(c, lid, "in")
+    photos(c, lid, "out")
+    svc.start_report("landlord_demo", lid, background=False)
+    g = c.get(f"/leases/{lid}").json()
+    assert g["status"] == "move_out_recorded" and "unreadable" in g["report"]["error"]
+    svc._analyze_fn = fake_analyze
+    svc.start_report("landlord_demo", lid, background=False)
+    r = c.post(f"/leases/{lid}/report/send", headers=L, json={"remove_finding_ids": [{"id": "f1"}]})
+    assert r.status_code == 400

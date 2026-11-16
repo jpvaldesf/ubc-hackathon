@@ -22,6 +22,7 @@ DEMO_SCALE = 100  # D-002: testnet amounts are 1:100 of real ones
 CENTS_TO_UNITS = 10**4  # USDC has 6 decimals; 1 cent = 10_000 base units (D-003)
 REVIEW_HOURS = 48  # D-004
 MAX_ANALYZE_ATTEMPTS = 3
+MAX_DEPOSIT_CENTS = 10_000  # $100 testnet cap: one request can't lock the tenant wallet's whole balance
 MAX_PHOTO_BYTES = 25 * 1024 * 1024  # matches integrations/vision MAX_IMAGE_BYTES
 SIMULATED_APY = 0.04  # D-001: interest is simulated, labeled so in the UI
 

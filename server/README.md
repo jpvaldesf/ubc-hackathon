@@ -37,5 +37,9 @@ Optional env: `DK_CORS_ORIGINS` (comma-separated, default `http://localhost:3000
 - The landlord can only remove findings or lower costs (D-004).
 - At most 3 AI analysis attempts per lease. Vision errors return only the error message, never a traceback.
 - Uploads: JPEG/PNG only (checked by magic bytes), 25 MB max, at most 12 shots per lease.
+- Deposits are capped at $100 (10,000 cents) on testnet; request bodies over ~26 MB are rejected before parsing.
+- Either party can upload and commit photos for either phase (the contract allows both; API.md says "Tenant or landlord").
+- **Run one worker only** (no `--workers N`): nonces and per-lease locks are in-process.
+- **Before hosting (Mon):** add a shared demo token header so strangers can't spend testnet gas or act as a persona.
 - Known v1 limits: no real auth; uploaded photos are served without auth under unguessable lease ids;
   one server instance (txs are serialized by a process lock).

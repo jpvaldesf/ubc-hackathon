@@ -52,6 +52,16 @@ def create_app(settings: Settings | None = None, chain=None, analyze_fn=None, pr
                        allow_headers=["Content-Type", "X-User-Id"])
     app.mount("/files", StaticFiles(directory=store.files_dir), name="files")
 
+    @app.middleware("http")
+    async def body_limit(request: Request, call_next):
+        # Reject oversized bodies before multipart parsing spools them to disk.
+        size = request.headers.get("content-length")
+        if request.method == "PUT" and size is None:
+            return err(411, "bad_request", "Photo upload needs a Content-Length header")
+        if size is not None and (not size.isdigit() or int(size) > MAX_PHOTO_BYTES + 1024 * 1024):
+            return err(413, "bad_request", "Request body must be under 25 MB")
+        return await call_next(request)
+
     def err(status: int, code: str, message: str) -> JSONResponse:
         return JSONResponse(status_code=status, content={"error": {"code": code, "message": message}})
 
