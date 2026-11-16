@@ -12,12 +12,12 @@
 - Roles assigned (Nov 13, 5 PM): Pablo onchain+backend, Marcus frontend, Luka AI vision+demo.
 - Project chosen: Deposit Keeper (D-001). Explainer: https://claude.ai/artifact/UvpoQrNT1K8KoYQJAAEaxZ
 - Sat 2:30 PM: sync skipped; decisions D-002…D-008 recorded (amounts in cents, 1:100 demo scale, landlord 48 h review, per-shot upload, contract timeouts, stack). docs/API.md frozen.
-- Escrow contract written, 18 forge tests pass; ABI in shared/abi/. Deployed on Arc testnet: 0xe3791a88E125ce9e826FB07f84BF88625d9f3e98 (Sun: address PR open). No release tx yet.
+- Escrow contract written, 18 forge tests pass; ABI in shared/abi/. Deployed + source verified on Arc testnet: 0xe3791a88E125ce9e826FB07f84BF88625d9f3e98. Sun 6 PM: DemoRun lease #1 ran the whole path onchain ($10 in, $8.80 to tenant, $1.20 to landlord, escrow back to 0).
 - Vision spike: **GO** against the PLAN.md bar (Sat Nov 14, Luka). claude-sonnet-5-5 at the 0.7 cutoff flagged both damaged pairs in 3/3 runs (re-confirmed by the packaged pipeline on Nov 15: p3 @0.88–0.90, p4 @0.88–0.93) with no false positives on p1, p2 and p5. Caveats: both are staged wall marks charged as repaint; carpet stain unproven; small test set; p3 before photo reused from an earlier shot. Full note: docs/status/luka.md · evidence: spikes/vision/README.md.
 
 ## Next (max 5, in priority order)
 1. Luka: `analyze()` is packaged in integrations/vision/ (Sun Nov 15, branch feat/vision-pipeline, PR pending): 47 unit tests and a real 5/5 run pass, and sample_report.json is in place for Pablo and Marcus. Demo damage item is the wall mark (D-009), proven at 0.88–0.93 confidence; still to be run through the full flow.
-2. Pablo: DemoRun on Arc testnet → release tx link here. Then FastAPI skeleton tonight.
+2. Pablo: server is up (server/README.md), chain path proven live via the API. Left: the live AI step (needs Pablo's ANTHROPIC_API_KEY + Luka's photos), then hosting Mon.
 3. Marcus: clickable mock of the move-out report screen, then scaffold app/ with the 5 demo screens.
 4. Everyone: read D-002…D-008 in docs/DECISIONS.md and switch mocks to cents + the frozen docs/API.md.
 
@@ -38,7 +38,9 @@
 ## Proven integrations (with evidence)
 | Integration | Status | Evidence (tx sig / response / link) |
 |---|---|---|
-| Arc testnet DepositEscrow deploy | Deployed, no release tx yet | https://explorer.testnet.arc.io/tx/0x389693fbb99442aa7343e353c6df27d27f19eb4a30af256e660f417b6b4e4d2a |
+| Arc testnet DepositEscrow deploy | Deployed, source verified | https://explorer.testnet.arc.io/tx/0x389693fbb99442aa7343e353c6df27d27f19eb4a30af256e660f417b6b4e4d2a |
+| Arc testnet escrow release (DemoRun, lease #1) | Working: 7/7 txs status 1 | deposit https://explorer.testnet.arc.io/tx/0xb44a788bb2a2f01eb7f959ac1ef0a61d02514c93b5832a0cf3b90defb4c8d88c · propose ($8.80 to tenant) https://explorer.testnet.arc.io/tx/0xe29c4c5ccdac82eeae4112a440a3ab9b3af7eaa1661806c94a1e6d2bf7fd0109 · accept ($1.20 to landlord) https://explorer.testnet.arc.io/tx/0xd86ffb8e7c5484a71d9b7d71ccc5d1f81abc5fa9a4ac558a014c9d4a4355b693 |
+| Server → Arc testnet (HTTP API, lease #2, $1) | create, deposit, both photo commits; manifest hashes match onchain | deposit https://explorer.testnet.arc.io/tx/0x761597e3d3d70b27fdffce526d1996db747b93904e3da9cad777c07990f924f8 · commit out https://explorer.testnet.arc.io/tx/0xd09bd0ab4726f11cd50dec63b8e1d1876302caa3ba0786adc6a5d3c62bbd5576 |
 | Claude vision (claude-sonnet-5-5, structured JSON) | GO: 2 staged wall-mark pairs flagged 3/3 at 0.7 cutoff, 0 false positives; carpet stain unproven | spikes/vision/results/run11_p3_reshoot_bold_x3/p3_run1.json (damage/repaint @0.90, req_011Ch4Dcp8squfvzcHUqzwm7); run8_reshoot_closeup/p4_run1.json (damage/repaint @0.90, req_011Ch2MWf4fxn5qdcX69gCVR); runs 9–10 for p4 3/3 and clean pairs; summary: spikes/vision/README.md |
 
 ## Judge runs (date · Tech/UX/Innov/Impact/Demo · verdict)
