@@ -19,21 +19,13 @@ function describeFor(scenario: ScenarioId, role: Role) {
 }
 
 describe('describeLease', () => {
-  it('shows nothing urgent while the deposit is simply held, and offers move-out to either participant', () => {
+  it('shows nothing urgent while the deposit is simply held, and offers no move-out request', () => {
     for (const role of ['tenant', 'landlord'] as const) {
       const result = describeFor('active', role);
       expect(result.headline).toContain('$1,000.00');
-      expect(result.detail).toContain('Nothing needs doing');
-      expect(result.primary).toMatchObject({ kind: 'request_move_out', label: 'Request move-out' });
+      expect(result.detail).toBe('Nothing needs doing right now.');
+      expect(result.primary).toBeUndefined();
     }
-  });
-
-  it('hides the move-out action when allowedActions does not include it, and names who can request it', () => {
-    const state = buildScenario('active', now);
-    const lease = { ...selectLease(state, 'tenant'), allowedActions: [], moveOutAuthorizedRoles: ['landlord' as const] };
-    const result = describeLease(lease, null);
-    expect(result.primary).toBeUndefined();
-    expect(result.detail).toContain('Jordan Lee can request move-out');
   });
 
   it('gives the landlord one review action and tells the tenant who they are waiting on', () => {

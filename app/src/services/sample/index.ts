@@ -57,7 +57,6 @@ export interface SampleOptions {
 
 export const SAMPLE_ASSUMPTIONS = [
   'Inspections are treated as complete. Real inspection rules are pending team agreement.',
-  'Either participant can request move-out. The real rule comes from the backend.',
   'The landlord can edit charge amounts and reasons. Real policy is pending.',
   'Submitting a proposal starts the undisputed refund. Whether posting and refunding are one step is pending the contract owner.',
   'No deadlines or automatic payouts exist. Sample transfers confirm only when you press the demo control.',

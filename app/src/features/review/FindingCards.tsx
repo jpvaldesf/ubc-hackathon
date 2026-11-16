@@ -46,7 +46,8 @@ interface FindingEditorProps {
 /** Landlord draft: edit the amount and reason, or remove a charge that is not supported. */
 export function FindingEditor({ leaseId, item, onDirtyChange }: FindingEditorProps) {
   const { service } = useServices().bundle;
-  const { reloadNow } = useLeaseContext();
+  const { reloadNow, proposal } = useLeaseContext();
+  const editReason = proposal?.draftRules?.editReason !== false;
   const [amountText, setAmountText] = useState(toInputText(item.amount));
   const [rationale, setRationale] = useState(item.rationale);
   const [errors, setErrors] = useState<{ amount?: string; rationale?: string }>({});
@@ -60,7 +61,7 @@ export function FindingEditor({ leaseId, item, onDirtyChange }: FindingEditorPro
     setRationale(item.rationale);
   }, [item.amount, item.rationale]);
 
-  const dirty = amountText !== toInputText(item.amount) || rationale !== item.rationale;
+  const dirty = amountText !== toInputText(item.amount) || (editReason && rationale !== item.rationale);
   useEffect(() => {
     onDirtyChange(item.id, dirty);
     return () => onDirtyChange(item.id, false);
@@ -71,11 +72,13 @@ export function FindingEditor({ leaseId, item, onDirtyChange }: FindingEditorPro
     const parsed = parseUsdInput(amountText);
     const next: { amount?: string; rationale?: string } = {};
     if (!parsed.ok) next.amount = parsed.error;
-    if (rationale.trim() === '') next.rationale = 'Add a reason for this charge.';
+    if (editReason && rationale.trim() === '') next.rationale = 'Add a reason for this charge.';
     setErrors(next);
     if (!parsed.ok || next.rationale) return;
     const ok = await save.run(async () => {
-      await service.saveProposalDraft(leaseId, [{ itemId: item.id, amount: parsed.value, rationale: rationale.trim() }]);
+      await service.saveProposalDraft(leaseId, [
+        editReason ? { itemId: item.id, amount: parsed.value, rationale: rationale.trim() } : { itemId: item.id, amount: parsed.value },
+      ]);
       await reloadNow();
     });
     if (ok) setSaved(true);
@@ -159,6 +162,7 @@ export function FindingEditor({ leaseId, item, onDirtyChange }: FindingEditorPro
             />
           )}
         </Field>
+        {editReason ? (
         <Field label="Reason for this charge" error={errors.rationale}>
           {(props) => (
             <textarea
@@ -174,6 +178,9 @@ export function FindingEditor({ leaseId, item, onDirtyChange }: FindingEditorPro
             />
           )}
         </Field>
+        ) : (
+          <p className="small">You can lower this charge or remove it. Changes are kept in this browser and sent with the report.</p>
+        )}
         {save.error && (
           <p className="field__error" role="alert">
             {save.error.message}
@@ -191,7 +198,7 @@ export function FindingEditor({ leaseId, item, onDirtyChange }: FindingEditorPro
             disabled={!dirty || save.pending}
             aria-label={`${saved && !dirty ? 'Saved changes to' : 'Save changes to'} ${item.label}`}
           >
-            {save.pending ? 'Saving…' : saved && !dirty ? 'Saved' : 'Save changes'}
+            {save.pending ? 'Saving…' : saved && !dirty ? (editReason ? 'Saved' : 'Kept') : editReason ? 'Save changes' : 'Keep change'}
           </button>
           <button
             type="button"

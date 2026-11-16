@@ -53,6 +53,7 @@ export function DraftSubmit({ lease, proposal, hasUnsavedEdits }: { lease: Lease
   const key = useRef(newIdempotencyKey());
   const tenant = person(lease, 'tenant');
   const zero = isZero(proposal.deductionTotal);
+  const label = proposal.draftRules ? 'Send report' : 'Submit proposal';
 
   const close = () => {
     setOpen(false);
@@ -62,7 +63,7 @@ export function DraftSubmit({ lease, proposal, hasUnsavedEdits }: { lease: Lease
   return (
     <section className="surface stack--tight" aria-labelledby={titleId}>
       <h2 id={titleId} className="section-title">
-        Submit proposal
+        {label}
       </h2>
       <p>
         {zero
@@ -76,15 +77,15 @@ export function DraftSubmit({ lease, proposal, hasUnsavedEdits }: { lease: Lease
       )}
       <div className="button-row">
         <button type="button" className="button button--primary" disabled={hasUnsavedEdits} onClick={() => setOpen(true)}>
-          Submit proposal
+          {label}
         </button>
       </div>
 
       <ConfirmDialog
         open={open}
-        title="Submit this proposal?"
-        confirmLabel="Submit proposal"
-        busyLabel="Submitting…"
+        title={`${label}?`}
+        confirmLabel={label}
+        busyLabel={proposal.draftRules ? 'Sending…' : 'Submitting…'}
         busy={pending}
         confirmDisabled={error?.code === 'stale_proposal'}
         error={

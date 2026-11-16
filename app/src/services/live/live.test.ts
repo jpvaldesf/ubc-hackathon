@@ -89,9 +89,11 @@ describe('mapLease', () => {
   });
 
   it('flags unsupported next steps up front', () => {
-    expect(mapLease(api({ status: 'report_draft' }), 'landlord_demo').unavailableNotice).toMatch(/sending the report/);
+    expect(mapLease(api({ status: 'analyzing' }), 'landlord_demo').unavailableNotice).toMatch(/photo comparison/);
+    expect(mapLease(api({ status: 'report_draft' }), 'landlord_demo').unavailableNotice).toBeUndefined();
     expect(mapLease(api({ status: 'report_draft' }), 'tenant_demo').unavailableNotice).toBeUndefined();
     expect(mapLease(api({ status: 'funded' }), 'tenant_demo').unavailableNotice).toMatch(/not available/);
+    expect(mapLease(api({ status: 'funded' }), 'tenant_demo').unavailableNotice).not.toMatch(/move-out/i);
     expect(mapLease(api(), 'tenant_demo').unavailableNotice).toBeUndefined();
   });
 
@@ -171,11 +173,71 @@ describe('live service', () => {
     expect(c.get).toHaveBeenCalledWith('/leases/l_1');
   });
 
-  it('refuses unsupported actions instead of pretending', async () => {
+  it('refuses move-out instead of pretending', async () => {
     const s = createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: client() });
-    for (const call of [() => s.requestMoveOut('l_1', 'k'), () => s.saveProposalDraft('l_1', []), () => s.submitProposal('l_1', undefined, 'k')]) {
-      await expect(call()).rejects.toMatchObject({ code: 'integration_blocked' });
-    }
+    await expect(s.requestMoveOut('l_1', 'k')).rejects.toMatchObject({ code: 'integration_blocked' });
+  });
+
+  const draftLease = () => api({ status: 'report_draft', report: { ...api().report!, sent_by: null, report_hash: null }, payout: { to_tenant_cents: null, to_landlord_cents: null, pending_cents: null }, timeline: [] });
+  const draftClient = () => ({ get: vi.fn(async () => draftLease()), post: vi.fn(async () => ({})) }) satisfies ApiClient;
+
+  it('gives the landlord a draft to send, and the tenant none', async () => {
+    const l = createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: draftClient() });
+    expect((await l.getLease('l_1')).allowedActions).toEqual(['edit_proposal', 'submit_proposal']);
+    const p = (await l.getProposal('l_1'))!;
+    expect(p.status).toBe('draft');
+    expect(p.draftRules).toEqual({ editReason: false, lowerOnly: true });
+    expect(p.items.map((i) => i.id)).toEqual(['f1']);
+    const t = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: draftClient() });
+    expect((await t.getLease('l_1')).allowedActions).toEqual([]);
+    expect(await t.getProposal('l_1')).toBeNull();
+  });
+
+  it('sends the report as is with an empty edit set to POST /report/send', async () => {
+    const c = draftClient();
+    await createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: c }).submitProposal('l_1', undefined, 'k');
+    expect(c.post).toHaveBeenCalledWith('/leases/l_1/report/send', 'landlord_demo', { remove_finding_ids: [], lower_costs: {} });
+  });
+
+  it('stages a lowered charge and sends it as lower_costs, then clears the staging', async () => {
+    const c = draftClient();
+    const s = createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: c });
+    const preview = await s.saveProposalDraft('l_1', [{ itemId: 'f1', amount: centsToUnits(80) }]);
+    expect(preview.deductionTotal).toBe(centsToUnits(80));
+    expect(preview.refundAmount).toBe(centsToUnits(920));
+    await s.submitProposal('l_1', undefined, 'k');
+    expect(c.post).toHaveBeenCalledWith('/leases/l_1/report/send', 'landlord_demo', { remove_finding_ids: [], lower_costs: { f1: 80 } });
+    expect((await s.getProposal('l_1'))!.deductionTotal).toBe(centsToUnits(120));
+  });
+
+  it('sends a removed charge as remove_finding_ids, and restoring it undoes that', async () => {
+    const c = draftClient();
+    const s = createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: c });
+    await s.saveProposalDraft('l_1', [{ itemId: 'f1', included: false }]);
+    await s.submitProposal('l_1', undefined, 'k');
+    expect(c.post).toHaveBeenLastCalledWith('/leases/l_1/report/send', 'landlord_demo', { remove_finding_ids: ['f1'], lower_costs: {} });
+    await s.saveProposalDraft('l_1', [{ itemId: 'f1', included: false }]);
+    await s.saveProposalDraft('l_1', [{ itemId: 'f1', included: true }]);
+    await s.submitProposal('l_1', undefined, 'k');
+    expect(c.post).toHaveBeenLastCalledWith('/leases/l_1/report/send', 'landlord_demo', { remove_finding_ids: [], lower_costs: {} });
+  });
+
+  it('rejects raising a charge or editing the reason before any request', async () => {
+    const c = draftClient();
+    const s = createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: c });
+    await expect(s.saveProposalDraft('l_1', [{ itemId: 'f1', amount: centsToUnits(121) }])).rejects.toMatchObject({ code: 'validation' });
+    await expect(s.saveProposalDraft('l_1', [{ itemId: 'f1', rationale: 'x' }])).rejects.toMatchObject({ code: 'validation' });
+    await expect(s.saveProposalDraft('l_1', [{ itemId: 'nope', included: false }])).rejects.toMatchObject({ code: 'validation' });
+    expect(c.post).not.toHaveBeenCalled();
+  });
+
+  it('does not clear staged edits when the send fails', async () => {
+    const c = draftClient();
+    c.post.mockRejectedValueOnce(new ServiceError('invalid_state', 'nope'));
+    const s = createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: c });
+    await s.saveProposalDraft('l_1', [{ itemId: 'f1', included: false }]);
+    await expect(s.submitProposal('l_1', undefined, 'k')).rejects.toBeInstanceOf(ServiceError);
+    expect((await s.getProposal('l_1'))!.items[0].included).toBe(false);
   });
 
   it('rejects a lease id that could escape the path', async () => {

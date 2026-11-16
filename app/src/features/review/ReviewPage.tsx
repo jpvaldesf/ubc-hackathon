@@ -1,6 +1,5 @@
 import { useCallback, useId, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { formatDate } from '../../lib/format';
 import { pluralize } from '../../lib/format';
 import { formatUsd } from '../../lib/money';
 import type { Lease, Proposal } from '../../services/types';
@@ -32,7 +31,7 @@ function pageCopy(mode: Mode, lease: Lease): { title: string; lead: string } {
     case 'draft':
       return {
         title: 'Review proposed charges',
-        lead: `Move-out requested${lease.moveOutRequestedOn ? ` ${formatDate(lease.moveOutRequestedOn)}` : ''}. Remove or adjust charges before you submit.`,
+        lead: 'Lower or remove charges before you send the report.',
       };
     case 'respond':
       return {
