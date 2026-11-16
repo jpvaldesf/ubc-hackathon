@@ -14,6 +14,8 @@
 import type { ApiFinding, ApiLease, ApiStatus, DevUserId } from './api';
 import type {
   AllowedAction,
+  AnalysisState,
+  CaptureState,
   Finding,
   Lease,
   Operation,
@@ -22,6 +24,7 @@ import type {
   Proposal,
   Role,
   Stage,
+  UploadedPhoto,
   WaitingOn,
 } from '../types';
 
@@ -38,9 +41,11 @@ export interface MapContext {
 const NO_CONTEXT: MapContext = { apiUrl: '', chainVerified: false, explorer: 'https://explorer.testnet.arc.io' };
 
 /** Only paths under /files/ with no traversal are accepted; anything else is not shown. */
-export function resolvePhotoUrl(path: string, apiUrl: string): string | undefined {
+export function resolvePhotoUrl(path: string, apiUrl: string, sha256?: string): string | undefined {
   if (!apiUrl || !/^\/files\/[A-Za-z0-9_\-./]+$/.test(path) || path.includes('..')) return undefined;
-  return `${apiUrl.replace(/\/+$/, '')}${path}`;
+  const url = `${apiUrl.replace(/\/+$/, '')}${path}`;
+  // A retake keeps the same URL, so the content hash is added as a cache-buster (a changed photo means a new hash).
+  return sha256 && /^[0-9a-f]{64}$/i.test(sha256) ? `${url}?v=${sha256.slice(0, 16)}` : url;
 }
 
 /**
@@ -146,6 +151,28 @@ export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = N
     unavailableNotice = 'Running the photo comparison is not available in the app yet. The report appears here once it is ready.';
   }
 
+  const uploaded = (photos: ApiLease['photos']['in']): UploadedPhoto[] =>
+    photos.flatMap((p) => {
+      const src = resolvePhotoUrl(p.url, ctx.apiUrl, p.sha256);
+      return src ? [{ photoId: p.photo_id, shotId: p.shot_id, src, sha256: p.sha256 ?? '' }] : [];
+    });
+  const OUT_COMMITTED: ApiStatus[] = ['move_out_recorded', 'analyzing', 'report_draft', 'proposed', 'settled', 'appealed', 'resolved'];
+  const capture: CaptureState = {
+    shots: (api.shot_list ?? []).map((s) => ({ id: s.shot_id, room: s.room, label: s.label })),
+    photos: { in: uploaded(api.photos.in), out: uploaded(api.photos.out) },
+    openPhase: api.status === 'funded' ? 'in' : api.status === 'move_in_recorded' ? 'out' : null,
+    committed: { in: !['created', 'funded'].includes(api.status), out: OUT_COMMITTED.includes(api.status) },
+  };
+  const analysis: AnalysisState = {
+    state: api.status === 'analyzing' ? 'running' : 'idle',
+    canStart: role === 'landlord' && api.status === 'move_out_recorded',
+    progress:
+      api.status === 'analyzing' && api.progress
+        ? { shotsDone: api.progress.shots_done, shotsTotal: api.progress.shots_total, currentRoom: api.progress.current_room }
+        : undefined,
+    error: api.status === 'move_out_recorded' && api.report?.error ? api.report.error : undefined,
+  };
+
   const evidence = [
     { id: 'in', label: 'Move-in photos', detail: `${api.photos.in.length} recorded${stepTx(api, 'move_in_recorded') ? ', fingerprint saved' : ''}` },
     { id: 'out', label: 'Move-out photos', detail: `${api.photos.out.length} recorded${stepTx(api, 'move_out_recorded') ? ', fingerprint saved' : ''}` },
@@ -194,12 +221,14 @@ export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = N
     evidence,
     proofs,
     proofNote,
+    capture,
+    analysis,
   };
 }
 
 function photoFor(photoId: string, label: string, api: ApiLease, ctx: MapContext) {
   const found = [...api.photos.in, ...api.photos.out].find((p) => p.photo_id === photoId);
-  const src = found ? resolvePhotoUrl(found.url, ctx.apiUrl) : undefined;
+  const src = found ? resolvePhotoUrl(found.url, ctx.apiUrl, found.sha256) : undefined;
   return src
     ? ({ kind: 'image', src, alt: `${label} photo`, caption: photoId } as const)
     : ({ kind: 'placeholder', alt: `${label} photo not available`, caption: photoId } as const);

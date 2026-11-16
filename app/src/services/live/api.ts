@@ -41,6 +41,7 @@ export interface ApiFinding {
 export interface ApiPhoto {
   photo_id: string;
   shot_id: string;
+  sha256?: string;
   /** Relative, e.g. /files/l_7f3a/in/s1.jpg. Resolve against the backend address. */
   url: string;
 }
@@ -55,7 +56,9 @@ export interface ApiLease {
   demo_scale: number;
   escrow_balance_cents: number;
   appeal_deadline: string | null;
+  shot_list?: { shot_id: string; room: string; label: string }[];
   photos: { in: ApiPhoto[]; out: ApiPhoto[] };
+  progress?: { shots_done: number; shots_total: number; current_room: string | null } | null;
   report: {
     report_id: string | null;
     report_hash: string | null;
@@ -85,16 +88,23 @@ const FRIENDLY: Record<string, string> = {
   not_allowed: "Your account can't do that on this deposit.",
 };
 
+/** `keepServerMessage`: show the server's own text (for example "Missing shots: s2, s3") instead of the generic wording. */
+export interface CallOptions {
+  keepServerMessage?: boolean;
+}
+
 export interface ApiClient {
   get(path: string): Promise<unknown>;
-  post(path: string, userId: DevUserId, body: unknown): Promise<unknown>;
+  post(path: string, userId: DevUserId, body: unknown, options?: CallOptions): Promise<unknown>;
+  /** Multipart upload. The browser sets Content-Type (with the boundary) and Content-Length; we set neither. */
+  put(path: string, userId: DevUserId, body: FormData, options?: CallOptions): Promise<unknown>;
 }
 
 /** Backend errors have the shape { error: { code, message } }. Anything else becomes a generic retryable failure. */
 export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = fetch): ApiClient {
   const base = baseUrl.replace(/\/+$/, '');
 
-  async function request(path: string, init: RequestInit): Promise<unknown> {
+  async function request(path: string, init: RequestInit, options: CallOptions = {}): Promise<unknown> {
     let response: Response;
     try {
       response = await fetchImpl(`${base}${path}`, init);
@@ -111,18 +121,20 @@ export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = fetch
     const err = (payload as { error?: { code?: string; message?: string } } | null)?.error;
     if (err?.code && typeof err.message === 'string') {
       const mapped = CODE_MAP[err.code] ?? { code: 'service_failure' as ErrorCode, retryable: response.status >= 500 };
-      throw new ServiceError(mapped.code, FRIENDLY[err.code] ?? err.message, mapped.retryable);
+      throw new ServiceError(mapped.code, (options.keepServerMessage ? undefined : FRIENDLY[err.code]) ?? err.message, mapped.retryable);
     }
     throw new ServiceError('service_failure', 'Something went wrong on the server. Try again.', response.status >= 500);
   }
 
   return {
     get: (path) => request(path, { method: 'GET' }),
-    post: (path, userId, body) =>
-      request(path, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
-        body: JSON.stringify(body),
-      }),
+    post: (path, userId, body, options) =>
+      request(
+        path,
+        { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-User-Id': userId }, body: JSON.stringify(body) },
+        options,
+      ),
+    // No Content-Type here on purpose: fetch derives the multipart boundary from the FormData.
+    put: (path, userId, body, options) => request(path, { method: 'PUT', headers: { 'X-User-Id': userId }, body }, options),
   };
 }

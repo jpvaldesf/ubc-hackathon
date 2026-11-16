@@ -1,7 +1,7 @@
 import { ServiceError } from '../errors';
-import type { DepositService } from '../types';
+import type { CommitResult, DepositService, PhotoPhase, UploadResult } from '../types';
 import { createApiClient, type ApiClient, type ApiLease, type DevUserId } from './api';
-import { mapLease, mapProposal, UNITS_PER_CENT, type MapContext, type StagedEdits } from './mapping';
+import { genuineTxUrl, mapLease, mapProposal, resolvePhotoUrl, UNITS_PER_CENT, type MapContext, type StagedEdits } from './mapping';
 
 /**
  * Live adapter for the frozen API (docs/API.md). Calls the backend for:
@@ -11,15 +11,35 @@ import { mapLease, mapProposal, UNITS_PER_CENT, type MapContext, type StagedEdit
  *   submitProposal         -> POST /leases/{id}/report/send  (landlord "Send report")
  *   saveProposalDraft      -> no endpoint: edits (lower or remove only) are staged in this
  *                             browser and sent with the report; a reload discards them
+ *   uploadPhoto            -> PUT  /leases/{id}/photos/{in|out}/{shot_id}  (multipart `file`)
+ *   commitPhotos           -> POST /leases/{id}/photos/{in|out}/commit
+ *   startReport            -> POST /leases/{id}/report  (landlord; 202, then poll GET)
  * NOT connected (no endpoint, fails with `integration_blocked` instead of pretending): requestMoveOut.
  * It never falls back to sample data. Idempotency keys and proposal versions are not part of
  * the API, so they are not sent; the server's state machine rejects a repeat with 409.
  */
 const POLL_MS = 5000;
+/** docs/API.md: poll every 2 s while the AI comparison runs. */
+const ANALYSIS_POLL_MS = 2000;
+const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
 const TERMINAL = new Set(['settled', 'resolved']);
 
 function blocked(capability: string): never {
   throw new ServiceError('integration_blocked', `${capability} isn't connected to the backend yet.`);
+}
+
+/** Checks the first bytes, not file.type (browsers guess it, and HEIC can arrive labelled as a JPEG). */
+async function looksLikeJpegOrPng(file: Blob): Promise<boolean> {
+  const head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+  const jpeg = head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
+  const png = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((b, i) => head[i] === b);
+  return jpeg || png;
+}
+
+function photoPath(leaseId: string, phase: PhotoPhase, shotId: string): string {
+  if (phase !== 'in' && phase !== 'out') throw new ServiceError('validation', 'Unknown photo phase.');
+  if (!/^[A-Za-z0-9_-]+$/.test(shotId)) throw new ServiceError('validation', 'That shot id is not valid.');
+  return leasePath(leaseId, `/photos/${phase}/${shotId}`);
 }
 
 function leasePath(leaseId: string, suffix = ''): string {
@@ -54,7 +74,7 @@ export function createLiveService({
   let userId = initialUserId;
   let lastStatus: string | undefined;
   const listeners = new Set<() => void>();
-  let timer: ReturnType<typeof setInterval> | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
 
   // /health is the only place the API names the chain. Cache a successful check; retry after a failure.
   let verified: Promise<boolean> | undefined;
@@ -156,18 +176,58 @@ export function createLiveService({
     async disputeProposal(leaseId, _version, input) {
       await client.post(leasePath(leaseId, '/appeal'), userId, { finding_ids: input.itemIds, reason: input.reason });
     },
+    async uploadPhoto(leaseId, phase, shotId, file): Promise<UploadResult> {
+      const path = photoPath(leaseId, phase, shotId);
+      if (file.size === 0) throw new ServiceError('validation', 'That photo is empty. Choose another one.');
+      if (file.size > MAX_PHOTO_BYTES) throw new ServiceError('validation', 'That photo is larger than 25 MB.');
+      if (!(await looksLikeJpegOrPng(file))) {
+        throw new ServiceError('validation', 'Photos must be JPEG or PNG. HEIC is not supported; on iPhone, take the photo in the browser or choose a JPEG.');
+      }
+      const form = new FormData();
+      form.append('file', file, 'photo');
+      const r = (await client.put(path, userId, form, { keepServerMessage: true })) as {
+        photo_id: string;
+        shot_id: string;
+        phase: PhotoPhase;
+        url: string;
+        sha256: string;
+        shots_uploaded: number;
+        shots_total: number;
+      };
+      const src = resolvePhotoUrl(r.url, baseUrl, r.sha256);
+      if (!src) throw new ServiceError('service_failure', 'The server returned a photo address we could not use.', true);
+      return { photoId: r.photo_id, shotId: r.shot_id, phase, src, shotsUploaded: r.shots_uploaded, shotsTotal: r.shots_total };
+    },
+    async commitPhotos(leaseId, phase): Promise<CommitResult> {
+      if (phase !== 'in' && phase !== 'out') throw new ServiceError('validation', 'Unknown photo phase.');
+      const r = (await client.post(leasePath(leaseId, `/photos/${phase}/commit`), userId, {}, { keepServerMessage: true })) as {
+        status: string;
+        tx?: { hash: string; explorer_url: string } | null;
+      };
+      const url = genuineTxUrl(r.tx, await context());
+      return { status: r.status, proof: url ? { id: `commit-${phase}`, label: `Move-${phase} photos recorded`, url } : undefined };
+    },
+    async startReport(leaseId) {
+      await client.post(leasePath(leaseId, '/report'), userId, {}, { keepServerMessage: true });
+    },
     subscribe(listener) {
       listeners.add(listener);
-      // One shared poll for all subscribers.
-      timer ??= setInterval(() => {
-        if (typeof document !== 'undefined' && document.hidden) return;
-        if (lastStatus && TERMINAL.has(lastStatus)) return;
-        listeners.forEach((l) => l());
-      }, POLL_MS);
+      // One shared poll for all subscribers: every 2 s while the AI comparison runs (docs/API.md), otherwise every 5 s.
+      const tick = () => {
+        if (listeners.size === 0) {
+          timer = undefined;
+          return;
+        }
+        if (!(typeof document !== 'undefined' && document.hidden) && !(lastStatus && TERMINAL.has(lastStatus))) {
+          listeners.forEach((l) => l());
+        }
+        timer = setTimeout(tick, lastStatus === 'analyzing' ? ANALYSIS_POLL_MS : POLL_MS);
+      };
+      timer ??= setTimeout(tick, lastStatus === 'analyzing' ? ANALYSIS_POLL_MS : POLL_MS);
       return () => {
         listeners.delete(listener);
         if (listeners.size === 0 && timer) {
-          clearInterval(timer);
+          clearTimeout(timer);
           timer = undefined;
         }
       };
