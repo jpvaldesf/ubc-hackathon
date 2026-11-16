@@ -179,7 +179,7 @@ export function FindingEditor({ leaseId, item, onDirtyChange }: FindingEditorPro
           )}
         </Field>
         ) : (
-          <p className="small">You can lower this charge or remove it. The reason comes from the photo comparison.</p>
+          <p className="small">You can lower this charge or remove it. Changes are kept in this browser and sent with the report.</p>
         )}
         {save.error && (
           <p className="field__error" role="alert">
@@ -198,7 +198,7 @@ export function FindingEditor({ leaseId, item, onDirtyChange }: FindingEditorPro
             disabled={!dirty || save.pending}
             aria-label={`${saved && !dirty ? 'Saved changes to' : 'Save changes to'} ${item.label}`}
           >
-            {save.pending ? 'Saving…' : saved && !dirty ? 'Saved' : 'Save changes'}
+            {save.pending ? 'Saving…' : saved && !dirty ? (editReason ? 'Saved' : 'Kept') : editReason ? 'Save changes' : 'Keep change'}
           </button>
           <button
             type="button"

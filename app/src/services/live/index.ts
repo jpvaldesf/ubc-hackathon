@@ -75,7 +75,13 @@ export function createLiveService({ baseUrl, userId, client = createApiClient(ba
         const next = { ...current.get(edit.itemId) };
         if (edit.included !== undefined) next.included = edit.included;
         if (edit.amount !== undefined) {
-          const units = BigInt(edit.amount);
+          let units: bigint;
+          try {
+            units = BigInt(edit.amount);
+          } catch {
+            throw new ServiceError('validation', 'Enter a valid amount.');
+          }
+          if (units < 0n) throw new ServiceError('validation', 'Enter a valid amount.');
           if (units % UNITS_PER_CENT !== 0n) throw new ServiceError('validation', 'Use whole cents.');
           const cents = Number(units / UNITS_PER_CENT);
           if (cents > finding.cost_cents) {
