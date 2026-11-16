@@ -53,6 +53,12 @@ export function OverviewPage() {
         </section>
       )}
 
+      {lease.unavailableNotice && (
+        <p role="status" className="callout callout--caution">
+          {lease.unavailableNotice}
+        </p>
+      )}
+
       <Folds lease={lease} />
     </div>
   );

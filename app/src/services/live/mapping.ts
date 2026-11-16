@@ -105,6 +105,13 @@ export function mapLease(api: ApiLease, viewerId: DevUserId): Lease {
   else if (api.status === 'proposed' && (api.report?.total_deduction_cents ?? 0) > 0) waitingOn = { actor: 'tenant', awaiting: 'tenant_response' };
   else if (api.status === 'appealed') waitingOn = { actor: 'reviewer', awaiting: 'dispute_ruling' };
 
+  let unavailableNotice: string | undefined;
+  if (['created', 'funded', 'move_in_recorded'].includes(api.status)) {
+    unavailableNotice = 'Paying the deposit, taking photos and requesting move-out are not available in the app yet.';
+  } else if (role === 'landlord' && ['move_out_recorded', 'analyzing', 'report_draft'].includes(api.status)) {
+    unavailableNotice = 'Running the photo comparison and sending the report are not available in the app yet.';
+  }
+
   const evidence = [
     { id: 'in', label: 'Move-in photos', detail: `${api.photos.in.length} recorded${stepTx(api, 'move_in_recorded') ? ', fingerprint saved' : ''}` },
     { id: 'out', label: 'Move-out photos', detail: `${api.photos.out.length} recorded${stepTx(api, 'move_out_recorded') ? ', fingerprint saved' : ''}` },
@@ -122,6 +129,7 @@ export function mapLease(api: ApiLease, viewerId: DevUserId): Lease {
     allowedActions,
     moveOutAuthorizedRoles: [],
     waitingOn,
+    unavailableNotice,
     funds: {
       original: centsToUnits(original),
       returnedConfirmed: centsToUnits(toTenant),

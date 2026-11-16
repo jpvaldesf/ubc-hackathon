@@ -88,6 +88,13 @@ describe('mapLease', () => {
     expect(reconcileFunds(lease.funds).ok).toBe(true);
   });
 
+  it('flags unsupported next steps up front', () => {
+    expect(mapLease(api({ status: 'report_draft' }), 'landlord_demo').unavailableNotice).toMatch(/sending the report/);
+    expect(mapLease(api({ status: 'report_draft' }), 'tenant_demo').unavailableNotice).toBeUndefined();
+    expect(mapLease(api({ status: 'funded' }), 'tenant_demo').unavailableNotice).toMatch(/not available/);
+    expect(mapLease(api(), 'tenant_demo').unavailableNotice).toBeUndefined();
+  });
+
   it('tells the landlord who the refund went to', () => {
     expect(mapLease(api(), 'landlord_demo').events[0].text).toBe('$8.80 sent to Alex Kim');
   });
@@ -124,7 +131,7 @@ function fakeFetch(status: number, body: unknown) {
 describe('createApiClient', () => {
   it('maps backend error codes to service errors', async () => {
     const client = createApiClient('http://x', fakeFetch(409, { error: { code: 'wrong_state', message: 'Lease is not proposed' } }));
-    await expect(client.post('/leases/l_1/accept', 'tenant_demo', {})).rejects.toMatchObject({ code: 'invalid_state', message: 'Lease is not proposed', retryable: false });
+    await expect(client.post('/leases/l_1/accept', 'tenant_demo', {})).rejects.toMatchObject({ code: 'invalid_state', message: expect.stringContaining('already moved on'), retryable: false });
   });
 
   it('reports an unreachable server as retryable', async () => {

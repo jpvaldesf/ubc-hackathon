@@ -72,6 +72,12 @@ const CODE_MAP: Record<string, { code: ErrorCode; retryable: boolean }> = {
   vision_error: { code: 'service_failure', retryable: true },
 };
 
+/** Plain-language text for the codes users can realistically hit. The server's own message is kept for the rest. */
+const FRIENDLY: Record<string, string> = {
+  wrong_state: 'This deposit has already moved on, so that action is no longer available. The page will refresh with the latest status.',
+  not_allowed: "Your account can't do that on this deposit.",
+};
+
 export interface ApiClient {
   get(path: string): Promise<unknown>;
   post(path: string, userId: DevUserId, body: unknown): Promise<unknown>;
@@ -98,7 +104,7 @@ export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = fetch
     const err = (payload as { error?: { code?: string; message?: string } } | null)?.error;
     if (err?.code && typeof err.message === 'string') {
       const mapped = CODE_MAP[err.code] ?? { code: 'service_failure' as ErrorCode, retryable: response.status >= 500 };
-      throw new ServiceError(mapped.code, err.message, mapped.retryable);
+      throw new ServiceError(mapped.code, FRIENDLY[err.code] ?? err.message, mapped.retryable);
     }
     throw new ServiceError('service_failure', 'Something went wrong on the server. Try again.', response.status >= 500);
   }

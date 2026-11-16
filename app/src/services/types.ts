@@ -85,6 +85,8 @@ export interface Lease {
   waitingOn?: WaitingOn;
   funds: Funds;
   operations: Operation[];
+  /** Set when the viewer's next step exists in the product but is not connected to the backend yet. Shown before any attempt. */
+  unavailableNotice?: string;
   /** Only deadlines supplied by agreed policy. Empty means show none. */
   deadlines: Deadline[];
   events: ActivityEvent[];
