@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { SiteTop } from './components/SiteTop';
 import { LeaseLayout } from './features/lease/LeaseLayout';
+import { PhotoCapturePage } from './features/photos/PhotoCapturePage';
 import { OverviewPage } from './features/overview/OverviewPage';
 import { ReviewPage } from './features/review/ReviewPage';
 import { ServiceProvider, useServices } from './services/ServiceContext';
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="/leases/:leaseId" element={<LeaseLayout />}>
             <Route index element={<OverviewPage />} />
             <Route path="review" element={<ReviewPage />} />
+            <Route path="photos" element={<PhotoCapturePage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

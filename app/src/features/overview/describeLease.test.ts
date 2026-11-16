@@ -8,7 +8,7 @@ import {
   submitProposal,
   type ScenarioId,
 } from '../../services/sample/engine';
-import type { Role } from '../../services/types';
+import type { AnalysisState, CaptureState, Lease, Role } from '../../services/types';
 import { describeLease } from './describeLease';
 
 const now = new Date('2026-11-14T12:00:00.000Z');
@@ -116,5 +116,39 @@ describe('describeLease', () => {
     expect(tenant.detail).toContain('$880.00');
     expect(tenant.detail).toContain('$120.00 was paid to Jordan Lee');
     expect(tenant.detail).toContain('Nothing is held');
+  });
+
+  describe('photo and deposit entry points (live mode)', () => {
+    const base = (): Lease => selectLease(buildScenario('active', now), 'tenant');
+    const capture = (openPhase: CaptureState['openPhase']): CaptureState => ({
+      shots: [],
+      photos: { in: [], out: [] },
+      openPhase,
+      committed: { in: openPhase === 'out', out: false },
+    });
+
+    it('asks the tenant to pay the deposit while the lease is only created; the landlord just waits', () => {
+      const created: Lease = { ...base(), stage: 'setup', allowedActions: ['pay_deposit'] };
+      expect(describeLease(created, null).primary).toEqual({ kind: 'pay_deposit', label: 'Pay deposit', variant: 'primary' });
+      const landlord = describeLease({ ...created, allowedActions: [], viewer: { ...created.viewer, role: 'landlord' } }, null);
+      expect(landlord.primary).toBeUndefined();
+      expect(landlord.waiting).toContain('to pay the deposit');
+    });
+
+    it('links to the photos screen while a phase is open', () => {
+      const moveIn = describeLease({ ...base(), capture: capture('in') }, null).primary;
+      expect(moveIn).toMatchObject({ kind: 'link', to: 'photos', label: 'Take move-in photos' });
+      const moveOut = describeLease({ ...base(), capture: capture('out') }, null).primary;
+      expect(moveOut).toMatchObject({ kind: 'link', to: 'photos', label: 'Take move-out photos' });
+    });
+
+    it('links the landlord to Compare photos once move-out is recorded, and shows progress while it runs', () => {
+      const landlordLease = selectLease(buildScenario('active', now), 'landlord');
+      const moveOut: Lease = { ...landlordLease, phase: 'move_out', stage: 'move_out', capture: capture(null) };
+      const analysis = (a: Partial<AnalysisState>): AnalysisState => ({ state: 'idle', canStart: false, ...a });
+      expect(describeLease({ ...moveOut, analysis: analysis({ canStart: true }) }, null).primary).toMatchObject({ to: 'photos', label: 'Compare photos', variant: 'primary' });
+      expect(describeLease({ ...moveOut, analysis: analysis({ state: 'running' }) }, null).primary).toMatchObject({ to: 'photos', label: 'See progress' });
+      expect(describeLease({ ...moveOut, analysis: analysis({ error: 'x', canStart: true }) }, null).primary).toMatchObject({ to: 'photos' });
+    });
   });
 });

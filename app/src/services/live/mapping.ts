@@ -135,6 +135,8 @@ export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = N
   let allowedActions: AllowedAction[] = [];
   if (role === 'tenant' && api.status === 'proposed' && (api.report?.total_deduction_cents ?? 0) > 0) {
     allowedActions = ['accept_proposal', 'dispute_proposal'];
+  } else if (role === 'tenant' && api.status === 'created') {
+    allowedActions = ['pay_deposit']; // POST /deposit; the server still enforces it
   } else if (role === 'landlord' && api.status === 'report_draft') {
     allowedActions = ['edit_proposal', 'submit_proposal']; // POST /report/send; the server still enforces it
   }
@@ -143,13 +145,6 @@ export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = N
   if (api.status === 'report_draft') waitingOn = { actor: 'landlord', awaiting: 'move_out_proposal' };
   else if (api.status === 'proposed' && (api.report?.total_deduction_cents ?? 0) > 0) waitingOn = { actor: 'tenant', awaiting: 'tenant_response' };
   else if (api.status === 'appealed') waitingOn = { actor: 'reviewer', awaiting: 'dispute_ruling' };
-
-  let unavailableNotice: string | undefined;
-  if (['created', 'funded', 'move_in_recorded'].includes(api.status)) {
-    unavailableNotice = 'Paying the deposit and taking photos are not available in the app yet.';
-  } else if (role === 'landlord' && ['move_out_recorded', 'analyzing'].includes(api.status)) {
-    unavailableNotice = 'Running the photo comparison is not available in the app yet. The report appears here once it is ready.';
-  }
 
   const uploaded = (photos: ApiLease['photos']['in']): UploadedPhoto[] =>
     photos.flatMap((p) => {
@@ -204,7 +199,6 @@ export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = N
     allowedActions,
     moveOutAuthorizedRoles: [],
     waitingOn,
-    unavailableNotice,
     funds: {
       original: centsToUnits(original),
       returnedConfirmed: centsToUnits(toTenant),

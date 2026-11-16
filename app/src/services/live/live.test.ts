@@ -90,13 +90,18 @@ describe('mapLease', () => {
     expect(reconcileFunds(lease.funds).ok).toBe(true);
   });
 
-  it('flags unsupported next steps up front', () => {
-    expect(mapLease(api({ status: 'analyzing' }), 'landlord_demo').unavailableNotice).toMatch(/photo comparison/);
-    expect(mapLease(api({ status: 'report_draft' }), 'landlord_demo').unavailableNotice).toBeUndefined();
-    expect(mapLease(api({ status: 'report_draft' }), 'tenant_demo').unavailableNotice).toBeUndefined();
-    expect(mapLease(api({ status: 'funded' }), 'tenant_demo').unavailableNotice).toMatch(/not available/);
-    expect(mapLease(api({ status: 'funded' }), 'tenant_demo').unavailableNotice).not.toMatch(/move-out/i);
-    expect(mapLease(api(), 'tenant_demo').unavailableNotice).toBeUndefined();
+  it('shows no "not available" notice now that deposit, photos and Analyze are connected', () => {
+    for (const status of ['created', 'funded', 'move_in_recorded', 'move_out_recorded', 'analyzing', 'report_draft'] as const) {
+      for (const who of ['tenant_demo', 'landlord_demo'] as const) {
+        expect(mapLease(api({ status }), who).unavailableNotice).toBeUndefined();
+      }
+    }
+  });
+
+  it('lets only the tenant pay the deposit, and only while the lease is created', () => {
+    expect(mapLease(api({ status: 'created' }), 'tenant_demo').allowedActions).toEqual(['pay_deposit']);
+    expect(mapLease(api({ status: 'created' }), 'landlord_demo').allowedActions).toEqual([]);
+    expect(mapLease(api({ status: 'funded' }), 'tenant_demo').allowedActions).toEqual([]);
   });
 
   it('tells the landlord who the refund went to', () => {
@@ -407,6 +412,13 @@ describe('photo service', () => {
     expect(c.post).toHaveBeenCalledWith('/leases/l_1/photos/out/commit', 'tenant_demo', {}, { keepServerMessage: true });
   });
 
+  it('pays the deposit with POST /deposit and links only a genuine transaction', async () => {
+    const { c, s } = svc({ post: vi.fn(async () => ({ escrow_balance_cents: 1000, tx: { hash: HASH, explorer_url: `https://explorer.test/tx/${HASH}` } })) });
+    expect((await s.payDeposit('l_1')).proof).toBeUndefined();
+    expect(c.post).toHaveBeenCalledWith('/leases/l_1/deposit', 'tenant_demo', {}, { keepServerMessage: true });
+    const real = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: { get: vi.fn(async (p: string) => (p === '/health' ? { ok: true, chain_id: 5042002, escrow: '0x' + '1'.repeat(40) } : api())), post: vi.fn(async () => ({ escrow_balance_cents: 1000, tx: realTx })), put: vi.fn() } as unknown as ApiClient });
+    expect(await real.payDeposit('l_1')).toEqual({ proof: { id: 'deposit', label: 'Deposit paid', url: realTx.explorer_url } });
+  });
   it('starts the report with POST /report', async () => {
     const { c, s } = svc();
     await s.startReport('l_1');
@@ -484,4 +496,5 @@ describe('polling cadence', () => {
     await vi.advanceTimersByTimeAsync(20000);
     expect(listener).not.toHaveBeenCalled();
   });
+
 });

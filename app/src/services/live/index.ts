@@ -1,5 +1,5 @@
 import { ServiceError } from '../errors';
-import type { CommitResult, DepositService, PhotoPhase, UploadResult } from '../types';
+import type { CommitResult, DepositResult, DepositService, PhotoPhase, UploadResult } from '../types';
 import { createApiClient, type ApiClient, type ApiLease, type DevUserId } from './api';
 import { genuineTxUrl, mapLease, mapProposal, resolvePhotoUrl, UNITS_PER_CENT, type MapContext, type StagedEdits } from './mapping';
 
@@ -14,6 +14,7 @@ import { genuineTxUrl, mapLease, mapProposal, resolvePhotoUrl, UNITS_PER_CENT, t
  *   uploadPhoto            -> PUT  /leases/{id}/photos/{in|out}/{shot_id}  (multipart `file`)
  *   commitPhotos           -> POST /leases/{id}/photos/{in|out}/commit
  *   startReport            -> POST /leases/{id}/report  (landlord; 202, then poll GET)
+ *   payDeposit             -> POST /leases/{id}/deposit  (tenant, status `created`)
  * NOT connected (no endpoint, fails with `integration_blocked` instead of pretending): requestMoveOut.
  * It never falls back to sample data. Idempotency keys and proposal versions are not part of
  * the API, so they are not sent; the server's state machine rejects a repeat with 409.
@@ -206,6 +207,13 @@ export function createLiveService({
       };
       const url = genuineTxUrl(r.tx, await context());
       return { status: r.status, proof: url ? { id: `commit-${phase}`, label: `Move-${phase} photos recorded`, url } : undefined };
+    },
+    async payDeposit(leaseId): Promise<DepositResult> {
+      const r = (await client.post(leasePath(leaseId, '/deposit'), userId, {}, { keepServerMessage: true })) as {
+        tx?: { hash: string; explorer_url: string } | null;
+      };
+      const url = genuineTxUrl(r.tx, await context());
+      return { proof: url ? { id: 'deposit', label: 'Deposit paid', url } : undefined };
     },
     async startReport(leaseId) {
       await client.post(leasePath(leaseId, '/report'), userId, {}, { keepServerMessage: true });

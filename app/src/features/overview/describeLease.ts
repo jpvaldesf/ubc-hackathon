@@ -7,7 +7,9 @@ import { pluralize } from '../../lib/format';
 import { formatUsd, isPositive, isZero } from '../../lib/money';
 import type { Lease, Participant, Proposal, Role } from '../../services/types';
 
-export type ActionButton = { kind: 'link'; to: 'review'; label: string; variant: 'primary' | 'secondary' };
+export type ActionButton =
+  | { kind: 'link'; to: 'review' | 'photos'; label: string; variant: 'primary' | 'secondary' }
+  | { kind: 'pay_deposit'; label: string; variant: 'primary' };
 
 export interface NextAction {
   headline: string;
@@ -50,6 +52,32 @@ export function describeLease(lease: Lease, proposal: Proposal | null): NextActi
 
   switch (lease.phase) {
     case 'active': {
+      if (lease.stage === 'setup') {
+        // Created, not yet funded: nothing is held.
+        return allowed.has('pay_deposit')
+          ? {
+              headline: 'Pay your deposit.',
+              detail: 'Your deposit is held until move-out, then returned minus any agreed deductions. Photos open once it is paid.',
+              primary: { kind: 'pay_deposit', label: 'Pay deposit', variant: 'primary' },
+            }
+          : {
+              headline: 'Waiting for the deposit.',
+              detail: 'Photos open once the deposit is paid.',
+              waiting: viewer === 'tenant' ? undefined : `Waiting on ${tenant.displayName} to pay the deposit.`,
+            };
+      }
+      const openPhase = lease.capture?.openPhase;
+      if (openPhase) {
+        const owner = viewer === 'tenant' ? 'Your' : 'The';
+        return {
+          headline: `${owner} ${formatUsd(funds.original)} deposit is held.`,
+          detail:
+            openPhase === 'in'
+              ? 'Take the move-in photos. They record the condition of the home on move-in day.'
+              : 'Take the move-out photos, from the same spots as at move-in.',
+          primary: { kind: 'link', to: 'photos', label: openPhase === 'in' ? 'Take move-in photos' : 'Take move-out photos', variant: 'primary' },
+        };
+      }
       const owner = viewer === 'tenant' ? 'Your' : 'The';
       return {
         headline: `${owner} ${formatUsd(funds.original)} deposit is held.`,
@@ -63,6 +91,20 @@ export function describeLease(lease: Lease, proposal: Proposal | null): NextActi
           headline: 'Review the proposed charges.',
           detail: 'Check each finding, lower or remove charges, then send the report.',
           primary: { kind: 'link', to: 'review', label: 'Review proposed charges', variant: 'primary' },
+        };
+      }
+      const analysis = lease.analysis;
+      if (analysis && (analysis.state === 'running' || analysis.canStart || analysis.error)) {
+        const label = analysis.state === 'running' ? 'See progress' : analysis.canStart ? 'Compare photos' : 'View status';
+        return {
+          headline: 'Move-out is in progress.',
+          detail:
+            analysis.state === 'running'
+              ? 'The photos are being compared.'
+              : viewer === 'landlord'
+                ? 'Move-out photos are recorded. Compare them with the move-in photos to draft the report.'
+                : 'Move-out photos are recorded. Waiting for the landlord to compare them.',
+          primary: { kind: 'link', to: 'photos', label, variant: viewer === 'landlord' && analysis.canStart ? 'primary' : 'secondary' },
         };
       }
       return {
