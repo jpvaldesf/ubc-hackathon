@@ -95,6 +95,64 @@ export interface Lease {
   proofs?: ProofLink[];
   /** Why proof links are missing when the server reported transactions that could not be verified as real. */
   proofNote?: string;
+  /** Live mode only: shot list and photos. Absent in sample mode. */
+  capture?: CaptureState;
+  /** Live mode only: AI comparison state. Absent in sample mode. */
+  analysis?: AnalysisState;
+}
+
+export type PhotoPhase = 'in' | 'out';
+
+/** One entry of the lease's shot list: where in the unit to take a photo. */
+export interface PhotoShot {
+  id: string;
+  room: string;
+  label: string;
+}
+
+/** A photo the backend already holds. `src` is absolute and carries a cache-busting version. */
+export interface UploadedPhoto {
+  photoId: string;
+  shotId: string;
+  src: string;
+  sha256: string;
+}
+
+/** Everything the photo screen needs, from GET /leases/{id}. Live mode only. */
+export interface CaptureState {
+  shots: PhotoShot[];
+  photos: Record<PhotoPhase, UploadedPhoto[]>;
+  /** The phase that accepts uploads right now (move-in when funded, move-out after move-in is recorded); null otherwise. */
+  openPhase: PhotoPhase | null;
+  /** True once the phase was committed (locked). */
+  committed: Record<PhotoPhase, boolean>;
+}
+
+/** The AI comparison, from GET /leases/{id}. Live mode only. */
+export interface AnalysisState {
+  /** `running` while the server compares photos; poll until it ends. */
+  state: 'idle' | 'running';
+  /** Only the landlord can start it, and only at move_out_recorded. */
+  canStart: boolean;
+  progress?: { shotsDone: number; shotsTotal: number; currentRoom: string | null };
+  /** Set when the last attempt failed; the landlord can retry. */
+  error?: string;
+}
+
+export interface UploadResult {
+  photoId: string;
+  shotId: string;
+  phase: PhotoPhase;
+  src: string;
+  shotsUploaded: number;
+  shotsTotal: number;
+}
+
+export interface CommitResult {
+  /** The lease status after the commit (`move_in_recorded` or `move_out_recorded`). */
+  status: string;
+  /** Set only when the transaction is verified as a real one on the configured network. */
+  proof?: ProofLink;
 }
 
 export interface ProofLink {
@@ -199,6 +257,15 @@ export interface DepositService {
   submitProposal(leaseId: string, version: number | undefined, idempotencyKey: string): Promise<void>;
   acceptProposal(leaseId: string, version: number | undefined, idempotencyKey: string): Promise<void>;
   disputeProposal(leaseId: string, version: number | undefined, input: DisputeInput, idempotencyKey: string): Promise<void>;
+  /**
+   * Live mode only (sample mode throws `integration_blocked`). Uploads one shot (PUT), or replaces it on a retake.
+   * JPEG or PNG, at most 25 MB. Either persona may upload while the phase is open.
+   */
+  uploadPhoto(leaseId: string, phase: PhotoPhase, shotId: string, file: Blob): Promise<UploadResult>;
+  /** Live mode only. The "Done" call for a phase: locks the photos and records their fingerprint onchain. */
+  commitPhotos(leaseId: string, phase: PhotoPhase): Promise<CommitResult>;
+  /** Live mode only. Landlord starts the AI comparison (returns once it is queued); poll via getLease. */
+  startReport(leaseId: string): Promise<void>;
   /** Optional change notification (sample adapter now; live adapter may poll later). */
   subscribe?(listener: () => void): () => void;
 }

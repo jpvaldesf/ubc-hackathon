@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { reconcileFunds } from '../../lib/funds';
 import { ServiceError } from '../errors';
 import { createApiClient, type ApiClient, type ApiLease } from './api';
@@ -153,7 +153,7 @@ describe('createApiClient', () => {
 });
 
 describe('live service', () => {
-  const client = () => ({ get: vi.fn(async () => api()), post: vi.fn(async () => ({})) }) satisfies ApiClient;
+  const client = () => ({ get: vi.fn(async () => api()), post: vi.fn(async () => ({})), put: vi.fn(async () => ({})) }) satisfies ApiClient;
 
   it('accept calls POST /accept with the dev identity and no invented body fields', async () => {
     const c = client();
@@ -180,7 +180,7 @@ describe('live service', () => {
   });
 
   const draftLease = () => api({ status: 'report_draft', report: { ...api().report!, sent_by: null, report_hash: null }, payout: { to_tenant_cents: null, to_landlord_cents: null, pending_cents: null }, timeline: [] });
-  const draftClient = () => ({ get: vi.fn(async () => draftLease()), post: vi.fn(async () => ({})) }) satisfies ApiClient;
+  const draftClient = () => ({ get: vi.fn(async () => draftLease()), post: vi.fn(async () => ({})), put: vi.fn(async () => ({})) }) satisfies ApiClient;
 
   it('gives the landlord a draft to send, and the tenant none', async () => {
     const l = createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: draftClient() });
@@ -311,7 +311,7 @@ describe('proof links', () => {
 
 describe('demo identity', () => {
   it('uses the new identity on the next request and tells subscribers to refetch', async () => {
-    const c = { get: vi.fn(async () => api()), post: vi.fn(async () => ({})) } satisfies ApiClient;
+    const c = { get: vi.fn(async () => api()), post: vi.fn(async () => ({})), put: vi.fn(async () => ({})) } satisfies ApiClient;
     const s = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: c });
     const refetch = vi.fn();
     const stop = s.subscribe!(refetch);
@@ -326,11 +326,162 @@ describe('demo identity', () => {
 
   it('verifies the chain once via /health before offering links', async () => {
     const get = vi.fn(async (path: string) => (path === '/health' ? { ok: true, chain_id: 5042002, escrow: '0x' + '1'.repeat(40) } : api({ timeline: [{ step: 'proposed', at: 'a', label: 'x', tx: realTx }] })));
-    const s = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: { get, post: vi.fn() } as unknown as ApiClient });
+    const s = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: { get, post: vi.fn(), put: vi.fn() } as unknown as ApiClient });
     expect((await s.getLease('l_1')).proofs).toHaveLength(1);
     await s.getLease('l_1');
     expect(get.mock.calls.filter(([p]) => p === '/health')).toHaveLength(1);
-    const wrongChain = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: { get: vi.fn(async (path: string) => (path === '/health' ? { ok: true, chain_id: 1, escrow: '0x' + '1'.repeat(40) } : api({ timeline: [{ step: 'proposed', at: 'a', label: 'x', tx: realTx }] }))), post: vi.fn() } as unknown as ApiClient });
+    const wrongChain = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: { get: vi.fn(async (path: string) => (path === '/health' ? { ok: true, chain_id: 1, escrow: '0x' + '1'.repeat(40) } : api({ timeline: [{ step: 'proposed', at: 'a', label: 'x', tx: realTx }] }))), post: vi.fn(), put: vi.fn() } as unknown as ApiClient });
     expect((await wrongChain.getLease('l_1')).proofs).toEqual([]);
+  });
+});
+
+describe('multipart client', () => {
+  it('PUTs the FormData with only the identity header, so the browser sets the multipart boundary', async () => {
+    const f = fakeFetch(200, {});
+    const form = new FormData();
+    form.append('file', new Blob([new Uint8Array([1, 2, 3])]), 'photo');
+    await createApiClient('http://x/', f).put('/leases/l_1/photos/in/s1', 'tenant_demo', form);
+    const [url, init] = (f as unknown as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('http://x/leases/l_1/photos/in/s1');
+    expect(init.method).toBe('PUT');
+    expect(init.body).toBe(form);
+    expect(init.headers).toEqual({ 'X-User-Id': 'tenant_demo' });
+  });
+
+  it('keeps the server message on request, and uses plain wording otherwise', async () => {
+    const body = { error: { code: 'wrong_state', message: 'Move-in photos need the lease to be funded' } };
+    const kept = createApiClient('http://x', fakeFetch(409, body));
+    await expect(kept.put('/p', 'tenant_demo', new FormData(), { keepServerMessage: true })).rejects.toMatchObject({ code: 'invalid_state', message: 'Move-in photos need the lease to be funded' });
+    await expect(createApiClient('http://x', fakeFetch(409, body)).put('/p', 'tenant_demo', new FormData())).rejects.toMatchObject({ message: expect.stringContaining('already moved on') });
+  });
+});
+
+const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
+const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]);
+const uploadReply = { photo_id: 'p_in_s1', shot_id: 's1', phase: 'in', url: '/files/l_1/in/s1.png', sha256: 'a'.repeat(64), shots_uploaded: 1, shots_total: 5 };
+
+describe('photo service', () => {
+  const svc = (extra: Partial<ApiClient> = {}) => {
+    const c = { get: vi.fn(async () => api()), post: vi.fn(async () => ({})), put: vi.fn(async () => uploadReply), ...extra };
+    return { c, s: createLiveService({ baseUrl: 'http://api.test:8000', userId: 'tenant_demo', client: c as unknown as ApiClient }) };
+  };
+
+  it('uploads a PNG as multipart field `file` and returns a cache-busted address', async () => {
+    const { c, s } = svc();
+    const r = await s.uploadPhoto('l_1', 'in', 's1', new Blob([PNG], { type: 'image/png' }));
+    const [path, user, form, options] = (c.put as unknown as ReturnType<typeof vi.fn>).mock.calls[0] as [string, string, FormData, unknown];
+    expect([path, user, options]).toEqual(['/leases/l_1/photos/in/s1', 'tenant_demo', { keepServerMessage: true }]);
+    expect(form.get('file')).toBeInstanceOf(Blob);
+    expect(r).toEqual({ photoId: 'p_in_s1', shotId: 's1', phase: 'in', src: `http://api.test:8000/files/l_1/in/s1.png?v=${'a'.repeat(16)}`, shotsUploaded: 1, shotsTotal: 5 });
+  });
+
+  it('accepts JPEG, and rejects HEIC, empty, oversize and bad ids before any request', async () => {
+    const { c, s } = svc();
+    await s.uploadPhoto('l_1', 'in', 's1', new Blob([JPEG], { type: 'image/jpeg' }));
+    const heic = new Blob([new Uint8Array([0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63])], { type: 'image/jpeg' });
+    await expect(s.uploadPhoto('l_1', 'in', 's1', heic)).rejects.toMatchObject({ code: 'validation', message: expect.stringContaining('JPEG or PNG') });
+    await expect(s.uploadPhoto('l_1', 'in', 's1', new Blob([]))).rejects.toMatchObject({ code: 'validation' });
+    const big = { size: 25 * 1024 * 1024 + 1, slice: () => new Blob([PNG]) } as unknown as Blob;
+    await expect(s.uploadPhoto('l_1', 'in', 's1', big)).rejects.toMatchObject({ message: expect.stringContaining('25 MB') });
+    await expect(s.uploadPhoto('l_1', 'in', '../x', new Blob([PNG]))).rejects.toMatchObject({ code: 'validation' });
+    await expect(s.uploadPhoto('l_1', 'sideways' as never, 's1', new Blob([PNG]))).rejects.toMatchObject({ code: 'validation' });
+    expect(c.put as unknown as ReturnType<typeof vi.fn>).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses an upload reply whose address is not under /files/', async () => {
+    const { s } = svc({ put: vi.fn(async () => ({ ...uploadReply, url: 'http://evil.test/x.png' })) });
+    await expect(s.uploadPhoto('l_1', 'in', 's1', new Blob([PNG]))).rejects.toMatchObject({ code: 'service_failure' });
+  });
+
+  it('commits a phase, and only links a genuine transaction', async () => {
+    const reply = { status: 'move_in_recorded', tx: realTx };
+    const real = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: { get: vi.fn(async (p: string) => (p === '/health' ? { ok: true, chain_id: 5042002, escrow: '0x' + '1'.repeat(40) } : api())), post: vi.fn(async () => reply), put: vi.fn() } as unknown as ApiClient });
+    expect(await real.commitPhotos('l_1', 'in')).toEqual({ status: 'move_in_recorded', proof: { id: 'commit-in', label: 'Move-in photos recorded', url: realTx.explorer_url } });
+    const { s } = svc({ post: vi.fn(async () => ({ status: 'move_in_recorded', tx: { hash: HASH, explorer_url: `https://explorer.test/tx/${HASH}` } })) });
+    expect((await s.commitPhotos('l_1', 'in')).proof).toBeUndefined();
+  });
+
+  it('commit posts {} to the phase path and keeps the server message ("Missing shots")', async () => {
+    const { c, s } = svc();
+    await s.commitPhotos('l_1', 'out');
+    expect(c.post).toHaveBeenCalledWith('/leases/l_1/photos/out/commit', 'tenant_demo', {}, { keepServerMessage: true });
+  });
+
+  it('starts the report with POST /report', async () => {
+    const { c, s } = svc();
+    await s.startReport('l_1');
+    expect(c.post).toHaveBeenCalledWith('/leases/l_1/report', 'tenant_demo', {}, { keepServerMessage: true });
+  });
+});
+
+describe('capture and analysis state', () => {
+  const base = (over: Partial<ApiLease>) => api({ shot_list: [{ shot_id: 's3', room: 'bedroom', label: 'Wall' }], timeline: [], ...over });
+
+  it('opens move-in when funded and move-out after move-in is recorded', () => {
+    expect(mapLease(base({ status: 'funded' }), 'tenant_demo', ctx).capture).toMatchObject({ openPhase: 'in', committed: { in: false, out: false }, shots: [{ id: 's3', room: 'bedroom', label: 'Wall' }] });
+    expect(mapLease(base({ status: 'move_in_recorded' }), 'tenant_demo', ctx).capture).toMatchObject({ openPhase: 'out', committed: { in: true, out: false } });
+    expect(mapLease(base({ status: 'proposed' }), 'tenant_demo', ctx).capture).toMatchObject({ openPhase: null, committed: { in: true, out: true } });
+  });
+
+  it('maps uploaded photos with resolved, versioned addresses', () => {
+    const p = mapLease(base({ status: 'funded', photos: { in: [{ photo_id: 'p_in_s3', shot_id: 's3', url: '/files/l_1/in/s3.png', sha256: 'b'.repeat(64) }], out: [] } }), 'tenant_demo', ctx).capture!;
+    expect(p.photos.in).toEqual([{ photoId: 'p_in_s3', shotId: 's3', src: `http://api.test:8000/files/l_1/in/s3.png?v=${'b'.repeat(16)}`, sha256: 'b'.repeat(64) }]);
+  });
+
+  it('reports analysis progress, who can start it, and a failed attempt', () => {
+    const running = mapLease(base({ status: 'analyzing', progress: { shots_done: 2, shots_total: 5, current_room: 'bedroom' } }), 'landlord_demo', ctx).analysis;
+    expect(running).toEqual({ state: 'running', canStart: false, progress: { shotsDone: 2, shotsTotal: 5, currentRoom: 'bedroom' }, error: undefined });
+    const failed = mapLease(base({ status: 'move_out_recorded', report: { ...api().report!, error: 'Vision failed' } }), 'landlord_demo', ctx).analysis;
+    expect(failed).toMatchObject({ state: 'idle', canStart: true, error: 'Vision failed' });
+    expect(mapLease(base({ status: 'move_out_recorded', report: null }), 'tenant_demo', ctx).analysis?.canStart).toBe(false);
+  });
+
+  it('adds a cache-busting version only for a valid sha256', () => {
+    expect(resolvePhotoUrl('/files/l_1/in/s1.png', 'http://a', 'c'.repeat(64))).toBe(`http://a/files/l_1/in/s1.png?v=${'c'.repeat(16)}`);
+    expect(resolvePhotoUrl('/files/l_1/in/s1.png', 'http://a', 'nope')).toBe('http://a/files/l_1/in/s1.png');
+    expect(resolvePhotoUrl('/files/l_1/in/s1.png?x=1', 'http://a')).toBeUndefined();
+  });
+});
+
+describe('polling cadence', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('stops polling when a listener unsubscribes during a tick', async () => {
+    vi.useFakeTimers();
+    const c = { get: vi.fn(async () => api()), post: vi.fn(), put: vi.fn() } as unknown as ApiClient;
+    const s = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: c });
+    const calls: number[] = [];
+    const stop = s.subscribe!(() => {
+      calls.push(1);
+      stop();
+    });
+    await vi.advanceTimersByTimeAsync(5100);
+    await vi.advanceTimersByTimeAsync(30000);
+    expect(calls).toHaveLength(1);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('polls every 5 s normally and every 2 s while analysing', async () => {
+    vi.useFakeTimers();
+    let status = 'move_out_recorded';
+    const c = { get: vi.fn(async () => api({ status: status as ApiLease['status'], report: null })), post: vi.fn(), put: vi.fn() } as unknown as ApiClient;
+    const s = createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: c });
+    await s.getLease('l_1');
+    const listener = vi.fn();
+    const stop = s.subscribe!(listener);
+    await vi.advanceTimersByTimeAsync(4900);
+    expect(listener).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(200);
+    expect(listener).toHaveBeenCalledTimes(1);
+    status = 'analyzing';
+    await s.getLease('l_1');
+    await vi.advanceTimersByTimeAsync(5000); // the pending 5 s timer fires, then 2 s ticks follow
+    listener.mockClear();
+    await vi.advanceTimersByTimeAsync(6100);
+    expect(listener).toHaveBeenCalledTimes(3);
+    stop();
+    listener.mockClear();
+    await vi.advanceTimersByTimeAsync(20000);
+    expect(listener).not.toHaveBeenCalled();
   });
 });

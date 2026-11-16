@@ -19,6 +19,10 @@ import {
   type ScenarioId,
 } from './engine';
 
+function photosUnavailable(): never {
+  throw new ServiceError('integration_blocked', "Photo capture isn't available in sample mode.");
+}
+
 function requireVersion(version: number | undefined): number {
   if (version === undefined) throw new ServiceError('stale_proposal', 'Reload to see the current proposal.');
   return version;
@@ -171,6 +175,9 @@ export function createSampleService(options: SampleOptions = {}): { service: Dep
       assertLease(leaseId);
       await applyKeyed(key, 'dispute_proposal', (s) => disputeProposal(s, requireVersion(version), input, now()));
     },
+    uploadPhoto: async () => photosUnavailable(),
+    commitPhotos: async () => photosUnavailable(),
+    startReport: async () => photosUnavailable(),
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
