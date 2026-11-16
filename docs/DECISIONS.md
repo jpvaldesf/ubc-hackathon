@@ -11,6 +11,13 @@ One entry per decision that would be expensive to reverse. Newest at the top. `/
 - Revisit if: the condition that would make us change our mind
 -->
 
+## D-011 · Bounties: QuickNode Streams only, and only if the demo path works Mon 2 PM · 2026-11-15, 19:53 PST
+- Context: we're entered in no bounties. Bounties are free to enter and don't conflict with the Consumer track or the Arc award, but each one needs its sponsor's tool as a core feature, and the demo path isn't connected end to end yet.
+- Options considered: no bounties / QuickNode Streams / ElevenLabs / Gemini Prediction Markets / Grok Bot.
+- Decision: build QuickNode Streams **only if** the full demo path works end to end on Arc testnet at the Mon Nov 16, 2 PM checkpoint. Then Mon evening, 2–4 h timebox: one Arc Testnet Stream on logs filtered to our escrow's events → signed webhook to the server → timeline steps marked "confirmed on Arc" in the app; README section (network, dataset, filter, destination, why); opt in on Devpost Tue. If the demo path isn't working by 2 PM, enter no bounties. Skip ElevenLabs, Gemini Prediction Markets and Grok Bot.
+- Why: Streams supports Arc Testnet (QuickNode supported-chains docs and changelog) and fits a real need (the chain as source of truth for the lease timeline, including timeout calls the server didn't send). The other three would be add-ons or have no fit, and judges check "core, not add-on". The demo path wins the main prizes, so it comes first.
+- Revisit if: the demo path is done early (start Streams sooner), or hosting slips past Mon evening (the webhook needs a public URL, so drop it).
+
 ## D-010 · Separate confidence cutoffs: normal wear 0.5, damage 0.7 · 2026-11-15, 12:30 PST
 - Context: the p7 nail-hole pair was correctly read as normal_wear/nail_holes in 3/3 runs, but at 0.60, so the single 0.7 cutoff hid it. Demo step 3 needs the nail holes to show as a visible "normal wear, $0" line.
 - Options considered: keep one 0.7 cutoff (nail holes stay hidden) / lower the cutoff for everything (risks new charges) / separate cutoffs per category.
