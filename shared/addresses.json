@@ -1,1 +1,15 @@
-{}
+{
+  "arc_testnet": {
+    "chain_id": 5042002,
+    "explorer": "https://explorer.testnet.arc.io",
+    "usdc": "0x3600000000000000000000000000000000000000",
+    "DepositEscrow": "0xe3791a88E125ce9e826FB07f84BF88625d9f3e98",
+    "DepositEscrow_deploy_tx": "0x389693fbb99442aa7343e353c6df27d27f19eb4a30af256e660f417b6b4e4d2a",
+    "windows_seconds": { "appeal": 604800, "propose": 1814400, "resolve": 1209600 },
+    "demo_wallets": {
+      "landlord": "0x86a4F488D30b1CAA5A4e6613994DFc530B191a36",
+      "tenant": "0xFB2C0638628b7830e46F2e054d35bD058B9d4A6F",
+      "arbiter": "0x90b7F173B4aE279f9C7abb512a4cbDfeDb0D10c5"
+    }
+  }
+}

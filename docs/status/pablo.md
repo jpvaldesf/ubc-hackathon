@@ -3,16 +3,17 @@
 **Lane:** on-chain + backend (contracts/, server/, shared/abi/, shared/addresses.json)
 **Today's lane goal (Sat Nov 14):** Escrow deployed on Arc testnet with a release tx; FastAPI skeleton talking to it by midnight.
 **Full plan:** docs/PLAN.md (your section)
-**Branch:** feat/escrow-spike (merged via the Sat decisions PR)
+**Branch:** feat/escrow-deploy
 
 ## Done (with evidence: tx hash, PR link, screenshot)
 - Sat 11:50: docs/API.md drafted; frozen 2:30 PM as D-002…D-006.
 - Sat ~12:15: Arc testnet values in .env.example (chain 5042002, USDC 0x3600…0000, 6 dec ERC-20 / 18 native). Arc Foundry v0.8.0-4 installed.
 - Test wallets funded, 20 USDC each (faucet cap is 20). Landlord 0x86a4F488D30b1CAA5A4e6613994DFc530B191a36 · Tenant 0xFB2C0638628b7830e46F2e054d35bD058B9d4A6F · Arbiter 0x90b7F173B4aE279f9C7abb512a4cbDfeDb0D10c5
-- Sat 2 PM: DepositEscrow.sol + 14 forge tests passing (incl. fund-conservation fuzz), Deploy + DemoRun scripts, ABI in shared/abi/. Not deployed yet.
+- Sat 2 PM: DepositEscrow.sol + 14 forge tests passing (incl. fund-conservation fuzz), Deploy + DemoRun scripts, ABI in shared/abi/.
+- Sat Nov 14, 2:27 PM: DepositEscrow deployed on Arc testnet at 0xe3791a88E125ce9e826FB07f84BF88625d9f3e98 (deploy tx 0x389693fbb99442aa7343e353c6df27d27f19eb4a30af256e660f417b6b4e4d2a, status 1, code verified via RPC Sun 5:30 PM). Address in shared/addresses.json.
 
 ## Next (max 3)
-1. Deploy + DemoRun on Arc testnet → release tx link in docs/STATUS.md, address in shared/addresses.json.
+1. Run DemoRun on Arc testnet → release tx link in docs/STATUS.md.
 2. 6 PM–midnight: FastAPI skeleton in server/ per docs/API.md (SQLite, per-shot upload, cents, report draft + 48 h auto-send).
 3. Sun AM: Circle wallets, 2 h timebox (D-007). Fallback = server-held keys.
 
