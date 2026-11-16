@@ -1,5 +1,5 @@
 import { Disclosure } from '../../components/Disclosure';
-import { formatDate, formatDateTime } from '../../lib/format';
+import { formatDateTime } from '../../lib/format';
 import { formatUsd } from '../../lib/money';
 import type { Lease, Proposal } from '../../services/types';
 
@@ -48,13 +48,12 @@ export function ProposalHistory({ proposal }: { proposal: Proposal }) {
  * Proposal version and exact timestamps. They matter for the record (the response binds to this
  * version) but are not what a reader needs first, so they sit behind a disclosure.
  */
-export function ProposalDetails({ lease, proposal }: { lease: Lease; proposal: Proposal }) {
+export function ProposalDetails({ lease: _lease, proposal }: { lease: Lease; proposal: Proposal }) {
   const rows: [string, string][] = [];
   if (proposal.version !== undefined) rows.push(['Version', String(proposal.version)]);
   rows.push(['Submitted by', proposal.submittedBy ?? 'Not submitted']);
   if (proposal.submittedAt) rows.push(['Submitted', formatDateTime(proposal.submittedAt)]);
   if (proposal.dispute) rows.push(['Dispute submitted', formatDateTime(proposal.dispute.submittedAt)]);
-  if (lease.moveOutRequestedOn) rows.push(['Move-out requested', formatDate(lease.moveOutRequestedOn)]);
   return (
     <Disclosure title="Proposal details" standalone>
       <dl className="details">

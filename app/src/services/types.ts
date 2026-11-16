@@ -157,6 +157,11 @@ export interface Proposal {
   refundAmount: BaseUnits;
   history: ProposalHistory;
   dispute?: Dispute;
+  /**
+   * Live backend only: what a landlord may change in a draft (docs/API.md, D-004). Charges can only
+   * be lowered or removed, and the AI's reason is fixed. Absent in sample mode (everything editable).
+   */
+  draftRules?: { editReason: false; lowerOnly: true };
 }
 
 export interface DraftEdit {

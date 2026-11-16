@@ -3,13 +3,11 @@
  * copy: what is happening to the deposit, who acts next, and what to do.
  * It does not decide policy. A button appears only when allowedActions includes it.
  */
-import { formatDate, pluralize } from '../../lib/format';
+import { pluralize } from '../../lib/format';
 import { formatUsd, isPositive, isZero } from '../../lib/money';
 import type { Lease, Participant, Proposal, Role } from '../../services/types';
 
-export type ActionButton =
-  | { kind: 'link'; to: 'review'; label: string; variant: 'primary' | 'secondary' }
-  | { kind: 'request_move_out'; label: string; variant: 'primary' | 'secondary' };
+export type ActionButton = { kind: 'link'; to: 'review'; label: string; variant: 'primary' | 'secondary' };
 
 export interface NextAction {
   headline: string;
@@ -53,36 +51,23 @@ export function describeLease(lease: Lease, proposal: Proposal | null): NextActi
   switch (lease.phase) {
     case 'active': {
       const owner = viewer === 'tenant' ? 'Your' : 'The';
-      const authorized = lease.moveOutAuthorizedRoles
-        .filter((role) => role !== viewer)
-        .map((role) => party(lease, role).displayName);
-      if (allowed.has('request_move_out')) {
-        return {
-          headline: `${owner} ${formatUsd(funds.original)} deposit is held.`,
-          detail: 'Nothing needs doing right now. When you are ready to move out, you can request it here.',
-          primary: { kind: 'request_move_out', label: 'Request move-out', variant: 'secondary' },
-        };
-      }
       return {
         headline: `${owner} ${formatUsd(funds.original)} deposit is held.`,
-        detail: authorized.length
-          ? `Nothing needs doing right now. ${authorized.join(' or ')} can request move-out.`
-          : 'Nothing needs doing right now.',
+        detail: 'Nothing needs doing right now.',
       };
     }
 
     case 'move_out': {
-      const since = lease.moveOutRequestedOn ? ` on ${formatDate(lease.moveOutRequestedOn)}` : '';
       if (allowed.has('edit_proposal')) {
         return {
           headline: 'Review the proposed charges.',
-          detail: `Move-out was requested${since}. Check each finding, adjust or remove charges, then submit your proposal.`,
+          detail: 'Check each finding, lower or remove charges, then send the report.',
           primary: { kind: 'link', to: 'review', label: 'Review proposed charges', variant: 'primary' },
         };
       }
       return {
         headline: 'Move-out is in progress.',
-        detail: `Move-out was requested${since}.`,
+        detail: 'The move-out review is in progress.',
         waiting: waitingText(lease),
       };
     }

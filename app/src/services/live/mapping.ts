@@ -25,7 +25,7 @@ import type {
   WaitingOn,
 } from '../types';
 
-const UNITS_PER_CENT = 10_000n; // docs/API.md: 1 cent = 10_000 USDC base units (6 decimals)
+export const UNITS_PER_CENT = 10_000n; // docs/API.md: 1 cent = 10_000 USDC base units (6 decimals)
 
 export function centsToUnits(cents: number): string {
   if (!Number.isInteger(cents) || cents < 0) throw new Error(`Invalid cents amount: ${cents}`);
@@ -68,6 +68,9 @@ function chargedFindings(lease: ApiLease): ApiFinding[] {
   return (lease.report?.findings ?? []).filter((f) => f.cost_cents > 0);
 }
 
+/** Landlord edits staged in the browser until the report is sent. The API applies edits only at /report/send. */
+export type StagedEdits = Map<string, { included?: boolean; cents?: number }>;
+
 export function mapLease(api: ApiLease, viewerId: DevUserId): Lease {
   const role = roleOf(viewerId);
   const { stage, phase } = stageAndPhase(api.status);
@@ -95,10 +98,12 @@ export function mapLease(api: ApiLease, viewerId: DevUserId): Lease {
     { id: api.landlord.id, role: 'landlord', displayName: api.landlord.name },
   ];
 
-  const allowedActions: AllowedAction[] =
-    role === 'tenant' && api.status === 'proposed' && (api.report?.total_deduction_cents ?? 0) > 0
-      ? ['accept_proposal', 'dispute_proposal']
-      : [];
+  let allowedActions: AllowedAction[] = [];
+  if (role === 'tenant' && api.status === 'proposed' && (api.report?.total_deduction_cents ?? 0) > 0) {
+    allowedActions = ['accept_proposal', 'dispute_proposal'];
+  } else if (role === 'landlord' && api.status === 'report_draft') {
+    allowedActions = ['edit_proposal', 'submit_proposal']; // POST /report/send; the server still enforces it
+  }
 
   let waitingOn: WaitingOn | undefined;
   if (api.status === 'report_draft') waitingOn = { actor: 'landlord', awaiting: 'move_out_proposal' };
@@ -107,9 +112,9 @@ export function mapLease(api: ApiLease, viewerId: DevUserId): Lease {
 
   let unavailableNotice: string | undefined;
   if (['created', 'funded', 'move_in_recorded'].includes(api.status)) {
-    unavailableNotice = 'Paying the deposit, taking photos and requesting move-out are not available in the app yet.';
-  } else if (role === 'landlord' && ['move_out_recorded', 'analyzing', 'report_draft'].includes(api.status)) {
-    unavailableNotice = 'Running the photo comparison and sending the report are not available in the app yet.';
+    unavailableNotice = 'Paying the deposit and taking photos are not available in the app yet.';
+  } else if (role === 'landlord' && ['move_out_recorded', 'analyzing'].includes(api.status)) {
+    unavailableNotice = 'Running the photo comparison is not available in the app yet. The report appears here once it is ready.';
   }
 
   const evidence = [
@@ -171,8 +176,19 @@ function mapFinding(f: ApiFinding): Finding {
   };
 }
 
-/** Null until the report has been sent (see the rules at the top). Only charged findings are listed. */
-export function mapProposal(api: ApiLease): Proposal | null {
+function applyStaged(f: ApiFinding, staged?: StagedEdits) {
+  const edit = staged?.get(f.id);
+  const cents = edit?.cents !== undefined ? Math.min(edit.cents, f.cost_cents) : f.cost_cents;
+  return { included: edit?.included ?? true, cents };
+}
+
+/**
+ * A proposal exists once the report was sent. The landlord also gets the AI draft (`report_draft`) to
+ * review; the tenant never sees a draft. Draft totals are a preview of what /report/send will do:
+ * the server recomputes and returns the real figures.
+ */
+export function mapProposal(api: ApiLease, viewerId: DevUserId = 'tenant_demo', staged?: StagedEdits): Proposal | null {
+  if (api.report && api.status === 'report_draft' && roleOf(viewerId) === 'landlord') return mapDraft(api, staged);
   if (!api.report || !PROPOSAL_STATUSES.includes(api.status)) return null;
   const sent = api.timeline.find((t) => t.step === 'proposed');
   const items = chargedFindings(api).map(mapFinding);
@@ -197,5 +213,35 @@ export function mapProposal(api: ApiLease): Proposal | null {
       },
       revisions: [],
     },
+  };
+}
+
+function mapDraft(api: ApiLease, staged?: StagedEdits): Proposal {
+  const findings = chargedFindings(api);
+  const items = findings.map((f) => {
+    const { included, cents } = applyStaged(f, staged);
+    return { ...mapFinding({ ...f, cost_cents: cents }), included };
+  });
+  const total = Math.min(
+    findings.reduce((sum, f) => {
+      const { included, cents } = applyStaged(f, staged);
+      return included ? sum + cents : sum;
+    }, 0),
+    api.deposit_cents,
+  );
+  return {
+    id: api.report?.report_id ?? `report-${api.lease_id}`,
+    status: 'draft',
+    items,
+    deductionTotal: centsToUnits(total),
+    refundAmount: centsToUnits(api.deposit_cents - total),
+    history: {
+      original: {
+        source: 'analysis',
+        items: findings.map((f) => ({ id: f.id, label: `${f.room}: ${f.item}`, amount: centsToUnits(f.cost_cents), rationale: f.description })),
+      },
+      revisions: [],
+    },
+    draftRules: { editReason: false, lowerOnly: true },
   };
 }
