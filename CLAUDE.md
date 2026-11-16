@@ -67,6 +67,7 @@ Architecture decisions live in @docs/DECISIONS.md. Read it before proposing a ch
 7. **Plan mode for anything over ~30 minutes of work.** Show me the plan, then build.
 8. When you finish a task, update `docs/STATUS.md` (Done / Next / Blockers) in two or three lines.
 9. When unsure about scope, ask: "Does this help us win a prize we're entered for?"
+10. Don't add Co-Authored-By or 'Generated with Claude Code' lines.
 
 ## Agents and skills available
 - Subagents: `researcher`, `security-auditor`, `judge-panel`, `qa-demo-tester`
