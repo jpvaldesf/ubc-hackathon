@@ -1,8 +1,7 @@
 import { ServiceError } from '../errors';
 import type { DepositService } from '../types';
 import { createApiClient, type ApiClient, type ApiLease, type DevUserId } from './api';
-import { mapLease, mapProposal, type StagedEdits } from './mapping';
-import { UNITS_PER_CENT } from './mapping';
+import { mapLease, mapProposal, UNITS_PER_CENT, type MapContext, type StagedEdits } from './mapping';
 
 /**
  * Live adapter for the frozen API (docs/API.md). Calls the backend for:
@@ -32,10 +31,45 @@ export interface LiveOptions {
   baseUrl: string;
   userId: DevUserId;
   client?: ApiClient;
+  /** The one explorer origin accepted for proof links. */
+  explorer?: string;
+  /** Chain id /health must report before transaction links are shown. */
+  expectedChainId?: number;
 }
 
-export function createLiveService({ baseUrl, userId, client = createApiClient(baseUrl) }: LiveOptions): DepositService {
+export type LiveService = DepositService & {
+  /** The development identity sent as X-User-Id. Not authentication. */
+  getUserId(): DevUserId;
+  /** Switches the dev identity and makes every subscriber refetch. */
+  setUserId(id: DevUserId): void;
+};
+
+export function createLiveService({
+  baseUrl,
+  userId: initialUserId,
+  client = createApiClient(baseUrl),
+  explorer = 'https://explorer.testnet.arc.io',
+  expectedChainId = 5042002,
+}: LiveOptions): LiveService {
+  let userId = initialUserId;
   let lastStatus: string | undefined;
+  const listeners = new Set<() => void>();
+  let timer: ReturnType<typeof setInterval> | undefined;
+
+  // /health is the only place the API names the chain. Cache a successful check; retry after a failure.
+  let verified: Promise<boolean> | undefined;
+  function chainVerified(): Promise<boolean> {
+    verified ??= (client.get('/health') as Promise<{ ok?: boolean; chain_id?: number; escrow?: string }>)
+      .then((h) => h.ok === true && h.chain_id === expectedChainId && /^0x[0-9a-fA-F]{40}$/.test(h.escrow ?? ''))
+      .catch(() => false)
+      .then((ok) => {
+        if (!ok) verified = undefined;
+        return ok;
+      });
+    return verified;
+  }
+  const context = async (): Promise<MapContext> => ({ apiUrl: baseUrl, chainVerified: await chainVerified(), explorer });
+
   const inflight = new Map<string, Promise<ApiLease>>();
   const staged = new Map<string, StagedEdits>();
 
@@ -55,11 +89,18 @@ export function createLiveService({ baseUrl, userId, client = createApiClient(ba
 
   return {
     mode: 'live',
+    getUserId: () => userId,
+    setUserId(id) {
+      userId = id;
+      listeners.forEach((l) => l());
+    },
     async getLease(leaseId) {
-      return mapLease(await fetchLease(leaseId), userId);
+      const [lease, ctx] = await Promise.all([fetchLease(leaseId), context()]);
+      return mapLease(lease, userId, ctx);
     },
     async getProposal(leaseId) {
-      return mapProposal(await fetchLease(leaseId), userId, staged.get(leaseId));
+      const [lease, ctx] = await Promise.all([fetchLease(leaseId), context()]);
+      return mapProposal(lease, userId, staged.get(leaseId), ctx);
     },
     requestMoveOut: async () => blocked('Requesting move-out'),
     async saveProposalDraft(leaseId, edits) {
@@ -92,7 +133,7 @@ export function createLiveService({ baseUrl, userId, client = createApiClient(ba
         current.set(edit.itemId, next);
       }
       staged.set(leaseId, current);
-      const proposal = mapProposal(lease, userId, current);
+      const proposal = mapProposal(lease, userId, current, await context());
       if (!proposal) throw new ServiceError('invalid_state', 'There is no draft report to edit.');
       return proposal;
     },
@@ -116,13 +157,19 @@ export function createLiveService({ baseUrl, userId, client = createApiClient(ba
       await client.post(leasePath(leaseId, '/appeal'), userId, { finding_ids: input.itemIds, reason: input.reason });
     },
     subscribe(listener) {
-      const timer = setInterval(() => {
+      listeners.add(listener);
+      // One shared poll for all subscribers.
+      timer ??= setInterval(() => {
         if (typeof document !== 'undefined' && document.hidden) return;
         if (lastStatus && TERMINAL.has(lastStatus)) return;
-        listener();
+        listeners.forEach((l) => l());
       }, POLL_MS);
       return () => {
-        clearInterval(timer);
+        listeners.delete(listener);
+        if (listeners.size === 0 && timer) {
+          clearInterval(timer);
+          timer = undefined;
+        }
       };
     },
   };

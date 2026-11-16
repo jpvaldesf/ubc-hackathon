@@ -25,6 +25,35 @@ import type {
   WaitingOn,
 } from '../types';
 
+/** What the adapter knows about the backend beyond a single lease response. */
+export interface MapContext {
+  /** Backend base URL; relative /files/... photo paths resolve against it. */
+  apiUrl: string;
+  /** True only when /health matched the expected Arc testnet chain and escrow. */
+  chainVerified: boolean;
+  /** The one explorer origin accepted for proof links. */
+  explorer: string;
+}
+
+const NO_CONTEXT: MapContext = { apiUrl: '', chainVerified: false, explorer: 'https://explorer.testnet.arc.io' };
+
+/** Only paths under /files/ with no traversal are accepted; anything else is not shown. */
+export function resolvePhotoUrl(path: string, apiUrl: string): string | undefined {
+  if (!apiUrl || !/^\/files\/[A-Za-z0-9_\-./]+$/.test(path) || path.includes('..')) return undefined;
+  return `${apiUrl.replace(/\/+$/, '')}${path}`;
+}
+
+/**
+ * A transaction counts as real proof only if the server's chain checked out AND the explorer link points at the
+ * single accepted explorer for exactly this hash. The lease response has no network field, so this is the
+ * strongest check available from the API alone; a fake chain configured with the real explorer would not be caught.
+ */
+export function genuineTxUrl(tx: { hash: string; explorer_url: string } | null | undefined, ctx: MapContext): string | undefined {
+  if (!tx || !ctx.chainVerified || !/^https:\/\//.test(ctx.explorer)) return undefined;
+  if (!/^0x[0-9a-fA-F]{64}$/.test(tx.hash)) return undefined;
+  return tx.explorer_url === `${ctx.explorer.replace(/\/+$/, '')}/tx/${tx.hash}` ? tx.explorer_url : undefined;
+}
+
 export const UNITS_PER_CENT = 10_000n; // docs/API.md: 1 cent = 10_000 USDC base units (6 decimals)
 
 export function centsToUnits(cents: number): string {
@@ -71,7 +100,7 @@ function chargedFindings(lease: ApiLease): ApiFinding[] {
 /** Landlord edits staged in the browser until the report is sent. The API applies edits only at /report/send. */
 export type StagedEdits = Map<string, { included?: boolean; cents?: number }>;
 
-export function mapLease(api: ApiLease, viewerId: DevUserId): Lease {
+export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = NO_CONTEXT): Lease {
   const role = roleOf(viewerId);
   const { stage, phase } = stageAndPhase(api.status);
   const proposed = PROPOSAL_STATUSES.includes(api.status);
@@ -87,10 +116,10 @@ export function mapLease(api: ApiLease, viewerId: DevUserId): Lease {
 
   const operations: Operation[] = [];
   if (proposeTx && toTenant > 0) {
-    operations.push({ id: `refund-${api.lease_id}`, kind: 'refund', amount: centsToUnits(toTenant), status: 'succeeded', txHash: proposeTx.hash });
+    operations.push({ id: `refund-${api.lease_id}`, kind: 'refund', amount: centsToUnits(toTenant), status: 'succeeded' });
   }
   if (settleTx && toLandlord > 0) {
-    operations.push({ id: `payout-${api.lease_id}`, kind: 'landlord_payout', amount: centsToUnits(toLandlord), status: 'succeeded', txHash: settleTx.hash });
+    operations.push({ id: `payout-${api.lease_id}`, kind: 'landlord_payout', amount: centsToUnits(toLandlord), status: 'succeeded' });
   }
 
   const participants: Participant[] = [
@@ -123,6 +152,20 @@ export function mapLease(api: ApiLease, viewerId: DevUserId): Lease {
   ];
   if (api.report?.report_hash) evidence.push({ id: 'report', label: 'Report fingerprint', detail: api.report.report_hash });
 
+  const eventText = (t: ApiLease['timeline'][number]) =>
+    t.step === 'proposed' && role === 'landlord' && api.payout.to_tenant_cents != null
+      ? `$${(api.payout.to_tenant_cents / 100).toFixed(2)} sent to ${api.tenant.name}`
+      : t.label;
+  const withTx = api.timeline.filter((t) => t.tx);
+  const proofs = withTx.flatMap((t, i) => {
+    const url = genuineTxUrl(t.tx, ctx);
+    return url ? [{ id: `${t.step}-${i}`, label: eventText(t), url }] : [];
+  });
+  const proofNote =
+    withTx.length > proofs.length
+      ? "Transaction links are hidden because these transactions could not be verified as real Arc testnet transactions, so they are not blockchain proof."
+      : undefined;
+
   return {
     id: api.lease_id,
     property: { label: api.address },
@@ -146,20 +189,23 @@ export function mapLease(api: ApiLease, viewerId: DevUserId): Lease {
     operations,
     deadlines:
       api.status === 'proposed' && api.appeal_deadline ? [{ label: 'Appeal window ends', at: api.appeal_deadline }] : [],
-    events: api.timeline.map((t, i) => ({
-      id: `${t.step}-${i}`,
-      at: t.at,
-      // The server words this step for the tenant ("sent to you"); say who it went to for the landlord.
-      text:
-        t.step === 'proposed' && role === 'landlord' && api.payout.to_tenant_cents != null
-          ? `$${(api.payout.to_tenant_cents / 100).toFixed(2)} sent to ${api.tenant.name}`
-          : t.label,
-    })),
+    // The server words the proposed step for the tenant ("sent to you"); eventText says who it went to for the landlord.
+    events: api.timeline.map((t, i) => ({ id: `${t.step}-${i}`, at: t.at, text: eventText(t) })),
     evidence,
+    proofs,
+    proofNote,
   };
 }
 
-function mapFinding(f: ApiFinding): Finding {
+function photoFor(photoId: string, label: string, api: ApiLease, ctx: MapContext) {
+  const found = [...api.photos.in, ...api.photos.out].find((p) => p.photo_id === photoId);
+  const src = found ? resolvePhotoUrl(found.url, ctx.apiUrl) : undefined;
+  return src
+    ? ({ kind: 'image', src, alt: `${label} photo`, caption: photoId } as const)
+    : ({ kind: 'placeholder', alt: `${label} photo not available`, caption: photoId } as const);
+}
+
+function mapFinding(f: ApiFinding, api: ApiLease, ctx: MapContext): Finding {
   const edited = f.edited_by_landlord && f.original_cost_cents != null ? ` Lowered by the landlord from $${(f.original_cost_cents / 100).toFixed(2)}.` : '';
   return {
     id: f.id,
@@ -168,12 +214,19 @@ function mapFinding(f: ApiFinding): Finding {
     amount: centsToUnits(f.cost_cents),
     rationale: `Found by comparing move-in and move-out photos (confidence ${Math.round(f.confidence * 100)}%).${edited}`,
     included: true,
-    // Photos exist at /files/... but the UI only renders placeholders today.
-    photoPair: {
-      moveIn: { kind: 'placeholder', alt: `Move-in photo ${f.before_photo}`, caption: f.before_photo },
-      moveOut: { kind: 'placeholder', alt: `Move-out photo ${f.after_photo}`, caption: f.after_photo },
-    },
+    photoPair: { moveIn: photoFor(f.before_photo, 'Move-in', api, ctx), moveOut: photoFor(f.after_photo, 'Move-out', api, ctx) },
   };
+}
+
+/** $0 findings (normal wear, or a charge lowered to $0). Context only: not deductions, not editable. */
+function noChargeFindings(api: ApiLease, ctx: MapContext): Finding[] {
+  return (api.report?.findings ?? [])
+    .filter((f) => f.cost_cents === 0)
+    .map((f) => ({
+      ...mapFinding(f, api, ctx),
+      included: false,
+      tag: f.category === 'normal_wear' ? 'Normal wear' : 'No charge',
+    }));
 }
 
 function applyStaged(f: ApiFinding, staged?: StagedEdits) {
@@ -187,15 +240,16 @@ function applyStaged(f: ApiFinding, staged?: StagedEdits) {
  * review; the tenant never sees a draft. Draft totals are a preview of what /report/send will do:
  * the server recomputes and returns the real figures.
  */
-export function mapProposal(api: ApiLease, viewerId: DevUserId = 'tenant_demo', staged?: StagedEdits): Proposal | null {
-  if (api.report && api.status === 'report_draft' && roleOf(viewerId) === 'landlord') return mapDraft(api, staged);
+export function mapProposal(api: ApiLease, viewerId: DevUserId = 'tenant_demo', staged?: StagedEdits, ctx: MapContext = NO_CONTEXT): Proposal | null {
+  if (api.report && api.status === 'report_draft' && roleOf(viewerId) === 'landlord') return mapDraft(api, staged, ctx);
   if (!api.report || !PROPOSAL_STATUSES.includes(api.status)) return null;
   const sent = api.timeline.find((t) => t.step === 'proposed');
-  const items = chargedFindings(api).map(mapFinding);
+  const items = chargedFindings(api).map((f) => mapFinding(f, api, ctx));
   const total = api.report.total_deduction_cents;
   return {
     id: api.report.report_id ?? `report-${api.lease_id}`,
     status: 'submitted',
+    noChargeItems: noChargeFindings(api, ctx),
     submittedAt: sent?.at,
     submittedBy: api.report.sent_by === 'auto' ? 'Automatic send after 48 hours' : api.landlord.name,
     items,
@@ -216,11 +270,11 @@ export function mapProposal(api: ApiLease, viewerId: DevUserId = 'tenant_demo', 
   };
 }
 
-function mapDraft(api: ApiLease, staged?: StagedEdits): Proposal {
+function mapDraft(api: ApiLease, staged: StagedEdits | undefined, ctx: MapContext): Proposal {
   const findings = chargedFindings(api);
   const items = findings.map((f) => {
     const { included, cents } = applyStaged(f, staged);
-    return { ...mapFinding({ ...f, cost_cents: cents }), included };
+    return { ...mapFinding({ ...f, cost_cents: cents }, api, ctx), included };
   });
   const total = Math.min(
     findings.reduce((sum, f) => {
@@ -232,6 +286,7 @@ function mapDraft(api: ApiLease, staged?: StagedEdits): Proposal {
   return {
     id: api.report?.report_id ?? `report-${api.lease_id}`,
     status: 'draft',
+    noChargeItems: noChargeFindings(api, ctx),
     items,
     deductionTotal: centsToUnits(total),
     refundAmount: centsToUnits(api.deposit_cents - total),

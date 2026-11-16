@@ -91,13 +91,22 @@ export interface Lease {
   deadlines: Deadline[];
   events: ActivityEvent[];
   evidence: EvidenceEntry[];
+  /** Links to real transactions. Only set when the transaction is verified as belonging to the configured network. */
+  proofs?: ProofLink[];
+  /** Why proof links are missing when the server reported transactions that could not be verified as real. */
+  proofNote?: string;
 }
 
-export interface Photo {
-  kind: 'placeholder';
-  alt: string;
-  caption: string;
+export interface ProofLink {
+  id: string;
+  label: string;
+  url: string;
 }
+
+export type Photo =
+  | { kind: 'placeholder'; alt: string; caption: string }
+  /** A real photo served by the backend. `src` is already an absolute URL. */
+  | { kind: 'image'; src: string; alt: string; caption: string };
 
 export interface PhotoPair {
   moveIn: Photo;
@@ -113,6 +122,8 @@ export interface Finding {
   rationale: string;
   included: boolean;
   photoPair: PhotoPair;
+  /** Short label for $0 findings, such as "Normal wear". */
+  tag?: string;
 }
 
 export interface OriginalFinding {
@@ -162,6 +173,8 @@ export interface Proposal {
    * be lowered or removed, and the AI's reason is fixed. Absent in sample mode (everything editable).
    */
   draftRules?: { editReason: false; lowerOnly: true };
+  /** Findings that carry no charge (normal wear). Shown for context; never counted as deductions and never editable. */
+  noChargeItems?: Finding[];
 }
 
 export interface DraftEdit {

@@ -3,9 +3,11 @@ import { reconcileFunds } from '../../lib/funds';
 import { ServiceError } from '../errors';
 import { createApiClient, type ApiClient, type ApiLease } from './api';
 import { createLiveService } from './index';
-import { centsToUnits, mapLease, mapProposal } from './mapping';
+import { centsToUnits, genuineTxUrl, mapLease, mapProposal, resolvePhotoUrl, type MapContext } from './mapping';
 
 const tx = (h: string) => ({ hash: h, explorer_url: `https://explorer.test/tx/${h}` });
+
+const photo = (id: string, phase: string, shot: string) => ({ photo_id: id, shot_id: shot, url: `/files/l_1/${phase}/${shot}.jpg` });
 
 function api(over: Partial<ApiLease> = {}): ApiLease {
   return {
@@ -18,7 +20,7 @@ function api(over: Partial<ApiLease> = {}): ApiLease {
     demo_scale: 100,
     escrow_balance_cents: 120,
     appeal_deadline: '2026-11-21T20:11:02Z',
-    photos: { in: [1, 2], out: [1, 2] },
+    photos: { in: [photo('p_in_s3', 'in', 's3'), photo('p_in_s4', 'in', 's4')], out: [photo('p_out_s3', 'out', 's3'), photo('p_out_s4', 'out', 's4')] },
     report: {
       report_id: 'r_1',
       report_hash: '0xabc',
@@ -41,7 +43,7 @@ describe('mapLease', () => {
     const lease = mapLease(api(), 'tenant_demo');
     expect(lease.funds).toMatchObject({ original: '10000000', returnedConfirmed: '8800000', held: '1200000', paidToLandlordConfirmed: '0' });
     expect(reconcileFunds(lease.funds).ok).toBe(true);
-    expect(lease.operations).toEqual([{ id: 'refund-l_1', kind: 'refund', amount: '8800000', status: 'succeeded', txHash: '0x1' }]);
+    expect(lease.operations).toEqual([{ id: 'refund-l_1', kind: 'refund', amount: '8800000', status: 'succeeded' }]);
     expect(lease.phase).toBe('proposal_submitted');
     expect(lease.allowedActions).toEqual(['accept_proposal', 'dispute_proposal']);
     expect(lease.deadlines).toEqual([{ label: 'Appeal window ends', at: '2026-11-21T20:11:02Z' }]);
@@ -169,8 +171,7 @@ describe('live service', () => {
     const c = client();
     const s = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: c });
     await Promise.all([s.getLease('l_1'), s.getProposal('l_1')]);
-    expect(c.get).toHaveBeenCalledTimes(1);
-    expect(c.get).toHaveBeenCalledWith('/leases/l_1');
+    expect((c.get.mock.calls as unknown as string[][]).filter(([path]) => path === '/leases/l_1')).toHaveLength(1);
   });
 
   it('refuses move-out instead of pretending', async () => {
@@ -243,5 +244,93 @@ describe('live service', () => {
   it('rejects a lease id that could escape the path', async () => {
     const s = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: client() });
     await expect(s.getLease('../health')).rejects.toBeInstanceOf(ServiceError);
+  });
+});
+
+const HASH = '0x' + 'ab'.repeat(32);
+const ctx: MapContext = { apiUrl: 'http://api.test:8000/', chainVerified: true, explorer: 'https://explorer.testnet.arc.io' };
+const realTx = { hash: HASH, explorer_url: `https://explorer.testnet.arc.io/tx/${HASH}` };
+
+describe('photos', () => {
+  it('resolves relative /files paths against the backend address and rejects anything else', () => {
+    expect(resolvePhotoUrl('/files/l_1/in/s3.jpg', 'http://api.test:8000/')).toBe('http://api.test:8000/files/l_1/in/s3.jpg');
+    expect(resolvePhotoUrl('http://evil.test/x.jpg', 'http://api.test:8000')).toBeUndefined();
+    expect(resolvePhotoUrl('/files/../secret', 'http://api.test:8000')).toBeUndefined();
+    expect(resolvePhotoUrl('/other/x.jpg', 'http://api.test:8000')).toBeUndefined();
+    expect(resolvePhotoUrl('/files/x.jpg', '')).toBeUndefined();
+  });
+
+  it('shows the real photos on a finding, and a placeholder when the server has no such photo', () => {
+    const [item] = mapProposal(api(), 'tenant_demo', undefined, ctx)!.items;
+    expect(item.photoPair.moveIn).toMatchObject({ kind: 'image', src: 'http://api.test:8000/files/l_1/in/s3.jpg' });
+    expect(item.photoPair.moveOut).toMatchObject({ kind: 'image', src: 'http://api.test:8000/files/l_1/out/s3.jpg' });
+    const missing = api({ photos: { in: [], out: [] } });
+    expect(mapProposal(missing, 'tenant_demo', undefined, ctx)!.items[0].photoPair.moveIn.kind).toBe('placeholder');
+  });
+});
+
+describe('$0 findings', () => {
+  it('lists normal wear separately, without changing counts or totals', () => {
+    const p = mapProposal(api(), 'tenant_demo', undefined, ctx)!;
+    expect(p.items.map((i) => i.id)).toEqual(['f1']);
+    expect(p.noChargeItems!.map((i) => [i.id, i.tag, i.amount, i.included])).toEqual([['f2', 'Normal wear', '0', false]]);
+    expect(p.deductionTotal).toBe('1200000');
+  });
+
+  it('shows them in the landlord draft preview too, and staging never touches them', () => {
+    const draft = api({ status: 'report_draft', report: { ...api().report!, sent_by: null }, timeline: [] });
+    const staged = new Map([['f1', { cents: 80 }]]);
+    const p = mapProposal(draft, 'landlord_demo', staged, ctx)!;
+    expect(p.status).toBe('draft');
+    expect(p.noChargeItems!.map((i) => i.id)).toEqual(['f2']);
+    expect(p.deductionTotal).toBe(centsToUnits(80));
+  });
+});
+
+describe('proof links', () => {
+  it('links only genuine transactions on the verified network', () => {
+    expect(genuineTxUrl(realTx, ctx)).toBe(realTx.explorer_url);
+    expect(genuineTxUrl(realTx, { ...ctx, chainVerified: false })).toBeUndefined();
+    expect(genuineTxUrl({ ...realTx, explorer_url: `https://FAKE-explorer.invalid/tx/${HASH}` }, ctx)).toBeUndefined();
+    expect(genuineTxUrl({ ...realTx, explorer_url: 'https://explorer.testnet.arc.io/tx/0xdead' }, ctx)).toBeUndefined();
+    expect(genuineTxUrl({ hash: '0x1', explorer_url: 'https://explorer.testnet.arc.io/tx/0x1' }, ctx)).toBeUndefined();
+    expect(genuineTxUrl(null, ctx)).toBeUndefined();
+    expect(genuineTxUrl(realTx, { ...ctx, explorer: 'javascript:alert(1)//' })).toBeUndefined();
+  });
+
+  it('puts links on the lease only for genuine tx, and explains the missing ones', () => {
+    const lease = mapLease(api({ timeline: [{ step: 'proposed', at: 'a', label: 'x', tx: realTx }] }), 'tenant_demo', ctx);
+    expect(lease.proofs).toHaveLength(1);
+    expect(lease.proofNote).toBeUndefined();
+    const fake = mapLease(api({ timeline: [{ step: 'proposed', at: 'a', label: 'x', tx: { hash: HASH, explorer_url: `https://FAKE-explorer.invalid/tx/${HASH}` } }] }), 'tenant_demo', ctx);
+    expect(fake.proofs).toEqual([]);
+    expect(fake.proofNote).toMatch(/not blockchain proof/);
+    expect(mapLease(api({ timeline: [] }), 'tenant_demo', ctx).proofNote).toBeUndefined();
+  });
+});
+
+describe('demo identity', () => {
+  it('uses the new identity on the next request and tells subscribers to refetch', async () => {
+    const c = { get: vi.fn(async () => api()), post: vi.fn(async () => ({})) } satisfies ApiClient;
+    const s = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: c });
+    const refetch = vi.fn();
+    const stop = s.subscribe!(refetch);
+    expect((await s.getLease('l_1')).viewer).toEqual({ userId: 'tenant_demo', role: 'tenant' });
+    s.setUserId('landlord_demo');
+    expect(refetch).toHaveBeenCalledTimes(1);
+    expect((await s.getLease('l_1')).viewer).toEqual({ userId: 'landlord_demo', role: 'landlord' });
+    await s.acceptProposal('l_1', undefined, 'k');
+    expect(c.post).toHaveBeenCalledWith('/leases/l_1/accept', 'landlord_demo', {});
+    stop();
+  });
+
+  it('verifies the chain once via /health before offering links', async () => {
+    const get = vi.fn(async (path: string) => (path === '/health' ? { ok: true, chain_id: 5042002, escrow: '0x' + '1'.repeat(40) } : api({ timeline: [{ step: 'proposed', at: 'a', label: 'x', tx: realTx }] })));
+    const s = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: { get, post: vi.fn() } as unknown as ApiClient });
+    expect((await s.getLease('l_1')).proofs).toHaveLength(1);
+    await s.getLease('l_1');
+    expect(get.mock.calls.filter(([p]) => p === '/health')).toHaveLength(1);
+    const wrongChain = createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: { get: vi.fn(async (path: string) => (path === '/health' ? { ok: true, chain_id: 1, escrow: '0x' + '1'.repeat(40) } : api({ timeline: [{ step: 'proposed', at: 'a', label: 'x', tx: realTx }] }))), post: vi.fn() } as unknown as ApiClient });
+    expect((await wrongChain.getLease('l_1')).proofs).toEqual([]);
   });
 });

@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { Link } from 'react-router-dom';
+import { ProofLinks } from '../../components/ProofLinks';
 import { Disclosure } from '../../components/Disclosure';
 import { LifecycleStatus } from '../../components/LifecycleTimeline';
 import { formatDateTime, roleLabel } from '../../lib/format';
@@ -55,6 +56,8 @@ export function OverviewPage() {
         </p>
       )}
 
+      <ProofLinks lease={lease} />
+
       <Folds lease={lease} />
     </div>
   );
@@ -75,7 +78,6 @@ function ActionControl({ action }: { action: ActionButton }) {
 function Folds({ lease }: { lease: Lease }) {
   // Oldest-first sort is stable, so entries sharing a timestamp keep their recorded order; reversing gives newest first.
   const events = [...lease.events].sort((a, b) => a.at.localeCompare(b.at)).reverse().slice(0, 5);
-  const receipts = lease.operations.filter((o) => o.txHash);
   const evidenceCount = lease.evidence.length;
   return (
     <div className="folds">
@@ -96,12 +98,6 @@ function Folds({ lease }: { lease: Lease }) {
             <li key={event.id} className="fold__row">
               <span>{event.text}</span>
               <span className="fold__row-note">{formatDateTime(event.at)}</span>
-            </li>
-          ))}
-          {receipts.map((op) => (
-            <li key={op.id} className="fold__row">
-              <span>{op.kind === 'refund' ? 'Refund receipt' : 'Payment receipt'}</span>
-              <span className="fold__row-note">{op.txHash}</span>
             </li>
           ))}
         </ul>
