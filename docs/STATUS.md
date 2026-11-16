@@ -30,6 +30,7 @@
 - Wed to Thu: buffer only (bug fixes, pitch drills). Sat 21: pitch in person.
 
 ## Blockers / open questions (for office hours, Telegram, or mentor)
+- Sun 9 PM check: app gaps for Mon AM (Marcus): photos show "No photo attached" (prefix server URL to /files paths); $0 normal-wear line hidden; proof links not one tap away; persona switch only via ?as=. App has no create/deposit/photo screens yet (steps 1–2 run by script).
 - Law check done (verified against Civil Code §1950.5 text (Justia)): AB 2801 move-out photos required since Apr 1 2025 (all tenancies); move-in photos for tenancies starting on/after Jul 1 2025; photos go with the itemized statement within 21 days; bad-faith penalty up to 2x deposit (subd. (m)).
 - Fri-night milestone slipped: contract is written and tested but not deployed; no app or server code on the remote yet (Sat Nov 14 night).
 - Open (from the vision spike): how to treat a tenant's own rug vs built-in carpet (the model calls area rugs belongings even when told otherwise). Pipeline location and API settled by D-005/D-008.
