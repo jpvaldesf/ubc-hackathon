@@ -14,10 +14,12 @@
 - Sun Nov 15, ~6 PM: source verified on Blockscout. DemoRun lease #1 on testnet: 7/7 txs ok; propose paid tenant 8.8 USDC (0xe29c4c5c…0109), accept paid landlord 1.2 USDC (0xd86ffb8e…b693); escrow balance 0 after. Links in docs/STATUS.md.
 - Sun Nov 15, ~9 PM: FastAPI server in server/ (all docs/API.md endpoints, analyze() wired in, 12 tests). Live on testnet through the HTTP API: lease #2 ($1) create 0xe0d8e507…, deposit 0x761597e3…, commit in 0xf4419928…, commit out 0xd09bd0ab…; onchain manifest hashes match the server's. AI step not run live yet (no ANTHROPIC_API_KEY in my .env).
 
+- Sun Nov 15, 8:40–9 PM: full live run through server with real AI (lease #3); 9 PM check: demo steps 3–5 through Marcus's app on testnet, exact demo amounts (links in STATUS). smoke --demo added (PR #17).
+
 ## Next (max 3)
-1. Add my own ANTHROPIC_API_KEY to .env, get Luka's p1–p5 photos, finish lease #2 via smoke.py --photos (report → send → accept).
-2. Mon AM: help Marcus switch off mocks; then hosting (Mon PM).
-3. Circle wallets (D-007): propose dropping at next sync; server-held keys for the demo.
+1. Mon AM: demo-token header on the server; help Marcus with photo URLs / screens.
+2. Mon PM: host server (persistent disk) + point app at it; faucet top-up; qa-demo-tester + judge-panel after 2 PM; D-011 Streams call.
+3. Tue: README contract section with Luka.
 
 ## Blocked by / waiting on
 - Faucet caps at 20 USDC: demo scaled 1:100 (D-002). Optional: ask Arc rep for more.
