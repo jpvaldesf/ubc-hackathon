@@ -47,9 +47,9 @@ Architecture decisions live in @docs/DECISIONS.md. Read it before proposing a ch
 - Onchain: Solidity + Arc Foundry on Arc testnet (D-008); server-held testnet keys now, Circle dev-controlled wallets if the Sun AM timebox lands (D-007)
 - Agent/backend: Python + FastAPI (server/), vision pipeline as a Python module in integrations/ (D-008)
 - Package manager & commands:
-  - install: TBD
-  - dev: TBD
-  - test: contracts: `cd contracts && arc-forge test`; others TBD
+  - install: server: `uv sync --project server`; others TBD
+  - dev: server: `uv run --project server uvicorn server.app.main:app --reload` (repo root); others TBD
+  - test: contracts: `cd contracts && arc-forge test`; server: `uv run --project server pytest server/tests`; others TBD
   - build: TBD
 
 ## How we work
