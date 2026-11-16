@@ -19,6 +19,11 @@ import {
   type ScenarioId,
 } from './engine';
 
+function requireVersion(version: number | undefined): number {
+  if (version === undefined) throw new ServiceError('stale_proposal', 'Reload to see the current proposal.');
+  return version;
+}
+
 const STORAGE_KEY = 'deposit-keeper.sample.v1';
 
 interface Persisted {
@@ -157,15 +162,15 @@ export function createSampleService(options: SampleOptions = {}): { service: Dep
     },
     async submitProposal(leaseId, version, key) {
       assertLease(leaseId);
-      await applyKeyed(key, 'submit_proposal', (s) => submitProposal(s, version, now()));
+      await applyKeyed(key, 'submit_proposal', (s) => submitProposal(s, requireVersion(version), now()));
     },
     async acceptProposal(leaseId, version, key) {
       assertLease(leaseId);
-      await applyKeyed(key, 'accept_proposal', (s) => acceptProposal(s, version, now()));
+      await applyKeyed(key, 'accept_proposal', (s) => acceptProposal(s, requireVersion(version), now()));
     },
     async disputeProposal(leaseId, version, input: DisputeInput, key) {
       assertLease(leaseId);
-      await applyKeyed(key, 'dispute_proposal', (s) => disputeProposal(s, version, input, now()));
+      await applyKeyed(key, 'dispute_proposal', (s) => disputeProposal(s, requireVersion(version), input, now()));
     },
     subscribe(listener) {
       listeners.add(listener);

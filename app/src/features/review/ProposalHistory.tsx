@@ -49,10 +49,9 @@ export function ProposalHistory({ proposal }: { proposal: Proposal }) {
  * version) but are not what a reader needs first, so they sit behind a disclosure.
  */
 export function ProposalDetails({ lease, proposal }: { lease: Lease; proposal: Proposal }) {
-  const rows: [string, string][] = [
-    ['Version', String(proposal.version)],
-    ['Submitted by', proposal.submittedBy ?? 'Not submitted'],
-  ];
+  const rows: [string, string][] = [];
+  if (proposal.version !== undefined) rows.push(['Version', String(proposal.version)]);
+  rows.push(['Submitted by', proposal.submittedBy ?? 'Not submitted']);
   if (proposal.submittedAt) rows.push(['Submitted', formatDateTime(proposal.submittedAt)]);
   if (proposal.dispute) rows.push(['Dispute submitted', formatDateTime(proposal.dispute.submittedAt)]);
   if (lease.moveOutRequestedOn) rows.push(['Move-out requested', formatDate(lease.moveOutRequestedOn)]);

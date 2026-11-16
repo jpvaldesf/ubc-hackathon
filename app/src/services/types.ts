@@ -145,7 +145,8 @@ export interface Dispute {
 
 export interface Proposal {
   id: string;
-  version: number;
+  /** Absent when the backend has no proposal versions (the live adapter never invents one). */
+  version?: number;
   status: 'draft' | 'submitted';
   submittedAt?: string;
   submittedBy?: string;
@@ -175,9 +176,9 @@ export interface DepositService {
   getProposal(leaseId: string): Promise<Proposal | null>;
   requestMoveOut(leaseId: string, idempotencyKey: string): Promise<void>;
   saveProposalDraft(leaseId: string, edits: DraftEdit[]): Promise<Proposal>;
-  submitProposal(leaseId: string, version: number, idempotencyKey: string): Promise<void>;
-  acceptProposal(leaseId: string, version: number, idempotencyKey: string): Promise<void>;
-  disputeProposal(leaseId: string, version: number, input: DisputeInput, idempotencyKey: string): Promise<void>;
+  submitProposal(leaseId: string, version: number | undefined, idempotencyKey: string): Promise<void>;
+  acceptProposal(leaseId: string, version: number | undefined, idempotencyKey: string): Promise<void>;
+  disputeProposal(leaseId: string, version: number | undefined, input: DisputeInput, idempotencyKey: string): Promise<void>;
   /** Optional change notification (sample adapter now; live adapter may poll later). */
   subscribe?(listener: () => void): () => void;
 }

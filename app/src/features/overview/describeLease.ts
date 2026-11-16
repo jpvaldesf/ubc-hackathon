@@ -125,11 +125,12 @@ export function describeLease(lease: Lease, proposal: Proposal | null): NextActi
       };
 
     case 'disputed': {
-      const count = proposal?.dispute?.itemIds.length ?? 0;
+      // The live API does not return which items were disputed, so say so plainly instead of "0 deductions".
+      const count = proposal?.dispute?.itemIds.length;
       const who = viewer === 'tenant' ? 'You disputed' : `${tenant.displayName} disputed`;
       return {
         headline: 'Awaiting review',
-        detail: `${who} ${pluralize(count, 'deduction')}.`,
+        detail: count === undefined ? `${who} the deductions.` : `${who} ${pluralize(count, 'deduction')}.`,
         waiting: waitingText(lease),
         primary: { kind: 'link', to: 'review', label: 'View dispute', variant: 'secondary' },
       };

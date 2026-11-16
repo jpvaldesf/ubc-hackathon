@@ -152,7 +152,7 @@ describe('stale proposals and duplicates', () => {
   it('allows retrying a failed action with the same key', async () => {
     const { service, controls } = setup();
     controls.loadScenario('refund_confirmed');
-    const version = (await service.getProposal(SAMPLE_LEASE_ID))!.version;
+    const version = (await service.getProposal(SAMPLE_LEASE_ID))!.version!;
     await failure(service.acceptProposal(SAMPLE_LEASE_ID, version + 1, 'retry-key'));
     await service.acceptProposal(SAMPLE_LEASE_ID, version, 'retry-key');
     expect((await service.getLease(SAMPLE_LEASE_ID)).phase).toBe('accepted');

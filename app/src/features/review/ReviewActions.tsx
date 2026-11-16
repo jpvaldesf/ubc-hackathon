@@ -205,7 +205,7 @@ export function RespondPanel({ lease, proposal }: { lease: Lease; proposal: Prop
         }}
       >
         <p>
-          You are accepting {formatUsd(proposal.deductionTotal)} in deductions from version {proposal.version}.
+          You are accepting {formatUsd(proposal.deductionTotal)} in deductions{proposal.version === undefined ? '' : ` from version ${proposal.version}`}.
         </p>
         <Facts
           rows={[

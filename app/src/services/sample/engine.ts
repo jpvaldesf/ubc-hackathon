@@ -37,7 +37,8 @@ export const LANDLORD: Participant = { id: 'sample-landlord', role: 'landlord', 
 export interface SampleState {
   phase: Phase;
   moveOutRequestedOn?: string;
-  proposal: Proposal;
+  /** Sample proposals are always versioned; the live API's are not. */
+  proposal: Proposal & { version: number };
   operations: Operation[];
   events: ActivityEvent[];
   counter: number;

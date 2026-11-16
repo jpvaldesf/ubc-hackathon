@@ -13,6 +13,17 @@ import { Disclosure } from './Disclosure';
 export function DemoBar() {
   const { bundle } = useServices();
   const [open, setOpen] = useState(false);
+  if (bundle.live) {
+    return (
+      <div className="demo-bar" role="region" aria-label="Development notice">
+        <div className="page">
+          <div className="demo-bar__row">
+            <p className="demo-bar__label">Development identity: {bundle.live.userId} (not sign-in)</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (!bundle.sampleControls) return null;
 
   return (

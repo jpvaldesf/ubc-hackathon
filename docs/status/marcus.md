@@ -8,7 +8,8 @@
 ## Done (with evidence: tx hash, PR link, screenshot)
 - `app/` added: Vite + React + TypeScript (note: D-008 says Next.js; see Blocked). Lease overview and deposit review screens, **sample data only**: `app/src/services/sample/` is simulated, and `app/src/services/live/` throws `integration_blocked` for every call.
   Evidence: `npm ci`, `npm run typecheck`, `npm test` (74 tests), `npm run build` pass in `app/`.
-- **No real API call is made yet.** The UI's service interface (`app/src/services/types.ts`) predates docs/API.md and does not match it: it assumes proposal versions, `allowedActions`, fund buckets and idempotency keys; the API returns `status`, `payout`, `report.findings`, `timeline`, and uses `X-User-Id`.
+- **Live adapter (Nov 15, branch feat/frontend-deposit-keeper):** `app/src/services/live/` maps docs/API.md to the UI. Backend-connected buttons: tenant **Accept deductions** (`POST /accept`) and **Submit dispute** (`POST /appeal`); screens load via `GET /leases/{id}` (5 s polling). NOT connected, fail with `integration_blocked`: Request move-out, edit/save draft, landlord Submit proposal (the API only lets the landlord lower/remove at `/report/send`, and has no move-out request). Tests: 92 pass. Verified against the real FastAPI app with the repo's FakeChain (no wallet keys on my machine), so no live Arc tx yet. The UI itself was not driven in a browser (gstack browse was killed on launch). Run live: `VITE_ADAPTER=live VITE_API_URL=http://127.0.0.1:8000 npm run dev` with the server started with `DK_CORS_ORIGINS=http://127.0.0.1:5173`; open `/`, enter a server lease id; `?as=landlord_demo` switches the X-User-Id dev identity (not auth). Vercel stays `VITE_ADAPTER=sample`.
+- (Older note) **No real API call was made before this.** The UI's service interface (`app/src/services/types.ts`) predates docs/API.md and does not match it: it assumes proposal versions, `allowedActions`, fund buckets and idempotency keys; the API returns `status`, `payout`, `report.findings`, `timeline`, and uses `X-User-Id`.
 - Sample demo (simulated): https://deposit-keeper-demo.vercel.app (built from the earlier Smart_Renting checkout).
 
 ## Next (max 3)
@@ -17,7 +18,8 @@
 3. Sun–Mon: guided photo capture (shot list: same room, same angle as move-in, with an outline overlay). Better photos make the AI work better, so this helps Luka too.
 
 ## Blocked by / waiting on
-- Decision needed: the app is Vite, D-008 says Next.js. Keep Vite or move? (I own app/; will record with /decide if we keep Vite.)
+- Decision needed (team sync, unchanged): the app is Vite, D-008 says Next.js. No migration done; needs agreement, then `/decide`.
+- Gaps the UI shows honestly: no proposal versions or idempotency keys in the API (not sent); photos render as placeholders; $0 normal-wear findings are not listed; after an appeal `GET /leases/{id}` returns no appeal reason/items.
 - Next real step: map `DepositService` to docs/API.md (POST /leases/{id}/accept, /appeal, GET /leases/{id} with 2 s polling), then run the server locally and check `GET /health`. Public API URL: not yet hosted (API.md says Mon); a hosted frontend must not call localhost.
 - API shape (Sat sync). Work from mock JSON until then.
 
