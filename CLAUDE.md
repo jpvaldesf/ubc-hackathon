@@ -34,7 +34,7 @@ Team rules for every Claude session:
 - One-line pitch: Rental deposits held in a neutral USDC escrow on Arc; an AI compares move-in vs move-out photos and drafts the itemized deductions; the tenant gets the undisputed amount back the same day, the rest needs their OK or a ruling.
 - Main track: Consumer
 - Chain award: Arc
-- Bounties: None
+- Bounties: None for now; QuickNode Streams only if the demo path works at Mon 2 PM (D-011)
 - Network: devnet/testnet ONLY. Never mainnet.
 
 ## Live state
