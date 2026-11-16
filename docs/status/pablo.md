@@ -11,11 +11,11 @@
 - Test wallets funded, 20 USDC each (faucet cap is 20). Landlord 0x86a4F488D30b1CAA5A4e6613994DFc530B191a36 · Tenant 0xFB2C0638628b7830e46F2e054d35bD058B9d4A6F · Arbiter 0x90b7F173B4aE279f9C7abb512a4cbDfeDb0D10c5
 - Sat 2 PM: DepositEscrow.sol + 14 forge tests passing (incl. fund-conservation fuzz), Deploy + DemoRun scripts, ABI in shared/abi/.
 - Sat Nov 14, 2:27 PM: DepositEscrow deployed on Arc testnet at 0xe3791a88E125ce9e826FB07f84BF88625d9f3e98 (deploy tx 0x389693fbb99442aa7343e353c6df27d27f19eb4a30af256e660f417b6b4e4d2a, status 1, code verified via RPC Sun 5:30 PM). Address in shared/addresses.json.
+- Sun Nov 15, ~6 PM: source verified on Blockscout. DemoRun lease #1 on testnet: 7/7 txs ok; propose paid tenant 8.8 USDC (0xe29c4c5c…0109), accept paid landlord 1.2 USDC (0xd86ffb8e…b693); escrow balance 0 after. Links in docs/STATUS.md.
 
 ## Next (max 3)
-1. Run DemoRun on Arc testnet → release tx link in docs/STATUS.md.
-2. 6 PM–midnight: FastAPI skeleton in server/ per docs/API.md (SQLite, per-shot upload, cents, report draft + 48 h auto-send).
-3. Sun AM: Circle wallets, 2 h timebox (D-007). Fallback = server-held keys.
+1. Tonight: FastAPI skeleton in server/ per docs/API.md (SQLite, per-shot upload, cents, report draft + 48 h auto-send).
+2. Circle wallets (D-007): propose dropping at next sync; server-held keys for the demo.
 
 ## Blocked by / waiting on
 - Faucet caps at 20 USDC: demo scaled 1:100 (D-002). Optional: ask Arc rep for more.
