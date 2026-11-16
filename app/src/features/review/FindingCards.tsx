@@ -37,6 +37,30 @@ export function FindingView({ item, disputed }: { item: Finding; disputed?: bool
   );
 }
 
+/** A $0 finding, such as normal wear. Context only: no amount editing, no remove, not a deduction. */
+export function NoChargeView({ item }: { item: Finding }) {
+  return (
+    <article className="surface finding" aria-label={`${item.label}, no charge`}>
+      <div className="finding__head">
+        <h3 className="finding__title">{item.label}</h3>
+        <p className="finding__amount amount">{formatUsd(item.amount)}</p>
+      </div>
+      <p>
+        <span className="tag tag--muted">{item.tag ?? 'No charge'}</span> Not charged.
+      </p>
+      <div className="finding__evidence">
+        <PhotoPair pair={item.photoPair} />
+        <dl className="finding__notes">
+          <div className="finding__note">
+            <dt>Found</dt>
+            <dd>{item.observation}</dd>
+          </div>
+        </dl>
+      </div>
+    </article>
+  );
+}
+
 interface FindingEditorProps {
   leaseId: string;
   item: Finding;

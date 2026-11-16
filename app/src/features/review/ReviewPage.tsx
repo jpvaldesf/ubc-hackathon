@@ -4,7 +4,8 @@ import { pluralize } from '../../lib/format';
 import { formatUsd } from '../../lib/money';
 import type { Lease, Proposal } from '../../services/types';
 import { useLeaseContext } from '../lease/LeaseLayout';
-import { FindingEditor, FindingView } from './FindingCards';
+import { ProofLinks } from '../../components/ProofLinks';
+import { FindingEditor, FindingView, NoChargeView } from './FindingCards';
 import { ProposalDetails, ProposalHistory } from './ProposalHistory';
 import { FinancialSummary } from './FinancialSummary';
 import { DraftSubmit, RespondPanel } from './ReviewActions';
@@ -105,6 +106,7 @@ export function ReviewPage() {
       {mode === 'empty' || !proposal ? null : (
         <>
           <FinancialSummary lease={lease} proposal={proposal} />
+          <ProofLinks lease={lease} />
 
           <section className="stack" aria-labelledby={findingsId}>
             <h2 id={findingsId} className="section-title">
@@ -126,6 +128,21 @@ export function ReviewPage() {
               </ul>
             )}
           </section>
+
+          {proposal.noChargeItems && proposal.noChargeItems.length > 0 && (
+            <section className="stack" aria-labelledby={`${findingsId}-nocharge`}>
+              <h2 id={`${findingsId}-nocharge`} className="section-title">
+                Normal wear, no charge ({proposal.noChargeItems.length})
+              </h2>
+              <ul className="stack">
+                {proposal.noChargeItems.map((item) => (
+                  <li key={item.id}>
+                    <NoChargeView item={item} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {mode === 'disputed' && proposal.dispute && <DisputeSummary lease={lease} proposal={proposal} />}
           {mode === 'respond' ? (

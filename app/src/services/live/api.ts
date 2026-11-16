@@ -38,6 +38,13 @@ export interface ApiFinding {
   original_cost_cents?: number;
 }
 
+export interface ApiPhoto {
+  photo_id: string;
+  shot_id: string;
+  /** Relative, e.g. /files/l_7f3a/in/s1.jpg. Resolve against the backend address. */
+  url: string;
+}
+
 export interface ApiLease {
   lease_id: string;
   status: ApiStatus;
@@ -48,7 +55,7 @@ export interface ApiLease {
   demo_scale: number;
   escrow_balance_cents: number;
   appeal_deadline: string | null;
-  photos: { in: unknown[]; out: unknown[] };
+  photos: { in: ApiPhoto[]; out: ApiPhoto[] };
   report: {
     report_id: string | null;
     report_hash: string | null;

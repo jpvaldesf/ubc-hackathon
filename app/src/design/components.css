@@ -1266,3 +1266,87 @@
 .account__item[aria-current='page'] {
   color: var(--color-text);
 }
+
+/* ---------- Real photos ---------- */
+.compare__img {
+  display: block;
+  max-width: 100%;
+  max-height: 16rem;
+  object-fit: contain;
+  border-radius: var(--radius-control);
+}
+
+.compare__img--pending {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---------- Proof links ---------- */
+.proof {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.proof__title {
+  margin: 0;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.proof__list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.proof__item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+}
+
+/* ---------- Live demo identity switch ---------- */
+.demo-bar__switch {
+  display: inline-flex;
+  margin-left: auto;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-control);
+  overflow: hidden;
+}
+
+.demo-bar__choice {
+  min-height: 2rem;
+  padding: 0 var(--space-3);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: var(--text-small);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.demo-bar__choice[aria-pressed='true'] {
+  background: var(--color-demo-text);
+  color: var(--color-demo-bg);
+}
+
+.compare__frame {
+  position: relative;
+}

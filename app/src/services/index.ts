@@ -1,4 +1,4 @@
-import { createLiveService } from './live';
+import { createLiveService, type LiveService } from './live';
 import type { DevUserId } from './live/api';
 import { SAMPLE_LEASE_ID } from './sample/engine';
 import { createSampleService, type SampleControls } from './sample';
@@ -10,8 +10,8 @@ export interface ServiceBundle {
   sampleControls?: SampleControls;
   /** Where "/" goes. Undefined in live mode: the API has no lease list, so the user enters a server-issued lease id. */
   defaultLeaseId?: string;
-  /** Live mode only: the development identity sent as X-User-Id. Not authentication. */
-  live?: { userId: DevUserId; apiUrl: string };
+  /** Live mode only. The development identity (X-User-Id) is demo identity, not authentication. */
+  live?: { apiUrl: string; getUserId(): DevUserId; setUserId(id: DevUserId): void };
 }
 
 const IDENTITY_KEY = 'deposit-keeper.live.user';
@@ -33,13 +33,42 @@ function devIdentity(): DevUserId {
   return 'tenant_demo';
 }
 
+/** Remembers the choice for this tab and drops a stale ?as= so a reload doesn't undo the switch. */
+function rememberIdentity(id: DevUserId) {
+  try {
+    sessionStorage.setItem(IDENTITY_KEY, id);
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('as')) {
+      url.searchParams.delete('as');
+      window.history.replaceState(window.history.state, '', url.toString());
+    }
+  } catch {
+    /* storage or history unavailable: the in-memory identity still switches */
+  }
+}
+
 /** Adapter is chosen explicitly. Default is sample; there is no silent fallback from live to sample. */
 export function createServices(): ServiceBundle {
   const adapter = import.meta.env.VITE_ADAPTER === 'live' ? 'live' : 'sample';
   if (adapter === 'live') {
     const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
-    const userId = devIdentity();
-    return { service: createLiveService({ baseUrl: apiUrl, userId }), live: { userId, apiUrl } };
+    const service: LiveService = createLiveService({
+      baseUrl: apiUrl,
+      userId: devIdentity(),
+      explorer: import.meta.env.VITE_EXPLORER_URL ?? undefined,
+      expectedChainId: import.meta.env.VITE_CHAIN_ID ? Number(import.meta.env.VITE_CHAIN_ID) : undefined,
+    });
+    return {
+      service,
+      live: {
+        apiUrl,
+        getUserId: () => service.getUserId(),
+        setUserId(id) {
+          rememberIdentity(id);
+          service.setUserId(id);
+        },
+      },
+    };
   }
   const { service, controls } = createSampleService();
   return { service, sampleControls: controls, defaultLeaseId: SAMPLE_LEASE_ID };

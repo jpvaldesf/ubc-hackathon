@@ -13,17 +13,7 @@ import { Disclosure } from './Disclosure';
 export function DemoBar() {
   const { bundle } = useServices();
   const [open, setOpen] = useState(false);
-  if (bundle.live) {
-    return (
-      <div className="demo-bar" role="region" aria-label="Development notice">
-        <div className="page">
-          <div className="demo-bar__row">
-            <p className="demo-bar__label">Development identity: {bundle.live.userId} (not sign-in)</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (bundle.live) return <LiveIdentityBar />;
   if (!bundle.sampleControls) return null;
 
   return (
@@ -40,6 +30,39 @@ export function DemoBar() {
       </div>
       <DemoControlsDialog open={open} onClose={() => setOpen(false)} />
     </>
+  );
+}
+
+/** Live mode: a compact switch for the development identity (X-User-Id). It is demo identity, not sign-in. */
+function LiveIdentityBar() {
+  const { bundle } = useServices();
+  const live = bundle.live!;
+  const current = live.getUserId();
+  const options = [
+    { id: 'tenant_demo', label: 'Tenant' },
+    { id: 'landlord_demo', label: 'Landlord' },
+  ] as const;
+  return (
+    <div className="demo-bar" role="region" aria-label="Demo identity">
+      <div className="page">
+        <div className="demo-bar__row">
+          <p className="demo-bar__label">Demo identity · not sign-in</p>
+          <div className="demo-bar__switch" role="group" aria-label="Demo identity (not sign-in)">
+            {options.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className="demo-bar__choice"
+                aria-pressed={current === option.id}
+                onClick={() => current !== option.id && live.setUserId(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
