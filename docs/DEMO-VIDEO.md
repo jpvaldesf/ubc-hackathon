@@ -4,13 +4,18 @@
 Demo path: docs/STATUS.md (D-002 1:100 scale, D-004 landlord review, D-009 wall mark, D-010 normal wear shown at $0).
 Voiceover pace: ≤ 2.3 words/sec. Word counts are in brackets.
 
-> **Not built yet. Placeholders to swap before recording:**
-> - The app screens: Marcus's mock exists; the real app/ does not yet.
-> - The deployed escrow address: `shared/addresses.json` is still `{}`.
-> - The real tx links.
-> - The final screen names.
+> **What's real (Mon Nov 16):**
+> - Escrow deployed and source-verified on Arc testnet: `0xe3791a88E125ce9e826FB07f84BF88625d9f3e98` (`shared/addresses.json`).
+> - App screens on main: the lease overview with **Pay deposit**, the **Photos** screen (move-in/move-out upload, **Done**, landlord **Analyze photos** with progress), and the report screen (landlord **Send report**, tenant accept or dispute).
+> - Create lease is **not** in the app. Pablo creates the demo lease by script before recording, so the video starts at **Pay deposit**.
 >
-> Never show a made-up tx (PLAN.md rule). If a step isn't wired, cut it from the video.
+> **Still placeholders:** the tx links below. Fill them in from the final run only. Never show a made-up tx (PLAN.md rule). If a step isn't wired, cut it from the video.
+>
+> Tx links from the final run:
+> - Deposit: `<DEPOSIT_TX_URL>`
+> - Move-in photos recorded: `<COMMIT_IN_TX_URL>`
+> - $8.80 to tenant (report sent): `<PAYOUT_TX_URL>`
+> - $1.20 to landlord (accepted): `<ACCEPT_TX_URL>`
 
 ## Script
 
@@ -18,7 +23,7 @@ Voiceover pace: ≤ 2.3 words/sec. Word counts are in brackets.
 |---|---|---|
 | 0:00–0:10 | Phone-width app on the landlord's "Move-out report" screen, blurred. Title card: **"Deposit Keeper"**. | When you move out, your landlord can hold your deposit for up to three weeks, and you can't check the charges. [20] |
 | 0:10–0:25 | **Wow moment.** The report un-blurs:<br>• before/after photos side by side, with the wall mark outlined in red: **"Damage · $1.20"**<br>• a nail hole card: **"Normal wear · $0"** (grey)<br>• a green banner: **"$8.80 sent to you today"** | Deposit Keeper compares your move-in and move-out photos, charges only real damage, never normal wear, and sends the rest back the same day. Here's how. [25] |
-| 0:25–0:40 | **Step 1.**<br>• The landlord creates the lease: address, tenant, $10 deposit.<br>• Switch persona to Tenant and tap **"Pay $10 into neutral escrow"**.<br>• It shows "Held safely: neither you nor your landlord can take it alone".<br>• The note "Testnet demo: amounts scaled 1:100" is visible. | The landlord creates the lease. The tenant pays the deposit into a neutral escrow. Neither side can take it alone. This is a testnet demo, so amounts are scaled one to a hundred. [33] |
+| 0:25–0:40 | **Step 1.** (The $10 lease was created by script before recording; no create screen is shown.)<br>• Open the lease as the Tenant. The overview shows **"Pay deposit"**.<br>• Tap it; "Deposit paid. View proof" appears.<br>• The note "Testnet demo: amounts scaled 1:100" is visible. | The landlord has already set up the lease. The tenant pays the deposit into a neutral escrow. Neither side can take it alone. This is a testnet demo, so amounts are scaled one to a hundred. [36] |
 | 0:40–0:55 | **Step 2.**<br>• The move-in shot list: "Living room: wall by the door", "Living room: wall above the bed"…<br>• Upload 2–3 photos quickly (sped up), then tap **Done**.<br>• A small "Proof" link appears. | At move-in, the tenant photographs each spot from a guided shot list. Each photo's fingerprint is recorded onchain, so nobody can swap them later. [24] |
 | 0:55–1:20 | **Step 3.**<br>• Move-out: the same shots again, then the landlord taps **"Analyze"**.<br>• "Analyzing photos… living room 2 of 5" (sped up).<br>• The report: wall mark **Damage · $1.20** with "Why?" open ("price from the fixed table"); nail hole **Normal wear · $0**.<br>• The landlord taps **"Send report"**. | At move-out, the same shots again. The AI compares each pair. It flags a paint mark on the wall: damage, one dollar twenty, priced from a fixed table, not by the AI. The nail hole is normal wear, so it costs nothing. The landlord can lower or remove charges, never add them, then sends. [52] |
 | 1:20–1:35 | **Step 4.**<br>• Tenant view: the green banner **"$8.80 sent to you today"**.<br>• The payout timeline with a "Proof" link on each step. | The moment it's sent, the undisputed eight dollars eighty goes back to the tenant. Not in three weeks. Now. Every step has a proof link. [25] |
@@ -27,7 +32,7 @@ Voiceover pace: ≤ 2.3 words/sec. Word counts are in brackets.
 | 2:10–2:22 | **Onchain proof.**<br>• Click the "Proof" link from step 4 to open the Arc testnet explorer (`explorer.testnet.arc.io`).<br>• Show the escrow contract address and the $8.80 transfer to the tenant.<br>• Then the `commitPhotos` tx. | Here's that payout on the Arc testnet explorer: our escrow contract, the eight eighty to the tenant, and the photo fingerprints. [21] |
 | 2:22–2:30 | Logo + one line: **"Deposit Keeper: fair deposits, returned the day you move out."** Team names. | Deposit Keeper. Fair deposits, returned the day you move out. [10] |
 
-**Total about 277 words over 2:30, about 1.85 words/sec.** There's slack for pauses, and room to add one line in step 3 if a judge needs it.
+**Total about 280 words over 2:30, about 1.87 words/sec.** There's slack for pauses, and room to add one line in step 3 if a judge needs it.
 
 ### Claims to keep honest
 - **"Up to three weeks":** this is California's 21-day return rule (Civil Code §1950.5). It's fine for a California pitch; say "in California" if the audience is mixed.
