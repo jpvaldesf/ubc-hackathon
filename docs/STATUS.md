@@ -7,7 +7,7 @@
 2. Move-in photos taken in-app; fingerprints committed onchain.
 3. Move-out photos taken; AI report flags a wall mark ($1.20, damage, D-009) and small nail holes (normal wear, $0); landlord reviews and sends the report (D-004).
 4. Undisputed $8.80 pays out to tenant immediately (tx).
-5. Tenant accepts; $1.20 releases to landlord (tx); simulated interest shown.
+5. Tenant accepts; $1.20 releases to landlord (tx). (Simulated interest cut: the API returns `simulated_interest_cents`, but the app doesn't show it; the video leaves it out.)
 
 ## Done
 - Roles assigned (Nov 13, 5 PM): Pablo onchain+backend, Marcus frontend, Luka AI vision+demo.
@@ -23,6 +23,7 @@
 - Mon Nov 16, night (Luka): demo video script matched to the app's labels (PR #26); README draft open (PR #33). Luka's hosted test used p1–p5 (p4 = second wall mark), so it showed $7.60 / $2.40, not the demo amounts.
 - Tue Nov 17, ~9 AM: **demo amounts proven on the hosted stack** (Pablo's phone, lease l_62839344, demo set p1 p2 p3 p5 p7). Create by script; Pay deposit → photos → Analyze → Send report → Accept all in the app. AI: wall mark $1.20 @0.90, nail holes normal wear $0 @0.60, one finding dropped under the cutoff, nothing removed or lowered. 6/6 receipts status 1; USDC read from the logs: 10.00 in, 8.80 to tenant, 1.20 to landlord, lease escrow back to 0. Links in the evidence table.
 - Tue Nov 17, ~9:20 AM: **demo token on (D-012)**. App sends `X-Demo-Token` on writes (PR #36, done by Pablo while Marcus was offline); Render app rebuilt with it, then the API set `DK_DEMO_TOKEN`. `/health` → `demo_token_required: true`; no or wrong token → 401, the app's token passes.
+- Tue Nov 17, ~9:25 AM: **qa-demo-tester PASS on the hosted app with the token on** (lease l_21ea3132, phone viewport, settled $8.80 / $1.20, explorer pages Success). judge-panel run logged below. Fixes merged: README on main (#33), 1:100 note in the app (#38), Arc fee line (#39, a full lease costs $0.012 in fees).
 ## Next (max 5, in priority order)
 1. Marcus, by noon: show the "Testnet demo: amounts scaled 1:100" note (video requirement shot); review PR #36; Create lease screen only if time. Vercel: still sample mode; leave it or set `VITE_DEMO_TOKEN` too if it goes live.
 2. Luka: fix the 3 review points on PR #33 (README), then merge. Contract & Arc section and token line are done.
@@ -44,6 +45,7 @@
 - Escrow contract holds 11 USDC from earlier unfinished test leases (they unlock only via timeouts). Say "escrow back to 0" per lease, not for the whole contract.
 - Open (from the vision spike): how to treat a tenant's own rug vs built-in carpet (the model calls area rugs belongings even when told otherwise). Pipeline location and API settled by D-005/D-008.
 - Open product decisions: where interest goes, who pays the fee, appeal window length, price-table costs in v1.
+- QA (Tue AM): API returned 502s for a few seconds around 9:22 AM (app showed "couldn't reach the server"; Try again worked). Don't deploy during recording or the pitch; hit /health first.
 
 ## Proven integrations (with evidence)
 | Integration | Status | Evidence (tx sig / response / link) |
@@ -57,4 +59,4 @@
 | **Demo path on the hosted stack (Render), Pay deposit in the app (Tue Nov 17, lease l_62839344)** | Working: 6/6 receipts status 1, all to the escrow; USDC moves read from the tx logs; AI: wall mark $1.20 @0.90 + nail holes $0 @0.60 | create https://explorer.testnet.arc.io/tx/0x1fa09cff1cc3583a168a90c4a234964f2adc4058cea948807a8395f5f2ecf799 · deposit (10.00 tenant→escrow) https://explorer.testnet.arc.io/tx/0xd075c1b9df2859e5275085726392974f4ff10867f3358fc7c4fe95f12a54ec02 · move-in commit https://explorer.testnet.arc.io/tx/0xfaf4929a7bf341a5f7bac8b3a24f0053a11d68f17b9e0ede4173c57ed0a6dba7 · move-out commit https://explorer.testnet.arc.io/tx/0x729fb201bc7c89014a9df4028e2d49020bcef5f21c900582a2d3e9459d05b1fd · send report (8.80 escrow→tenant) https://explorer.testnet.arc.io/tx/0xadd00e01b09987201bc0e9051a361961dba3624c0d94b18a1d55cdaaf5a364de · accept (1.20 escrow→landlord) https://explorer.testnet.arc.io/tx/0xde762bfa36e2cf943fb47a454c58aedd30f56f3f3f127c3fa543a82afdf96bdc |
 
 ## Judge runs (date · Tech/UX/Innov/Impact/Demo · verdict)
--
+- Tue Nov 17, 9:30 AM · organizer 7/6/6/7/5, Arc rep 6/6/5/6/5 · Consumer contender (top 2–3 if the video lands and judges can enter the app); Arc weak (only USDC gas + Foundry); finalist ~50/50. At risk: judge entry point (no lease id), video, Devpost.

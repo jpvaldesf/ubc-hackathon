@@ -114,21 +114,27 @@ export function analysisCopy(analysis: AnalysisState, section: Exclude<AnalysisS
 
 /** What the screen says when nothing here is open. */
 export function idleCopy(lease: Lease, sections: PageSections): { title: string; body: string } {
-  const title = 'Nothing to photograph right now';
-  if (!sections.available) return { title, body: "Taking photos isn't available in this preview." };
-  if (sections.reviewReady) return { title, body: 'The photos have been compared and the report is ready.' };
+  if (!sections.available) return { title: 'Nothing to photograph right now', body: "Taking photos isn't available in this preview." };
+  const tenant = lease.viewer.role === 'tenant';
+  if (sections.reviewReady) {
+    return {
+      title: 'Report ready',
+      body: tenant
+        ? 'The photos have been compared. Your landlord reviews the report before sending it to you.'
+        : 'The photos have been compared and the report is ready for your review.',
+    };
+  }
   const committed = lease.capture!.committed;
   if (committed.out) {
     return {
-      title,
-      body:
-        lease.viewer.role === 'tenant'
-          ? 'Move-in and move-out photos are recorded. Waiting on your landlord to compare them.'
-          : 'Move-in and move-out photos are recorded.',
+      title: 'Photos recorded',
+      body: tenant
+        ? 'Move-in and move-out photos are recorded. Waiting on your landlord to compare them.'
+        : 'Move-in and move-out photos are recorded.',
     };
   }
-  if (committed.in) return { title, body: 'Move-in photos are recorded. Move-out photos open when move-out starts.' };
-  return { title, body: 'Photos open once the deposit is paid.' };
+  if (committed.in) return { title: 'Move-in photos recorded', body: 'Move-out photos open when move-out starts.' };
+  return { title: 'Nothing to photograph yet', body: 'Photos open once the deposit is paid.' };
 }
 
 /** A friendly message before any upload, or null. An empty type passes: the service checks the bytes. */
