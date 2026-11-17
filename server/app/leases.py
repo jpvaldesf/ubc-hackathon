@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from .config import (CENTS_TO_UNITS, DEFAULT_SHOT_LIST, DEMO_SCALE, LANDLORD_ID, LANDLORD_NAME,
                      MAX_ANALYZE_ATTEMPTS, MAX_PHOTO_BYTES, REVIEW_HOURS, SIMULATED_APY, TENANT_ID, Settings)
+from .previews import make_preview, too_big
 from .errors import bad_request, not_allowed, not_found, vision_error, wrong_state
 from .store import Store
 
@@ -157,16 +158,22 @@ class Service:
             ext = sniff_image(data[:16])
             if not ext:
                 raise bad_request("photo must be JPEG or PNG (HEIC is not supported)")
+            if reason := too_big(data):
+                raise bad_request(reason)
             folder = self.store.files_dir / lease_id / phase
             folder.mkdir(parents=True, exist_ok=True)
             for old in folder.glob(f"{shot_id}.*"):
                 old.unlink()
             (folder / f"{shot_id}.{ext}").write_bytes(data)
+            original_url = f"/files/{lease_id}/{phase}/{shot_id}.{ext}"
+            has_preview = make_preview(data, folder / f"{shot_id}.preview.jpg")
             photo = {
                 "photo_id": f"p_{phase}_{shot_id}",
                 "shot_id": shot_id,
                 "phase": phase,
-                "url": f"/files/{lease_id}/{phase}/{shot_id}.{ext}",
+                # D-013: `url` is a small display copy; `original_url` is the file the sha256 (and the AI) uses.
+                "url": f"/files/{lease_id}/{phase}/{shot_id}.preview.jpg" if has_preview else original_url,
+                "original_url": original_url,
                 "sha256": hashlib.sha256(data).hexdigest(),
             }
             lease["photos"][phase][shot_id] = photo
@@ -219,8 +226,8 @@ class Service:
         for sh in lease["shot_list"]:
             sid = sh["shot_id"]
             pairs.append({**sh,
-                          "before_path": str(folder / "in" / lease["photos"]["in"][sid]["url"].rsplit("/", 1)[1]),
-                          "after_path": str(folder / "out" / lease["photos"]["out"][sid]["url"].rsplit("/", 1)[1])})
+                          "before_path": str(folder / "in" / _original_name(lease["photos"]["in"][sid])),
+                          "after_path": str(folder / "out" / _original_name(lease["photos"]["out"][sid]))})
 
         def on_progress(done: int, room: str):
             with self.store.locked(lease_id):
@@ -427,3 +434,8 @@ class Service:
             "payout": lease["payout"],
             "timeline": lease["timeline"],
         }
+
+
+def _original_name(photo: dict) -> str:
+    """File name of the full-size original (the AI never sees the preview). Older leases have only `url`."""
+    return photo.get("original_url", photo["url"]).rsplit("/", 1)[1]

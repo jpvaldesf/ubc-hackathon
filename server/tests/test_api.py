@@ -385,3 +385,83 @@ def test_refuses_to_run_public_without_token():
     check_not_open(s, allow_open=False)
     s.demo_token, s.cors_origins = None, ["http://localhost:3000"]
     check_not_open(s, allow_open=False)  # local dev stays open
+
+
+def _real_jpg(w=4032, h=3024, orientation=None) -> bytes:
+    import io
+    from PIL import Image
+    im = Image.effect_noise((w, h), 60).convert("RGB")  # noisy, so the original is big like a phone photo
+    buf = io.BytesIO()
+    if orientation:
+        exif = Image.Exif()
+        exif[0x0112] = orientation
+        im.save(buf, "JPEG", quality=92, exif=exif)
+    else:
+        im.save(buf, "JPEG", quality=92)
+    return buf.getvalue()
+
+
+def test_upload_serves_small_preview_but_hashes_and_analyzes_original(tmp_path):
+    import hashlib, io
+    from PIL import Image
+    seen = {}
+
+    def spy_analyze(pairs, price_table, on_progress=None):
+        seen["pairs"] = pairs
+        return fake_analyze(pairs, price_table, on_progress)
+
+    s = Settings(rpc_url="x", chain_id=5042002, explorer="https://explorer.test", escrow_address="0x0",
+                 usdc_address="0x0", arbiter_address="0x0", data_dir=tmp_path, price_table_path=tmp_path / "p.json",
+                 cors_origins=[], autosend=False)
+    app = create_app(s, chain=FakeChain(), analyze_fn=spy_analyze, price_table={"wall_mark_repaint": 120})
+    c, svc = TestClient(app), app.state.svc
+    lid = new_lease(c)
+    c.post(f"/leases/{lid}/deposit", headers=T)
+    big = _real_jpg()
+    r = c.put(f"/leases/{lid}/photos/in/s1", headers=T, files={"file": ("s1.jpg", big, "image/jpeg")}).json()
+    assert r["url"] == f"/files/{lid}/in/s1.preview.jpg" and r["original_url"] == f"/files/{lid}/in/s1.jpg"
+    assert r["sha256"] == hashlib.sha256(big).hexdigest()  # onchain fingerprint is of the original
+    prev = c.get(r["url"]).content
+    orig = c.get(r["original_url"]).content
+    assert orig == big and len(prev) < len(big) / 4
+    assert max(Image.open(io.BytesIO(prev)).size) == 1280
+    for sid in ["s2", "s3", "s4", "s5"]:
+        c.put(f"/leases/{lid}/photos/in/{sid}", headers=T, files={"file": ("x.jpg", JPG, "image/jpeg")})
+    c.post(f"/leases/{lid}/photos/in/commit", headers=T)
+    photos(c, lid, "out")
+    svc.start_report("landlord_demo", lid, background=False)
+    p1 = seen["pairs"][0]
+    assert p1["before_path"].endswith("/in/s1.jpg") and "preview" not in p1["before_path"]  # AI gets the original
+
+
+def test_preview_applies_phone_rotation(tmp_path):
+    import io
+    from PIL import Image
+    from server.app.previews import make_preview
+    dest = tmp_path / "p.jpg"
+    assert make_preview(_real_jpg(400, 300, orientation=6), dest)  # 6 = rotate 90° (portrait phone shot)
+    assert Image.open(dest).size == (300, 400)
+
+
+def test_retake_replaces_preview(env):
+    c, _, _ = env
+    lid = new_lease(c)
+    c.post(f"/leases/{lid}/deposit", headers=T)
+    c.put(f"/leases/{lid}/photos/in/s1", headers=T, files={"file": ("a.jpg", _real_jpg(800, 600), "image/jpeg")})
+    r = c.put(f"/leases/{lid}/photos/in/s1", headers=T, files={"file": ("b.jpg", JPG, "image/jpeg")}).json()
+    assert r["url"] == r["original_url"]  # undecodable retake: no stale preview from the first shot
+    assert c.get(f"/files/{lid}/in/s1.preview.jpg").status_code == 404
+
+
+def test_huge_dimension_png_is_rejected_before_decoding(env):
+    import io
+    from PIL import Image
+    c, _, _ = env
+    lid = new_lease(c)
+    c.post(f"/leases/{lid}/deposit", headers=T)
+    buf = io.BytesIO()
+    Image.new("1", (13000, 13000)).save(buf, "PNG")  # tiny file, 169M px
+    assert len(buf.getvalue()) < 1_000_000
+    r = c.put(f"/leases/{lid}/photos/in/s1", headers=T, files={"file": ("bomb.png", buf.getvalue(), "image/png")})
+    assert r.status_code == 400 and "px" in r.json()["error"]["message"]
+    assert not list((c.app.state.svc.store.files_dir / lid).glob("in/s1*"))  # nothing stored

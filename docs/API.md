@@ -1,6 +1,6 @@
 # Backend API (agreed at the team sync; change only with /decide)
 
-**Status: FROZEN Sat Nov 14, 2:30 PM (D-002 to D-007). Changes need a new /decide entry.** Amended Mon Nov 16 by D-012 (demo token, daily caps, `/health` fields; additive only).
+**Status: FROZEN Sat Nov 14, 2:30 PM (D-002 to D-007). Changes need a new /decide entry.** Amended Mon Nov 16 by D-012 (demo token, daily caps, `/health` fields; additive only) and D-013 (photo previews).
 
 FastAPI server in `server/`. JSON everywhere except photo upload (multipart, one shot per request).
 Base URL: `http://localhost:8000` in dev; hosted URL added Mon.
@@ -33,6 +33,7 @@ The arbiter ruling (`resolve`) and the timeout functions (`finalize`, `reclaim`,
 
 - **Who's calling.** Demo-grade identity: header `X-User-Id: tenant_demo | landlord_demo`. It matches Marcus's persona switch. There's no real auth in v1; the README says so.
 - **Demo token (D-012).** When the server has `DK_DEMO_TOKEN` set (the hosted server always does), every write (POST/PUT) also needs header `X-Demo-Token: <token>`. Reads (`GET /leases/{id}`, `GET /health`, `/files/...`) don't. The app reads the value from `VITE_DEMO_TOKEN`. It keeps strangers off the hosted testnet wallets; it is not real auth (it ships in the app bundle).
+- **Photos (D-013).** In `photos` and in the `PUT` photo response, `url` is a small display copy (JPEG, 1280 px long side) and `original_url` is the uploaded file. `sha256`, the onchain fingerprint and the AI all use the original. Show `url`; link `original_url` only if someone wants the full-size file.
 - **Daily caps (D-012).** The hosted server limits new leases (`POST /leases`) and AI runs (`POST /leases/{id}/report`) per UTC day. Requests that are rejected (4xx) don't count. Deposits are capped per lease (`deposit_cents` above the cap gives 400).
 - **Money is integer cents** (D-003): `deposit_cents: 1000` = $10.00. The findings schema uses `cost_cents` too. The server converts cents to USDC base units (×10⁴, 6 decimals); the client never sees base units.
 - **Demo scale** (D-002): the demo lease is $10 (1:100 of a $1,000 deposit, because the testnet faucet caps at 20 USDC). `GET /leases/{id}` returns `demo_scale: 100` so the UI can show the note "Testnet demo: amounts scaled 1:100". The UI shows the real onchain cents; it never multiplies them.
@@ -208,8 +209,10 @@ Everything a screen needs, including the payout timeline. Fields are `null` unti
   "appeal_deadline": "2026-11-21T20:11:02Z",
   "shot_list": [ { "shot_id": "s1", "room": "living room", "label": "Carpet, toward window" } ],
   "photos": {
-    "in":  [ { "photo_id": "p_in_s1",  "shot_id": "s1", "url": "/files/l_7f3a/in/s1.jpg",  "sha256": "…" } ],
-    "out": [ { "photo_id": "p_out_s1", "shot_id": "s1", "url": "/files/l_7f3a/out/s1.jpg", "sha256": "…" } ]
+    "in":  [ { "photo_id": "p_in_s1",  "shot_id": "s1", "url": "/files/l_7f3a/in/s1.preview.jpg",
+               "original_url": "/files/l_7f3a/in/s1.jpg", "sha256": "…" } ],
+    "out": [ { "photo_id": "p_out_s1", "shot_id": "s1", "url": "/files/l_7f3a/out/s1.preview.jpg",
+               "original_url": "/files/l_7f3a/out/s1.jpg", "sha256": "…" } ]
   },
   "progress": null,
   "report": {

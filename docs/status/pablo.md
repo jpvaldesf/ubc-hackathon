@@ -17,12 +17,15 @@
 - Sun Nov 15, 8:40–9 PM: full live run through server with real AI (lease #3); 9 PM check: demo steps 3–5 through Marcus's app on testnet, exact demo amounts (links in STATUS). smoke --demo added (PR #17).
 - Mon Nov 16 AM: demo reset / hybrid step 1: `smoke.py --demo --stop-at funded` makes a fresh $10 lease with the deposit paid and prints the lease id; `--stop-at move_in` also commits move-in photos. Checked against FakeChain (all 4 stop points); no testnet run yet.
 
+- Mon Nov 16, ~9:30 PM: **first full in-app run on Arc testnet from a phone** (laptop server + Cloudflare tunnels, open mode with caps). Lease l_75b8a3c6: create → deposit 10 USDC → both photo commits → AI flagged the wall mark $1.20 @0.90 + nail hole $0 → $8.80 to tenant → accept, $1.20 to landlord. All 6 receipts status 1, USDC transfers checked from the RPC (links in docs/STATUS.md). PRs #27 (smoke --stop-at), #28 (demo token + caps, D-012) merged; photo previews (D-013) in PR.
+
 ## Next (max 3)
 1. Mon AM: demo-token header on the server; help Marcus with photo URLs / screens.
 2. Mon PM: host server (persistent disk) + point app at it; faucet top-up; qa-demo-tester + judge-panel after 2 PM; D-011 Streams call.
 3. Tue: README contract section with Luka.
 
 ## Blocked by / waiting on
+- Known (audit, older than D-013): original photos are public under `/files` with their EXIF, including GPS if the phone recorded it. Demo photos must be staged with location off. Fix after the hackathon: keep originals outside `/files`, serve only previews.
 - Faucet caps at 20 USDC: demo scaled 1:100 (D-002). Optional: ask Arc rep for more.
 
 ## Requests from others (teammates write here instead of editing your files)
