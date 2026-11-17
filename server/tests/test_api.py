@@ -465,3 +465,17 @@ def test_huge_dimension_png_is_rejected_before_decoding(env):
     r = c.put(f"/leases/{lid}/photos/in/s1", headers=T, files={"file": ("bomb.png", buf.getvalue(), "image/png")})
     assert r.status_code == 400 and "px" in r.json()["error"]["message"]
     assert not list((c.app.state.svc.store.files_dir / lid).glob("in/s1*"))  # nothing stored
+
+
+def test_hosted_fails_closed_even_with_local_or_empty_cors():
+    from server.app.config import check_not_open
+    s = Settings(rpc_url="x", chain_id=5042002, explorer="e", escrow_address="0x0", usdc_address="0x0",
+                 arbiter_address="0x0", data_dir=None, price_table_path=None, cors_origins=[])
+    with pytest.raises(RuntimeError):
+        check_not_open(s, allow_open=False, hosted=True)  # blank CORS on Render
+    s.cors_origins = ["http://localhost.evil.com"]
+    with pytest.raises(RuntimeError):
+        check_not_open(s, allow_open=False)  # not really local
+    check_not_open(s, allow_open=True, hosted=True)
+    s.demo_token = "t"
+    check_not_open(s, allow_open=False, hosted=True)
