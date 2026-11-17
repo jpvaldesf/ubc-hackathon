@@ -1356,3 +1356,10 @@
 .compare__frame {
   position: relative;
 }
+
+/* Home: the numbered demo steps (the base reset removes list markers). */
+.home-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style: decimal;
+}

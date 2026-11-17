@@ -1,10 +1,12 @@
 import { useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { ServiceError } from '../../services/errors';
 import { useMutation } from '../../services/hooks';
 import { useServices } from '../../services/ServiceContext';
 import type { CaptureState, PhotoPhase, ProofLink } from '../../services/types';
 import { useLeaseContext } from '../lease/LeaseLayout';
+import { offersSamplePhotos, samplePhotoUrl } from './samplePhotos';
 import {
   ACCEPT_ATTR,
   analysisCopy,
@@ -133,6 +135,28 @@ function CaptureSection({ capture, phase, onRecorded }: { capture: CaptureState;
     setActiveShot(null);
   };
 
+  const [sampleProgress, setSampleProgress] = useState<number | null>(null);
+  const canUseSamples = offersSamplePhotos(capture.shots) && (uploaded < total || sampleProgress !== null);
+  const addSamplePhotos = async () => {
+    setFileError(null);
+    await upload.run(async () => {
+      try {
+        // One shot at a time: the server serialises uploads per lease.
+        for (const [i, row] of rows.entries()) {
+          setSampleProgress(i);
+          setActiveShot(row.shot.id);
+          const res = await fetch(samplePhotoUrl(row.shot.id, phase));
+          if (!res.ok) throw new ServiceError('service_failure', "The sample photos didn't load. Try again.", true);
+          await service.uploadPhoto(lease.id, phase, row.shot.id, await res.blob());
+        }
+      } finally {
+        setSampleProgress(null);
+        setActiveShot(null);
+        await reloadNow();
+      }
+    });
+  };
+
   const closeDialog = () => {
     setConfirming(false);
     if (commit.error) void reloadNow(); // e.g. already recorded elsewhere: show the current state
@@ -148,6 +172,17 @@ function CaptureSection({ capture, phase, onRecorded }: { capture: CaptureState;
       {upload.error && (
         <div role="alert" className="callout callout--problem">
           <p>{upload.error.message}</p>
+        </div>
+      )}
+
+      {canUseSamples && (
+        <div className="surface stack--tight">
+          <p className="small">No room to photograph? Use our sample photos for every spot. You can still retake any of them.</p>
+          <div className="button-row">
+            <button type="button" className="button" disabled={busy} aria-busy={sampleProgress !== null} onClick={() => void addSamplePhotos()}>
+              {sampleProgress !== null ? `Adding sample photos… ${sampleProgress + 1} of ${rows.length}` : 'Use sample photos'}
+            </button>
+          </div>
         </div>
       )}
 

@@ -116,6 +116,12 @@ export function analysisCopy(analysis: AnalysisState, section: Exclude<AnalysisS
 export function idleCopy(lease: Lease, sections: PageSections): { title: string; body: string } {
   if (!sections.available) return { title: 'Nothing to photograph right now', body: "Taking photos isn't available in this preview." };
   const tenant = lease.viewer.role === 'tenant';
+  if (sections.reviewReady && lease.stage === 'settlement') {
+    return {
+      title: 'Report sent',
+      body: tenant ? 'Your landlord has sent the report. See it for the charges and your payout.' : 'You sent the report. See it for the charges and what happens next.',
+    };
+  }
   if (sections.reviewReady) {
     return {
       title: 'Report ready',

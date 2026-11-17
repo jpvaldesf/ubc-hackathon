@@ -179,6 +179,9 @@ export function createSampleService(options: SampleOptions = {}): { service: Dep
     commitPhotos: async () => photosUnavailable(),
     startReport: async () => photosUnavailable(),
     payDeposit: async () => photosUnavailable(),
+    createDemoLease: async () => {
+      throw new ServiceError('integration_blocked', 'Starting a new deposit needs the live server.');
+    },
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);

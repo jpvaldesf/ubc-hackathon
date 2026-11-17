@@ -220,6 +220,20 @@ describe('createApiClient', () => {
 describe('live service', () => {
   const client = () => ({ get: vi.fn(async () => api()), post: vi.fn(async () => ({})), put: vi.fn(async () => ({})) }) satisfies ApiClient;
 
+  it('createDemoLease posts the demo lease as the landlord, whatever identity is selected', async () => {
+    const c = client();
+    c.post.mockResolvedValueOnce({ lease_id: 'l_abc123' } as never);
+    const r = await createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: c }).createDemoLease();
+    expect(r).toEqual({ leaseId: 'l_abc123' });
+    expect(c.post).toHaveBeenCalledWith('/leases', 'landlord_demo', expect.objectContaining({ deposit_cents: 1000, shot_list: expect.arrayContaining([expect.objectContaining({ shot_id: 's3' })]) }), { keepServerMessage: true });
+  });
+
+  it('createDemoLease rejects a response without a usable lease id', async () => {
+    const c = client();
+    c.post.mockResolvedValueOnce({ lease_id: '../x' } as never);
+    await expect(createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: c }).createDemoLease()).rejects.toMatchObject({ code: 'service_failure', retryable: true });
+  });
+
   it('accept calls POST /accept with the dev identity and no invented body fields', async () => {
     const c = client();
     await createLiveService({ baseUrl: 'x', userId: 'tenant_demo', client: c }).acceptProposal('l_1', undefined, 'key');
