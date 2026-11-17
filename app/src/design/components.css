@@ -83,6 +83,12 @@
   min-height: 2.5rem;
 }
 
+.demo-bar__note {
+  margin: 0;
+  padding-bottom: var(--space-2);
+  font-size: var(--text-small);
+}
+
 .demo-bar__label {
   padding: 0 var(--space-2);
   border: 1px dashed currentColor;

@@ -61,6 +61,7 @@ function LiveIdentityBar() {
             ))}
           </div>
         </div>
+        <p className="demo-bar__note">Testnet demo: amounts scaled 1:100</p>
       </div>
     </div>
   );
