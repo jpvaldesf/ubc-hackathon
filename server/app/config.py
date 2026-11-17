@@ -5,6 +5,7 @@ import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
@@ -57,17 +58,23 @@ class Settings:
         return f"{self.explorer}/tx/{tx_hash}"
 
 
-def check_not_open(s: Settings, allow_open: bool) -> None:
-    """Fail closed: a server that allows a non-local browser origin must have a demo token."""
-    public = [o for o in s.cors_origins if not o.startswith(("http://localhost", "http://127.0.0.1"))]
-    if public and not s.demo_token and not allow_open:
-        raise RuntimeError(f"DK_DEMO_TOKEN is not set but DK_CORS_ORIGINS allows {public}; "
+def _is_local(origin: str) -> bool:
+    host = urlparse(origin).hostname or ""
+    return host in ("localhost", "127.0.0.1")
+
+
+def check_not_open(s: Settings, allow_open: bool, hosted: bool = False) -> None:
+    """Fail closed: a hosted server, or one that allows a non-local browser origin, must have a demo token."""
+    public = [o for o in s.cors_origins if not _is_local(o)]
+    if (public or hosted) and not s.demo_token and not allow_open:
+        why = f"DK_CORS_ORIGINS allows {public}" if public else "the server is running on Render (RENDER_EXTERNAL_URL is set)"
+        raise RuntimeError(f"DK_DEMO_TOKEN is not set but {why}; "
                            "set the token (or DK_ALLOW_OPEN=1 to run open on purpose)")
 
 
 def load_settings() -> Settings:
     s = _load()
-    check_not_open(s, os.environ.get("DK_ALLOW_OPEN") == "1")
+    check_not_open(s, os.environ.get("DK_ALLOW_OPEN") == "1", hosted=bool(os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("RENDER")))
     return s
 
 
@@ -82,7 +89,7 @@ def _load() -> Settings:
         arbiter_address=addrs["demo_wallets"]["arbiter"],
         data_dir=Path(os.environ.get("DK_DATA_DIR", SERVER_DIR / "data")),
         price_table_path=REPO_ROOT / "integrations" / "vision" / "price_table.json",
-        cors_origins=[o for o in os.environ.get("DK_CORS_ORIGINS", "http://localhost:3000").split(",") if o],
+        cors_origins=[o.strip() for o in os.environ.get("DK_CORS_ORIGINS", "http://localhost:3000").split(",") if o.strip()],
         autosend=os.environ.get("DK_AUTOSEND", "1") != "0",
         demo_token=os.environ.get("DK_DEMO_TOKEN") or None,
         max_leases_per_day=int(os.environ.get("DK_MAX_LEASES_PER_DAY", "20")),
