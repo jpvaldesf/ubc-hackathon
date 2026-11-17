@@ -80,7 +80,7 @@ All addresses are also in `shared/addresses.json`; the ABI is in `shared/abi/`.
 | Tenant accepts | 1.20 escrow → landlord | [0xde76…96bdc](https://explorer.testnet.arc.io/tx/0xde762bfa36e2cf943fb47a454c58aedd30f56f3f3f127c3fa543a82afdf96bdc) |
 
 **Simplified for the demo**
-- The server holds the three testnet keys (landlord, tenant, arbiter) and signs for each role. A real product would use the users' own wallets, for example Circle Wallets; we didn't get to that in time.
+- The server holds the two testnet keys (landlord, tenant) and signs for both roles. The arbiter is a separate demo address, and no appeal was resolved in the demo. A real product would use the users' own wallets, for example Circle Wallets; we didn't get to that in time.
 - The contract still holds a few USDC from early unfinished test leases. Those unlock only through the timeouts above, so "escrow back to 0" is true per lease, not for the whole contract.
 
 ## Architecture
