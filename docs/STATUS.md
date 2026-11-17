@@ -1,6 +1,7 @@
 # STATUS (keep this short; Claude updates it after every task)
 
 **Today's one goal (Mon Nov 16, 8 PM → Tue noon freeze):** By Tue noon, a judge could open our hosted URL on their phone, run all 5 demo steps in the app with no script, and tap a Proof link at each money step that opens a real Arc testnet tx.
+**Hosted demo (24/7, Render):** app https://deposit-keeper-app.onrender.com · API https://deposit-keeper-api.onrender.com · how to use it: server/README.md "Using the hosted demo".
 **Demo path:**
 1. Landlord creates a lease; tenant deposits $10 USDC (testnet scale 1:100, D-002) into escrow (tx on Arc explorer).
 2. Move-in photos taken in-app; fingerprints committed onchain.
@@ -18,8 +19,9 @@
 - Sun Nov 15 9 PM: demo steps 3–5 ran through the app on Arc testnet with real AI and exact demo amounts. Vision pipeline merged to main.
 - Mon Nov 16: app photos screen, upload/commit/analyze wiring, pay-deposit and entry points merged (PRs #22, #23, #25). Server `smoke --stop-at funded|move_in` for demo reset (FakeChain only so far).
 - Mon Nov 16, ~9:30 PM: **first full demo path in the app from a phone on Arc testnet** (lease l_75b8a3c6, links in the evidence table). Step 1 (create) still by script. Served from Pablo's laptop through Cloudflare tunnels (open mode + daily caps, D-012). Photo previews, 19× lighter, merged (D-013, PR #29).
+- Mon Nov 16, ~11 PM: **hosted on Render** (PR #31): API (Docker, persistent disk, D-012 caps, open mode until the app sends the token) + app as a static site in live mode. Smoke lease on the host: createLease https://explorer.testnet.arc.io/tx/0x8a8f2053fc2fb52ab523d0d2423ed4267193b2a1be699fc206ae9d2c08b6c54b · deposit https://explorer.testnet.arc.io/tx/0xaf7e01bc0256070a19ee2b7cc56ed7ed8098e22169ec59b8b36df422246878df; data survived a redeploy.
 ## Next (max 5, in priority order)
-1. Pablo: real hosting Tue 8 AM (laptop tunnel works for now, but its URL changes on restart); then turn on the demo token once the app sends it.
+1. Pablo: turn the demo token on (D-012) once Marcus's app sends `X-Demo-Token`; Vercel to live mode with the Render API URL (Marcus).
 2. Marcus, tonight: Create lease screen (step 1) if not in #25; fix whatever the phone run breaks. Settle Vite vs Next.js with `/decide` (keep Vite).
 3. Luka, tonight: merge PR #26 (demo script); shoot the demo photo set for the in-app run; README draft (architecture, Arc usage, contract address).
 4. Tue AM: qa-demo-tester + judge-panel on the hosted URL, fix the top 3. Noon: freeze.

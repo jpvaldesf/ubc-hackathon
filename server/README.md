@@ -85,3 +85,46 @@ value, e.g. `openssl rand -hex 16`) and delete `DK_ALLOW_OPEN`; Render redeploys
 
 **Notes:** data on the disk survives deploys and restarts; everything outside `/var/data` is reset on each deploy.
 Add the Vercel URL of any other frontend to `DK_CORS_ORIGINS` (comma-separated). Never scale past one instance.
+
+## Using the hosted demo (for the team)
+
+Always on, no laptop needed (Render, set up Mon Nov 16 night):
+- **App:** https://deposit-keeper-app.onrender.com (Marcus's app in live mode)
+- **API:** https://deposit-keeper-api.onrender.com (`/health` shows chain 5042002 and `demo_token_required`)
+- Every money step is a real Arc testnet tx. The "Proof" links open the explorer.
+
+**Run the demo in the app**
+1. Get a lease id (see below), then open `https://deposit-keeper-app.onrender.com/leases/<id>`.
+2. The tenant is the default view. Add `?as=landlord_demo` to the URL for the landlord, and remove it to switch back.
+   This is a demo switch, not a sign-in.
+3. Order: Pay deposit (tenant) → move-in photos, Done → move-out photos, Done → landlord: Analyze, wait for the
+   draft, Send report (pays the undisputed part to the tenant) → tenant: Accept (pays the deduction to the landlord).
+
+**Get a lease** (the app has no Create screen yet; run from the repo root):
+```
+uv run --project server python server/scripts/smoke.py --base https://deposit-keeper-api.onrender.com --demo --stop-at funded
+```
+It prints a fresh lease id with the $10 deposit already paid. `--stop-at move_in --photos <folder>` also commits the
+move-in photos. `--demo --photos <folder>` runs all the way to the AI draft. The folder needs `p1 p2 p3 p5 p7` as
+`pN_before.jpg` / `pN_after.jpg`. Once the demo token is on, set `DK_DEMO_TOKEN` in your shell first (Pablo sends it by chat).
+
+**Demo shot list** (what each shot should show; the AI reads the label):
+| Shot | Pair | Shows | Expected AI result |
+|---|---|---|---|
+| s1 | p1 | Living room wall, wide shot | nothing |
+| s2 | p2 | Living room floor and wall | nothing |
+| s3 | p3 | White brick wall below the light switch (blue paint streak after) | damage, repaint, $1.20 |
+| s4 | p5 | Bedroom corner (lamp on/off) | nothing (lighting only) |
+| s5 | p7 | Wall above the bed (picture hooks, nail holes after) | normal wear, $0 |
+
+**Limits and rules**
+- Photos: JPEG or PNG only (no HEIC; iPhone: Settings → Camera → Formats → Most Compatible), up to 25 MB and 50 MP.
+  Turn location off: original photos are public with their EXIF.
+- Daily caps (UTC day): 5 new leases and 10 AI runs. Over the cap you get "Daily demo limit reached". Rejected
+  requests don't count. Max deposit is $10 (1000 cents).
+- Each lease locks 10 testnet USDC from the tenant wallet until it settles. Leases left unfinished stay locked for
+  weeks, so finish the ones you start, and tell Pablo if a deposit fails for lack of funds.
+- Data (leases, photos) persists across deploys.
+- The API URL is public (the app needs it). Writes are limited by the daily caps and, once the D-012 token is on,
+  need `X-Demo-Token`. The token ships in the app, so it's not a secret from app users; the caps are the real limit.
+  Share lease ids by chat, not in the repo: anyone with a lease id can step it forward while the API is in open mode.
