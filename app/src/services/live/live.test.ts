@@ -175,12 +175,46 @@ describe('createApiClient', () => {
     expect(headers).not.toHaveProperty('X-Demo-Token');
   });
 
-  it('explains a wrong token (401) and a daily cap (429) in plain words', async () => {
-    const bad = createApiClient('http://x', fakeFetch(401, { error: { code: 'unauthorized', message: 'Missing or wrong X-Demo-Token' } }), 'old');
-    await expect(bad.post('/leases/l_1/deposit', 'tenant_demo', {})).rejects.toMatchObject({ code: 'unauthorized', message: expect.stringContaining('fresh demo link'), retryable: false });
-    const capped = createApiClient('http://x', fakeFetch(429, { error: { code: 'rate_limited', message: 'Daily demo limit reached (10 reports per day); try again tomorrow' } }), 'tok');
-    await expect(capped.post('/leases/l_1/report', 'landlord_demo', {})).rejects.toMatchObject({ code: 'service_failure', message: expect.stringContaining("today's limit"), retryable: false });
+  it('explains a missing or wrong token (401), even where the server message is kept, without echoing the token', async () => {
+    const body = { error: { code: 'unauthorized', message: 'Missing or wrong X-Demo-Token' } };
+    for (const options of [undefined, { keepServerMessage: true }]) {
+      const bad = createApiClient('http://x', fakeFetch(401, body), 'secret-value-123');
+      const error = (await bad.post('/leases/l_1/deposit', 'tenant_demo', {}, options).catch((e: Error) => e)) as Error;
+      expect(error).toMatchObject({ code: 'unauthorized', retryable: false, message: expect.stringContaining('demo access token is missing or') });
+      expect(error.message).toContain('configuration needs to be updated');
+      expect(error.message).not.toContain('secret-value-123');
+    }
   });
+
+  it('explains the daily cap (429) without inventing a reset time, and honors Retry-After when sent', async () => {
+    const body = { error: { code: 'rate_limited', message: 'Daily demo limit reached (10 reports per day); try again tomorrow' } };
+    const plain = createApiClient('http://x', fakeFetch(429, body), 'tok');
+    await expect(plain.post('/leases/l_1/report', 'landlord_demo', {}, { keepServerMessage: true })).rejects.toMatchObject({
+      message: 'The daily demo limit has been reached. Please try again tomorrow.',
+      retryable: false,
+    });
+    const withHeader = vi.fn(async () => ({ ok: false, status: 429, headers: new Headers({ 'Retry-After': '1800' }), json: async () => body }) as unknown as Response);
+    await expect(createApiClient('http://x', withHeader, 'tok').post('/leases/l_1/report', 'landlord_demo', {})).rejects.toMatchObject({
+      message: 'The daily demo limit has been reached. Please try again in about 30 minutes.',
+    });
+  });
+
+  it('never retries a failed write', async () => {
+    const f = fakeFetch(401, { error: { code: 'unauthorized', message: 'x' } });
+    await createApiClient('http://x', f, 'tok').post('/leases/l_1/accept', 'tenant_demo', {}).catch(() => undefined);
+    await createApiClient('http://x', f, 'tok').put('/leases/l_1/photos/in/s1', 'tenant_demo', new FormData()).catch(() => undefined);
+    expect(f).toHaveBeenCalledTimes(2);
+  });
+
+  it('sends the token only to the configured backend and no Content-Type on multipart', async () => {
+    const f = fakeFetch(200, {});
+    const c = createApiClient('https://api.example/', f, 'tok');
+    await c.put('/leases/l_1/photos/in/s1', 'tenant_demo', new FormData());
+    const [url, init] = (f as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls[0];
+    expect(url.startsWith('https://api.example/')).toBe(true);
+    expect(init.headers as Record<string, string>).not.toHaveProperty('Content-Type');
+  });
+
 });
 
 describe('live service', () => {
