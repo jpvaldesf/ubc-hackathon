@@ -11,6 +11,13 @@ One entry per decision that would be expensive to reverse. Newest at the top. `/
 - Revisit if: the condition that would make us change our mind
 -->
 
+## D-013 · Photo `url` serves a small preview; `original_url` added · 2026-11-16, 21:38 PST
+- Context: the Mon night phone run worked end to end, but photos loaded slowly. The server sent the full phone originals (1.7–3.9 MB each, ~27 MB per lease) through the laptop tunnel.
+- Options considered: leave it (hosting alone won't fix 27 MB on a phone) / the app resizes before upload (changes what gets hashed onchain, and it's Marcus's lane) / the server keeps the original and also writes a small display copy.
+- Decision: on upload the server writes `<shot>.preview.jpg` (JPEG, long side 1280 px, quality 80, phone rotation applied) next to the original. In `photos`, `url` now points to the preview and a new `original_url` points to the unchanged original. `sha256` (the onchain fingerprint) and the AI both still use the original. If a preview can't be made, `url` stays the original. Leases uploaded before this change keep `url` = original. The app needs no change.
+- Why: measured on the real run's 10 photos, 26.8 MB → 1.41 MB (19× smaller) for ~0.15 s more per upload. It doesn't touch the proof or the tested AI input.
+- Revisit if: judges want to inspect full-size photos in the app (link `original_url`), or the AI is ever switched to previews (it would need a re-test first).
+
 ## D-012 · Hosted server: demo token on writes, daily caps, /health network fields · 2026-11-16, 20:55 PST
 - Context: the security audit found `X-User-Id` is the API's only auth. Once the server is hosted with the testnet keys and the Anthropic key, anyone with the URL could create leases, spend the server-held tenant wallet's USDC and gas, and run Analyze on our Anthropic credits. Marcus also asked for `network`/`explorer` in `/health` so Proof links don't have to guess. docs/API.md is frozen (D-005), so these additions need a decision.
 - Options considered: no protection (rely on an unlisted URL) / real user auth (too big for the time left) / a shared demo token on writes plus per-day caps.
