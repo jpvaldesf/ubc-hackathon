@@ -4,7 +4,7 @@ Rental deposits, held in USDC escrow and checked by AI, so tenants get their mon
 
 Built for the UBC 2026 blockchain hackathon. Track: Consumer. Chain: Arc testnet.
 
-- Live demo: https://deposit-keeper-app.onrender.com (the API is https://deposit-keeper-api.onrender.com)
+- Live demo: https://deposit-keeper-app.onrender.com (the API is https://deposit-keeper-api.onrender.com). The app opens a lease by its id. A ready lease id for judges is in our Devpost submission. A finished example run, with all six transactions, is under "Contract & Arc" below.
 - Demo video: TO FILL
 
 ## The problem
@@ -20,7 +20,7 @@ In California a landlord has 21 days to return a deposit or send an itemized sta
 5. The undisputed amount is paid out immediately. The tenant either accepts the rest or disputes a deduction.
 6. A disputed deduction goes to a neutral arbiter.
 
-Every step has a proof link to the Arc block explorer.
+Every money step and both photo commits have a proof link to the Arc block explorer. The AI analysis runs off-chain, but the hash of its report is stored onchain when the landlord sends it.
 
 ## How the AI decides
 
@@ -37,7 +37,7 @@ The AI describes what it sees. It does not set prices or make the final call.
 
 ### How we tested it
 
-7 staged photo pairs, each run 3 times. Damage pairs scored 0.88–0.93 confidence. Clean pairs (including a lighting-only change) produced no findings. These are staged wall marks, not a large real-world dataset, so treat accuracy claims accordingly. 47 unit tests cover the rules around the AI.
+6 staged photo pairs. The damage, lighting-only and nail-hole pairs ran 3 times each; the two clean pairs ran once per batch. Damage pairs scored 0.88–0.93 confidence. Clean pairs (including a lighting-only change) produced no findings. These are staged wall marks, not a large real-world dataset, so treat accuracy claims accordingly. 47 unit tests cover the rules around the AI.
 
 ## Contract & Arc
 
