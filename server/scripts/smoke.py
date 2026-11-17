@@ -8,6 +8,11 @@ Then:
 Demo set (the video run: $10, one damage + one normal-wear pair, stops at the report draft for the app):
     uv run --project server python -m server.scripts.smoke --photos ~/vision-test --demo
 Prints the lease id; open /leases/<id> in the app (live mode) as the landlord to review and send.
+
+Demo reset / hybrid demo (step 1 scripted, the app takes over at the photos):
+    uv run --project server python -m server.scripts.smoke --demo --stop-at funded     # fresh $10 lease, deposit paid
+    uv run --project server python -m server.scripts.smoke --demo --photos ~/vision-test --stop-at move_in
+--stop-at funded needs no photos. move_in also commits the move-in photos, so the app starts at move-out.
 """
 from __future__ import annotations
 
@@ -44,6 +49,11 @@ def proof(step: str, body: dict):
     print(f"  {step:<22} {body.get('tx', {}).get('explorer_url', '')}")
 
 
+def stopped(lid: str, what: str):
+    print(f"\nstopped: {what}. Open /leases/{lid} in the app (live mode).")
+    print(f"lease id: {lid}")
+
+
 def placeholder_jpg(color) -> bytes:
     buf = io.BytesIO()
     Image.new("RGB", (64, 64), color).save(buf, "JPEG")
@@ -64,11 +74,11 @@ def main():
     ap.add_argument("--deposit-cents", type=int, default=100)
     ap.add_argument("--photos", type=Path)
     ap.add_argument("--demo", action="store_true", help="demo set: $10, pairs p1 p2 p3 p5 p7, stop at the draft")
-    ap.add_argument("--stop-at", choices=["draft", "end"], default=None)
+    ap.add_argument("--stop-at", choices=["funded", "move_in", "draft", "end"], default=None)
     a = ap.parse_args()
     if a.demo:
-        if not a.photos:
-            sys.exit("--demo needs --photos")
+        if not a.photos and a.stop_at != "funded":
+            sys.exit("--demo needs --photos (unless --stop-at funded)")
         if a.deposit_cents == 100:
             a.deposit_cents = 1000
         a.stop_at = a.stop_at or "draft"
@@ -86,6 +96,9 @@ def main():
     print(f"lease {lid}")
     proof("createLease", lease)
     proof("deposit", ok(c.post(f"/leases/{lid}/deposit", headers=T)))
+    if a.stop_at == "funded":
+        stopped(lid, "deposit paid; move-in photos are next (tenant)")
+        return
 
     shots = [s["shot_id"] for s in lease["shot_list"]]
     for phase, side in (("in", "before"), ("out", "after")):
@@ -97,6 +110,9 @@ def main():
                 data, name = placeholder_jpg((i * 40, 100, 200 if phase == "in" else 120)), f"{sid}.jpg"
             ok(c.put(f"/leases/{lid}/photos/{phase}/{sid}", headers=T, files={"file": (name, data)}))
         proof(f"commitPhotos({phase})", ok(c.post(f"/leases/{lid}/photos/{phase}/commit", headers=T)))
+        if phase == "in" and a.stop_at == "move_in":
+            stopped(lid, "move-in photos recorded; move-out photos are next")
+            return
 
     if not a.photos:
         print("no --photos: stopping before the AI report (placeholder photos would waste an API call)")

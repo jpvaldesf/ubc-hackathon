@@ -1,6 +1,6 @@
 # STATUS (keep this short; Claude updates it after every task)
 
-**Today's one goal (Fri Nov 13 night → Sat 1 PM sync):** By the sync, a judge could watch the AI flag the 2 damaged photo pairs (and nothing else), and click one Arc testnet release tx on the explorer.
+**Today's one goal (Mon Nov 16, 8 PM → Tue noon freeze):** By Tue noon, a judge could open our hosted URL on their phone, run all 5 demo steps in the app with no script, and tap a Proof link at each money step that opens a real Arc testnet tx.
 **Demo path:**
 1. Landlord creates a lease; tenant deposits $10 USDC (testnet scale 1:100, D-002) into escrow (tx on Arc explorer).
 2. Move-in photos taken in-app; fingerprints committed onchain.
@@ -15,11 +15,15 @@
 - Escrow contract written, 18 forge tests pass; ABI in shared/abi/. Deployed + source verified on Arc testnet: 0xe3791a88E125ce9e826FB07f84BF88625d9f3e98. Sun 6 PM: DemoRun lease #1 ran the whole path onchain ($10 in, $8.80 to tenant, $1.20 to landlord, escrow back to 0).
 - Vision spike: **GO** against the PLAN.md bar (Sat Nov 14, Luka). claude-sonnet-5-5 at the 0.7 cutoff flagged both damaged pairs in 3/3 runs (re-confirmed by the packaged pipeline on Nov 15: p3 @0.88–0.90, p4 @0.88–0.93) with no false positives on p1, p2 and p5. Caveats: both are staged wall marks charged as repaint; carpet stain unproven; small test set; p3 before photo reused from an earlier shot. Full note: docs/status/luka.md · evidence: spikes/vision/README.md.
 
+- Sun Nov 15 9 PM: demo steps 3–5 ran through the app on Arc testnet with real AI and exact demo amounts. Vision pipeline merged to main.
+- Mon Nov 16: app photos screen, upload/commit/analyze wiring, pay-deposit and entry points merged (PRs #22, #23, #25). Server `smoke --stop-at funded|move_in` for demo reset (FakeChain only so far).
+
 ## Next (max 5, in priority order)
-1. Luka: `analyze()` is packaged in integrations/vision/ (Sun Nov 15, branch feat/vision-pipeline, PR pending): 47 unit tests and a real 5/5 run pass, and sample_report.json is in place for Pablo and Marcus. Demo damage item is the wall mark (D-009), proven at 0.88–0.93 confidence; still to be run through the full flow.
-2. Pablo: server is up (server/README.md), chain path proven live via the API. Left: the live AI step (needs Pablo's ANTHROPIC_API_KEY + Luka's photos), then hosting Mon.
-3. Marcus: clickable mock of the move-out report screen, then scaffold app/ with the 5 demo screens.
-4. Everyone: read D-002…D-008 in docs/DECISIONS.md and switch mocks to cents + the frozen docs/API.md.
+1. Pablo, tonight: host the server (persistent disk, testnet keys as host secrets), point the Vercel app at it in live mode, top up wallets. Then one full in-app run on testnet from a phone; record every tx link.
+2. Marcus, tonight: Create lease screen (step 1) if not in #25; fix whatever the phone run breaks. Settle Vite vs Next.js with `/decide` (keep Vite).
+3. Luka, tonight: merge PR #26 (demo script); shoot the demo photo set for the in-app run; README draft (architecture, Arc usage, contract address).
+4. Tue AM: qa-demo-tester + judge-panel on the hosted URL, fix the top 3. Noon: freeze.
+5. Tue PM: record the 2–3 min video (plus backup run), Devpost written answers, `/submit-check`, submit by 11:59 PM PT.
 
 ## Milestones (our deadline: submitted Tue Nov 17, 11:59 PM PT · detail: docs/PLAN.md)
 - Fri night: contract deployed + release tx; app scaffold + report screen; photos shot.

@@ -15,6 +15,7 @@
 - Sun Nov 15, ~9 PM: FastAPI server in server/ (all docs/API.md endpoints, analyze() wired in, 12 tests). Live on testnet through the HTTP API: lease #2 ($1) create 0xe0d8e507…, deposit 0x761597e3…, commit in 0xf4419928…, commit out 0xd09bd0ab…; onchain manifest hashes match the server's. AI step not run live yet (no ANTHROPIC_API_KEY in my .env).
 
 - Sun Nov 15, 8:40–9 PM: full live run through server with real AI (lease #3); 9 PM check: demo steps 3–5 through Marcus's app on testnet, exact demo amounts (links in STATUS). smoke --demo added (PR #17).
+- Mon Nov 16 AM: demo reset / hybrid step 1: `smoke.py --demo --stop-at funded` makes a fresh $10 lease with the deposit paid and prints the lease id; `--stop-at move_in` also commits move-in photos. Checked against FakeChain (all 4 stop points); no testnet run yet.
 
 ## Next (max 3)
 1. Mon AM: demo-token header on the server; help Marcus with photo URLs / screens.
