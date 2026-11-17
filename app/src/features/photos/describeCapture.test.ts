@@ -105,6 +105,13 @@ describe('pageSections', () => {
     expect(idleCopy(lease, s)).toMatchObject({ title: 'Report ready', body: expect.stringContaining('ready for your review') });
   });
 
+  it('says the report was sent once the lease is in settlement', () => {
+    const state = buildScenario('move_out', now);
+    const lease = { ...liveLease('landlord', capture(null, { in: true, out: true })), stage: 'settlement' as const };
+    const s = pageSections(lease, selectProposal(state, 'landlord'));
+    expect(idleCopy(lease, s).title).toBe('Report sent');
+  });
+
   it('names what is recorded instead of "nothing to photograph" after the photos are done', () => {
     const tenant = liveLease('tenant', capture(null, { in: true, out: true }));
     expect(idleCopy(tenant, pageSections(tenant, null)).title).toBe('Photos recorded');

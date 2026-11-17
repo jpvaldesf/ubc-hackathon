@@ -272,6 +272,11 @@ export interface DepositService {
   commitPhotos(leaseId: string, phase: PhotoPhase): Promise<CommitResult>;
   /** Live mode only (sample mode throws `integration_blocked`). Tenant pays the deposit into escrow (POST /deposit). */
   payDeposit(leaseId: string): Promise<DepositResult>;
+  /**
+   * Live mode only (sample mode throws `integration_blocked`). Creates a fresh $10 demo lease as the landlord
+   * (POST /leases, one real testnet tx) with the demo shot list, and returns its id. Counts toward the daily cap.
+   */
+  createDemoLease(): Promise<{ leaseId: string }>;
   /** Live mode only. Landlord starts the AI comparison (returns once it is queued); poll via getLease. */
   startReport(leaseId: string): Promise<void>;
   /** Optional change notification (sample adapter now; live adapter may poll later). */

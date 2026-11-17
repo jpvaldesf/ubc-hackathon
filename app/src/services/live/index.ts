@@ -1,6 +1,7 @@
 import { ServiceError } from '../errors';
 import type { CommitResult, DepositResult, DepositService, PhotoPhase, UploadResult } from '../types';
 import { createApiClient, type ApiClient, type ApiLease, type DevUserId } from './api';
+import { DEMO_LEASE } from './demoLease';
 import { genuineTxUrl, mapLease, mapProposal, resolvePhotoUrl, UNITS_PER_CENT, type MapContext, type StagedEdits } from './mapping';
 
 /**
@@ -217,6 +218,12 @@ export function createLiveService({
       };
       const url = genuineTxUrl(r.tx, await context());
       return { proof: url ? { id: 'deposit', label: 'Deposit paid', url } : undefined };
+    },
+    async createDemoLease() {
+      // Always as the landlord: only the landlord creates leases, whichever identity is selected.
+      const r = (await client.post('/leases', 'landlord_demo', DEMO_LEASE, { keepServerMessage: true })) as { lease_id?: string };
+      if (!r?.lease_id || !/^[A-Za-z0-9_-]+$/.test(r.lease_id)) throw new ServiceError('service_failure', "The demo deposit wasn't created. Try again.", true);
+      return { leaseId: r.lease_id };
     },
     async startReport(leaseId) {
       await client.post(leasePath(leaseId, '/report'), userId, {}, { keepServerMessage: true });
