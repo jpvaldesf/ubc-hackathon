@@ -52,7 +52,7 @@ All money moves in one Solidity contract, `DepositEscrow`, deployed on **Arc tes
 All addresses are also in `shared/addresses.json`; the ABI is in `shared/abi/`.
 
 **Why Arc**
-- **USDC is the deposit and the gas.** The tenant never needs a second token, and fees are small and in dollars. That keeps crypto out of sight in a consumer app.
+- **USDC is the deposit and the gas.** The tenant never needs a second token, and fees are small and in dollars. That keeps crypto out of sight in a consumer app. Measured on the demo run below: all six transactions of a full lease cost **$0.012 in network fees together** (each one $0.001–$0.003), read from the receipts (`gasUsed × effectiveGasPrice`, native USDC has 18 decimals).
 - **Fast finality.** "The undisputed amount comes back the same day" really means the same minute.
 - **Standard EVM tooling.** Built and tested with Arc Foundry (`arc-forge`, 18 tests); OpenZeppelin `SafeERC20` and `ReentrancyGuard`.
 
