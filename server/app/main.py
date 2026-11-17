@@ -6,7 +6,7 @@ from __future__ import annotations
 import asyncio
 import hmac
 import logging
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 
 from fastapi import Depends, FastAPI, File, Header, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
@@ -88,6 +88,18 @@ def create_app(settings: Settings | None = None, chain=None, analyze_fn=None, pr
         log.exception("unhandled error")
         return err(500, "internal", "Something went wrong on the server")
 
+    @contextmanager
+    def counted(kind: str):
+        # Count against the daily cap, but give it back if the request is rejected (4xx), so junk
+        # requests can't burn the cap. 5xx (chain/vision) stays counted: it may have spent gas or credits.
+        quota.take(kind)
+        try:
+            yield
+        except ApiError as e:
+            if e.status < 500:
+                quota.give_back(kind)
+            raise
+
     def user(x_user_id: str | None = Header(default=None), x_demo_token: str | None = Header(default=None)) -> str:
         # Every write goes through here. The token keeps strangers from spending the hosted testnet wallets.
         if s.demo_token and not hmac.compare_digest((x_demo_token or "").encode(), s.demo_token.encode()):
@@ -116,8 +128,8 @@ def create_app(settings: Settings | None = None, chain=None, analyze_fn=None, pr
 
     @app.post("/leases", status_code=201)
     def create(u: str = Depends(user), body: dict = Depends(json_body)):
-        quota.take("leases")
-        return svc.create(u, body)
+        with counted("leases"):
+            return svc.create(u, body)
 
     @app.get("/leases/{lease_id}")
     def get(lease_id: str):
@@ -138,8 +150,8 @@ def create_app(settings: Settings | None = None, chain=None, analyze_fn=None, pr
 
     @app.post("/leases/{lease_id}/report", status_code=202)
     def report(lease_id: str, u: str = Depends(user)):
-        quota.take("reports")
-        return svc.start_report(u, lease_id)
+        with counted("reports"):
+            return svc.start_report(u, lease_id)
 
     @app.post("/leases/{lease_id}/report/send")
     def send(lease_id: str, u: str = Depends(user), body: dict = Depends(json_body)):

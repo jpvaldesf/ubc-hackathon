@@ -18,6 +18,24 @@ class DailyQuota:
         self.limits = limits
         self._lock = threading.Lock()
 
+    def give_back(self, kind: str) -> None:
+        """Undo one take() when the request was rejected (4xx), so bad requests can't use up the cap."""
+        today = datetime.now(timezone.utc).date().isoformat()
+        with self._lock:
+            try:
+                data = json.loads(self.path.read_text())
+            except (FileNotFoundError, ValueError):
+                return
+            counts = data.get(today, {})
+            if counts.get(kind, 0) > 0:
+                counts[kind] -= 1
+                self._write(today, counts)
+
+    def _write(self, today: str, counts: dict) -> None:
+        tmp = self.path.with_suffix(".tmp")
+        tmp.write_text(json.dumps({today: counts}))  # keep only today
+        tmp.replace(self.path)
+
     def take(self, kind: str) -> None:
         """Count one `kind` call for today, or raise 429 if today's cap is used up."""
         limit = self.limits.get(kind, 0)
@@ -33,6 +51,4 @@ class DailyQuota:
             if counts.get(kind, 0) >= limit:
                 raise ApiError(429, "rate_limited", f"Daily demo limit reached ({limit} {kind} per day); try again tomorrow")
             counts[kind] = counts.get(kind, 0) + 1
-            tmp = self.path.with_suffix(".tmp")
-            tmp.write_text(json.dumps({today: counts}))  # keep only today
-            tmp.replace(self.path)
+            self._write(today, counts)

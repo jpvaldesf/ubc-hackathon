@@ -1,6 +1,6 @@
 # Backend API (agreed at the team sync; change only with /decide)
 
-**Status: FROZEN Sat Nov 14, 2:30 PM (D-002 to D-007). Changes need a new /decide entry.**
+**Status: FROZEN Sat Nov 14, 2:30 PM (D-002 to D-007). Changes need a new /decide entry.** Amended Mon Nov 16 by D-012 (demo token, daily caps, `/health` fields; additive only).
 
 FastAPI server in `server/`. JSON everywhere except photo upload (multipart, one shot per request).
 Base URL: `http://localhost:8000` in dev; hosted URL added Mon.
@@ -18,12 +18,22 @@ Base URL: `http://localhost:8000` in dev; hosted URL added Mon.
 | POST | `/leases/{id}/accept` | Tenant | `accept` | Pablo |
 | POST | `/leases/{id}/appeal` | Tenant | `appeal` | Pablo |
 | GET | `/leases/{id}` | Both | none (reads) | Pablo |
+| GET | `/health` | Anyone | none (reads the onchain lease count) | Pablo |
+
+`GET /health` returns (D-012 added the last three fields):
+```json
+{ "ok": true, "chain_id": 5042002, "escrow": "0xe379…", "onchain_leases": 7,
+  "network": "arc_testnet", "explorer": "https://explorer.testnet.arc.io", "demo_token_required": true }
+```
+Proof links use `explorer`; the app shows them only when `network` is `arc_testnet`.
 
 The arbiter ruling (`resolve`) and the timeout functions (`finalize`, `reclaim`, `expireAppeal`) run from scripts, not the API. `GET /leases/{id}` shows the result.
 
 ## Conventions
 
 - **Who's calling.** Demo-grade identity: header `X-User-Id: tenant_demo | landlord_demo`. It matches Marcus's persona switch. There's no real auth in v1; the README says so.
+- **Demo token (D-012).** When the server has `DK_DEMO_TOKEN` set (the hosted server always does), every write (POST/PUT) also needs header `X-Demo-Token: <token>`. Reads (`GET /leases/{id}`, `GET /health`, `/files/...`) don't. The app reads the value from `VITE_DEMO_TOKEN`. It keeps strangers off the hosted testnet wallets; it is not real auth (it ships in the app bundle).
+- **Daily caps (D-012).** The hosted server limits new leases (`POST /leases`) and AI runs (`POST /leases/{id}/report`) per UTC day. Requests that are rejected (4xx) don't count. Deposits are capped per lease (`deposit_cents` above the cap gives 400).
 - **Money is integer cents** (D-003): `deposit_cents: 1000` = $10.00. The findings schema uses `cost_cents` too. The server converts cents to USDC base units (×10⁴, 6 decimals); the client never sees base units.
 - **Demo scale** (D-002): the demo lease is $10 (1:100 of a $1,000 deposit, because the testnet faucet caps at 20 USDC). `GET /leases/{id}` returns `demo_scale: 100` so the UI can show the note "Testnet demo: amounts scaled 1:100". The UI shows the real onchain cents; it never multiplies them.
 - **Proof.** Every response that wrote onchain includes a `tx` object. Marcus shows `tx.explorer_url` as a small "Proof" link and never shows the hash.
@@ -38,9 +48,11 @@ The arbiter ruling (`resolve`) and the timeout functions (`finalize`, `reclaim`,
   | HTTP | code | When |
   |---|---|---|
   | 400 | `bad_request` | Missing or invalid field |
+  | 401 | `unauthorized` | Missing or wrong `X-Demo-Token` (D-012) |
   | 403 | `not_allowed` | Wrong persona (e.g. the landlord calls `/accept`) |
   | 404 | `not_found` | Unknown lease or shot |
   | 409 | `wrong_state` | Step out of order (see the state machine) |
+  | 429 | `rate_limited` | Daily demo cap reached for new leases or AI runs; try again tomorrow (D-012) |
   | 502 | `chain_error` | Tx reverted or RPC failed; `message` says which |
   | 502 | `vision_error` | `analyze()` failed after its retry |
 

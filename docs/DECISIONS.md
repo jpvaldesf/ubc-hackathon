@@ -11,6 +11,13 @@ One entry per decision that would be expensive to reverse. Newest at the top. `/
 - Revisit if: the condition that would make us change our mind
 -->
 
+## D-012 · Hosted server: demo token on writes, daily caps, /health network fields · 2026-11-16, 20:55 PST
+- Context: the security audit found `X-User-Id` is the API's only auth. Once the server is hosted with the testnet keys and the Anthropic key, anyone with the URL could create leases, spend the server-held tenant wallet's USDC and gas, and run Analyze on our Anthropic credits. Marcus also asked for `network`/`explorer` in `/health` so Proof links don't have to guess. docs/API.md is frozen (D-005), so these additions need a decision.
+- Options considered: no protection (rely on an unlisted URL) / real user auth (too big for the time left) / a shared demo token on writes plus per-day caps.
+- Decision: additive change to docs/API.md. (1) When `DK_DEMO_TOKEN` is set, every write needs header `X-Demo-Token`; a missing or wrong token gives `401 unauthorized`. Reads (`GET /leases/{id}`, `/health`, `/files`) stay open. (2) Per-day UTC caps on `POST /leases` and `POST /leases/{id}/report` (`DK_MAX_LEASES_PER_DAY`, `DK_MAX_REPORTS_PER_DAY`, default 20; host: 5 and 10); over the cap gives `429 rate_limited`. A rejected request (4xx) doesn't use up the cap. (3) Deposit cap is an env var (`DK_MAX_DEPOSIT_CENTS`, default 10000; host: 1000 = the $10 demo). (4) The server refuses to start with a non-localhost CORS origin and no token, unless `DK_ALLOW_OPEN=1`. (5) `/health` adds `network`, `explorer`, `demo_token_required`. Nothing existing changes shape; local dev with no token works as before.
+- Why: stops drive-by use of the hosted wallets and API key before the demo, in under an hour of work. The token ships in the static Vite bundle, so it's not a secret from anyone who opens the app; the caps are what bound the worst case (a few dollars of Anthropic credits and testnet funds per day). The README says this plainly.
+- Revisit if: someone drains the caps before the pitch (lower them or rotate the token on the host), or we add real sign-in after the hackathon.
+
 ## D-011 · Bounties: QuickNode Streams only, and only if the demo path works Mon 2 PM · 2026-11-15, 19:53 PST
 - Context: we're entered in no bounties. Bounties are free to enter and don't conflict with the Consumer track or the Arc award, but each one needs its sponsor's tool as a core feature, and the demo path isn't connected end to end yet.
 - Options considered: no bounties / QuickNode Streams / ElevenLabs / Gemini Prediction Markets / Grok Bot.
