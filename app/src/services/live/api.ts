@@ -78,6 +78,8 @@ const CODE_MAP: Record<string, { code: ErrorCode; retryable: boolean }> = {
   wrong_state: { code: 'invalid_state', retryable: false },
   bad_request: { code: 'validation', retryable: false },
   not_found: { code: 'service_failure', retryable: false },
+  unauthorized: { code: 'unauthorized', retryable: false },
+  rate_limited: { code: 'service_failure', retryable: false },
   chain_error: { code: 'service_failure', retryable: true },
   vision_error: { code: 'service_failure', retryable: true },
 };
@@ -86,6 +88,8 @@ const CODE_MAP: Record<string, { code: ErrorCode; retryable: boolean }> = {
 const FRIENDLY: Record<string, string> = {
   wrong_state: 'This deposit has already moved on, so that action is no longer available. The page will refresh with the latest status.',
   not_allowed: "Your account can't do that on this deposit.",
+  unauthorized: "This demo link isn't allowed to make changes right now. Reload the page, or ask the team for a fresh demo link.",
+  rate_limited: "The demo has reached today's limit. Please try again tomorrow.",
 };
 
 /** `keepServerMessage`: show the server's own text (for example "Missing shots: s2, s3") instead of the generic wording. */
@@ -100,9 +104,15 @@ export interface ApiClient {
   put(path: string, userId: DevUserId, body: FormData, options?: CallOptions): Promise<unknown>;
 }
 
-/** Backend errors have the shape { error: { code, message } }. Anything else becomes a generic retryable failure. */
-export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = fetch): ApiClient {
+/**
+ * Backend errors have the shape { error: { code, message } }. Anything else becomes a generic retryable failure.
+ * `demoToken` (D-012) is sent as X-Demo-Token on every write. It ships in the public bundle, so it only keeps
+ * casual callers off the hosted testnet wallets; the server's daily caps are the real limit.
+ */
+export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = fetch, demoToken?: string): ApiClient {
   const base = baseUrl.replace(/\/+$/, '');
+  const writeHeaders = (userId: DevUserId): Record<string, string> =>
+    demoToken ? { 'X-User-Id': userId, 'X-Demo-Token': demoToken } : { 'X-User-Id': userId };
 
   async function request(path: string, init: RequestInit, options: CallOptions = {}): Promise<unknown> {
     let response: Response;
@@ -131,10 +141,10 @@ export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = fetch
     post: (path, userId, body, options) =>
       request(
         path,
-        { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-User-Id': userId }, body: JSON.stringify(body) },
+        { method: 'POST', headers: { 'Content-Type': 'application/json', ...writeHeaders(userId) }, body: JSON.stringify(body) },
         options,
       ),
     // No Content-Type here on purpose: fetch derives the multipart boundary from the FormData.
-    put: (path, userId, body, options) => request(path, { method: 'PUT', headers: { 'X-User-Id': userId }, body }, options),
+    put: (path, userId, body, options) => request(path, { method: 'PUT', headers: writeHeaders(userId), body }, options),
   };
 }

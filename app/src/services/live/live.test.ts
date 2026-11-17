@@ -155,6 +155,32 @@ describe('createApiClient', () => {
     await createApiClient('http://x/', f).post('/leases/l_1/appeal', 'tenant_demo', { a: 1 });
     expect(f).toHaveBeenCalledWith('http://x/leases/l_1/appeal', expect.objectContaining({ method: 'POST', headers: expect.objectContaining({ 'X-User-Id': 'tenant_demo' }), body: '{"a":1}' }));
   });
+
+  it('sends X-Demo-Token on POST and PUT when a token is set, never on GET', async () => {
+    const f = fakeFetch(200, {});
+    const c = createApiClient('http://x', f, 'tok');
+    await c.post('/leases/l_1/accept', 'tenant_demo', {});
+    await c.put('/leases/l_1/photos/in/s1', 'tenant_demo', new FormData());
+    await c.get('/leases/l_1');
+    const calls = (f as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls;
+    expect(calls[0][1].headers).toMatchObject({ 'X-Demo-Token': 'tok', 'X-User-Id': 'tenant_demo' });
+    expect(calls[1][1].headers).toMatchObject({ 'X-Demo-Token': 'tok', 'X-User-Id': 'tenant_demo' });
+    expect(calls[2][1].headers).toBeUndefined();
+  });
+
+  it('sends no X-Demo-Token without a token (open mode)', async () => {
+    const f = fakeFetch(200, {});
+    await createApiClient('http://x', f).post('/leases/l_1/accept', 'tenant_demo', {});
+    const headers = (f as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls[0][1].headers as Record<string, string>;
+    expect(headers).not.toHaveProperty('X-Demo-Token');
+  });
+
+  it('explains a wrong token (401) and a daily cap (429) in plain words', async () => {
+    const bad = createApiClient('http://x', fakeFetch(401, { error: { code: 'unauthorized', message: 'Missing or wrong X-Demo-Token' } }), 'old');
+    await expect(bad.post('/leases/l_1/deposit', 'tenant_demo', {})).rejects.toMatchObject({ code: 'unauthorized', message: expect.stringContaining('fresh demo link'), retryable: false });
+    const capped = createApiClient('http://x', fakeFetch(429, { error: { code: 'rate_limited', message: 'Daily demo limit reached (10 reports per day); try again tomorrow' } }), 'tok');
+    await expect(capped.post('/leases/l_1/report', 'landlord_demo', {})).rejects.toMatchObject({ code: 'service_failure', message: expect.stringContaining("today's limit"), retryable: false });
+  });
 });
 
 describe('live service', () => {
