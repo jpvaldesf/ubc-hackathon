@@ -52,3 +52,29 @@ Host settings (D-012): `DK_DEMO_TOKEN=<random>`, `DK_MAX_LEASES_PER_DAY=5`, `DK_
 - Demo token + daily caps are in (`DK_DEMO_TOKEN`, see above). Set them before hosting.
 - Known v1 limits: no real auth; uploaded photos are served without auth under unguessable lease ids;
   one server instance (txs are serialized by a process lock).
+
+## Hosting (Render, D-012/D-013)
+
+`render.yaml` (repo root) defines one Docker web service built from `Dockerfile`. The image contains only `server/`,
+`shared/` and `integrations/` (`.dockerignore` is an allow-list; `.env` and keys are never copied). It runs one
+uvicorn worker on `$PORT` and keeps leases, photos and the daily caps on a 1 GB persistent disk at `/var/data`.
+The paid `0.5c-512mb` plan is needed because the free plan has no disk.
+
+**Setup (about 15 min):**
+1. Render dashboard → **New → Blueprint** → pick this repo, branch `main`. Render reads `render.yaml`.
+2. It asks for the `sync: false` values. Paste them into Render only, never into git or chat:
+   - `LANDLORD_PRIVATE_KEY`, `TENANT_PRIVATE_KEY`: the testnet demo wallets (the arbiter key is not needed).
+   - `ANTHROPIC_API_KEY`: also set a monthly spend limit on this key in the Anthropic console.
+   - `DK_ALLOW_OPEN`: enter `1` (open mode until the app sends `X-Demo-Token`).
+3. Deploy, then check `https://<service>.onrender.com/health`: `ok: true`, `chain_id: 5042002`, `network: arc_testnet`.
+4. Top up the wallets if needed: `uv run --project server python server/scripts/topup.py` (from your laptop).
+5. Smoke test against the host: `uv run --project server python server/scripts/smoke.py --base https://<service>.onrender.com --demo --stop-at funded`
+   (prints a fresh $10 lease id; uses 1 of the 5 daily leases).
+6. Send Marcus the URL by chat: Vercel `VITE_ADAPTER=live`, `VITE_API_URL=https://<service>.onrender.com`.
+
+**Turn the demo token on** (once the app sends `X-Demo-Token`): in the dashboard, add `DK_DEMO_TOKEN` (a random
+value, e.g. `openssl rand -hex 16`) and delete `DK_ALLOW_OPEN`; Render redeploys. Give Marcus the same value for
+`VITE_DEMO_TOKEN`, and set `DK_DEMO_TOKEN` in your shell when running `smoke.py` against the host.
+
+**Notes:** data on the disk survives deploys and restarts; everything outside `/var/data` is reset on each deploy.
+Add the Vercel URL of any other frontend to `DK_CORS_ORIGINS` (comma-separated). Never scale past one instance.

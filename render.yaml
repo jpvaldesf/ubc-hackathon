@@ -1,0 +1,40 @@
+# Render Blueprint for the Deposit Keeper API (Arc testnet only). Setup steps: server/README.md "Hosting".
+# Secrets are marked sync: false, so Render asks for them in the dashboard; they never go in this file.
+services:
+  - type: web
+    name: deposit-keeper-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: 0.5c-512mb # paid: the free plan has no persistent disk
+    region: oregon
+    branch: main
+    healthCheckPath: /health
+    disk:
+      name: dk-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      # Secrets: paste in the Render dashboard
+      - key: LANDLORD_PRIVATE_KEY
+        sync: false
+      - key: TENANT_PRIVATE_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Leases, photos and the daily caps live on the disk
+      - key: DK_DATA_DIR
+        value: /var/data
+      - key: DK_CORS_ORIGINS
+        value: https://deposit-keeper-demo.vercel.app
+      # D-012 limits for the public demo
+      - key: DK_MAX_LEASES_PER_DAY
+        value: "5"
+      - key: DK_MAX_REPORTS_PER_DAY
+        value: "10"
+      - key: DK_MAX_DEPOSIT_CENTS
+        value: "1000"
+      # Open mode until the app sends X-Demo-Token: enter 1 at setup. Later add DK_DEMO_TOKEN in the
+      # dashboard and delete this variable (server/README.md). Dashboard-managed so a blueprint sync
+      # can't switch open mode back on.
+      - key: DK_ALLOW_OPEN
+        sync: false

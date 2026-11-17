@@ -1,0 +1,18 @@
+# Allow-list: only what the API server needs goes into the image.
+*
+!server/
+!shared/
+!integrations/
+
+# Never ship secrets, local data or caches, even inside allowed folders.
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/*keypair*.json
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+server/data/
+server/tests/
+integrations/vision/tests/
