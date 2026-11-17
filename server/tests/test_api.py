@@ -451,3 +451,17 @@ def test_retake_replaces_preview(env):
     r = c.put(f"/leases/{lid}/photos/in/s1", headers=T, files={"file": ("b.jpg", JPG, "image/jpeg")}).json()
     assert r["url"] == r["original_url"]  # undecodable retake: no stale preview from the first shot
     assert c.get(f"/files/{lid}/in/s1.preview.jpg").status_code == 404
+
+
+def test_huge_dimension_png_is_rejected_before_decoding(env):
+    import io
+    from PIL import Image
+    c, _, _ = env
+    lid = new_lease(c)
+    c.post(f"/leases/{lid}/deposit", headers=T)
+    buf = io.BytesIO()
+    Image.new("1", (13000, 13000)).save(buf, "PNG")  # tiny file, 169M px
+    assert len(buf.getvalue()) < 1_000_000
+    r = c.put(f"/leases/{lid}/photos/in/s1", headers=T, files={"file": ("bomb.png", buf.getvalue(), "image/png")})
+    assert r.status_code == 400 and "px" in r.json()["error"]["message"]
+    assert not list((c.app.state.svc.store.files_dir / lid).glob("in/s1*"))  # nothing stored

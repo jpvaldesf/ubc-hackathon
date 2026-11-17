@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from .config import (CENTS_TO_UNITS, DEFAULT_SHOT_LIST, DEMO_SCALE, LANDLORD_ID, LANDLORD_NAME,
                      MAX_ANALYZE_ATTEMPTS, MAX_PHOTO_BYTES, REVIEW_HOURS, SIMULATED_APY, TENANT_ID, Settings)
-from .previews import make_preview
+from .previews import make_preview, too_big
 from .errors import bad_request, not_allowed, not_found, vision_error, wrong_state
 from .store import Store
 
@@ -158,6 +158,8 @@ class Service:
             ext = sniff_image(data[:16])
             if not ext:
                 raise bad_request("photo must be JPEG or PNG (HEIC is not supported)")
+            if reason := too_big(data):
+                raise bad_request(reason)
             folder = self.store.files_dir / lease_id / phase
             folder.mkdir(parents=True, exist_ok=True)
             for old in folder.glob(f"{shot_id}.*"):
