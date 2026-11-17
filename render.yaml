@@ -24,8 +24,10 @@ services:
       # Leases, photos and the daily caps live on the disk
       - key: DK_DATA_DIR
         value: /var/data
+      # Comma-separated browser origins allowed to call the API. Enter at setup:
+      # https://deposit-keeper-demo.vercel.app,https://<static site>.onrender.com
       - key: DK_CORS_ORIGINS
-        value: https://deposit-keeper-demo.vercel.app
+        sync: false
       # D-012 limits for the public demo
       - key: DK_MAX_LEASES_PER_DAY
         value: "5"
@@ -37,4 +39,23 @@ services:
       # dashboard and delete this variable (server/README.md). Dashboard-managed so a blueprint sync
       # can't switch open mode back on.
       - key: DK_ALLOW_OPEN
+        sync: false
+
+  # Marcus's app (app/, unchanged) as a free static site in live mode, so the team can use it 24/7.
+  - type: web
+    name: deposit-keeper-app
+    runtime: static
+    rootDir: app
+    branch: main
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite # client-side routes like /leases/<id>
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_ADAPTER
+        value: live
+      # The API service's URL, e.g. https://deposit-keeper-api.onrender.com (enter at setup)
+      - key: VITE_API_URL
         sync: false

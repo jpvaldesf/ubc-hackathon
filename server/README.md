@@ -60,13 +60,20 @@ Host settings (D-012): `DK_DEMO_TOKEN=<random>`, `DK_MAX_LEASES_PER_DAY=5`, `DK_
 uvicorn worker on `$PORT` and keeps leases, photos and the daily caps on a 1 GB persistent disk at `/var/data`.
 The paid `0.5c-512mb` plan is needed because the free plan has no disk.
 
+It also defines `deposit-keeper-app`: the app in `app/` (unchanged) as a free static site in live mode.
+
 **Setup (about 15 min):**
-1. Render dashboard → **New → Blueprint** → pick this repo, branch `main`. Render reads `render.yaml`.
+1. Render dashboard → **New → Blueprint** → pick this repo, branch `main`. Render reads `render.yaml` and shows
+   both services with their `onrender.com` URLs.
 2. It asks for the `sync: false` values. Paste them into Render only, never into git or chat:
    - `LANDLORD_PRIVATE_KEY`, `TENANT_PRIVATE_KEY`: the testnet demo wallets (the arbiter key is not needed).
    - `ANTHROPIC_API_KEY`: also set a monthly spend limit on this key in the Anthropic console.
    - `DK_ALLOW_OPEN`: enter `1` (open mode until the app sends `X-Demo-Token`).
-3. Deploy, then check `https://<service>.onrender.com/health`: `ok: true`, `chain_id: 5042002`, `network: arc_testnet`.
+   - `DK_CORS_ORIGINS`: `https://deposit-keeper-demo.vercel.app,https://<app service>.onrender.com`
+   - `VITE_API_URL` (app): `https://<api service>.onrender.com`
+   If the URLs aren't shown before creating, enter a placeholder, then fix both values after the first deploy
+   (the app needs a redeploy to pick up `VITE_API_URL`: Manual Deploy → Clear build cache & deploy).
+3. Deploy, then check `https://<api service>.onrender.com/health`: `ok: true`, `chain_id: 5042002`, `network: arc_testnet`.
 4. Top up the wallets if needed: `uv run --project server python server/scripts/topup.py` (from your laptop).
 5. Smoke test against the host: `uv run --project server python server/scripts/smoke.py --base https://<service>.onrender.com --demo --stop-at funded`
    (prints a fresh $10 lease id; uses 1 of the 5 daily leases).
