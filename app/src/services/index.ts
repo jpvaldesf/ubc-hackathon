@@ -55,6 +55,7 @@ export function createServices(): ServiceBundle {
     const service: LiveService = createLiveService({
       baseUrl: apiUrl,
       userId: devIdentity(),
+      demoToken: import.meta.env.VITE_DEMO_TOKEN?.trim() || undefined,
       explorer: import.meta.env.VITE_EXPLORER_URL ?? undefined,
       expectedChainId: import.meta.env.VITE_CHAIN_ID ? Number(import.meta.env.VITE_CHAIN_ID) : undefined,
     });

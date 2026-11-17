@@ -51,6 +51,8 @@ function leasePath(leaseId: string, suffix = ''): string {
 export interface LiveOptions {
   baseUrl: string;
   userId: DevUserId;
+  /** D-012 demo token, sent as X-Demo-Token on writes. Omit when the server runs in open mode. */
+  demoToken?: string;
   client?: ApiClient;
   /** The one explorer origin accepted for proof links. */
   explorer?: string;
@@ -68,7 +70,8 @@ export type LiveService = DepositService & {
 export function createLiveService({
   baseUrl,
   userId: initialUserId,
-  client = createApiClient(baseUrl),
+  demoToken,
+  client = createApiClient(baseUrl, fetch, demoToken),
   explorer = 'https://explorer.testnet.arc.io',
   expectedChainId = 5042002,
 }: LiveOptions): LiveService {
