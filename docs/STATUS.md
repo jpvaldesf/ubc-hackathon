@@ -17,9 +17,9 @@
 
 - Sun Nov 15 9 PM: demo steps 3–5 ran through the app on Arc testnet with real AI and exact demo amounts. Vision pipeline merged to main.
 - Mon Nov 16: app photos screen, upload/commit/analyze wiring, pay-deposit and entry points merged (PRs #22, #23, #25). Server `smoke --stop-at funded|move_in` for demo reset (FakeChain only so far).
-
+- Mon Nov 16, ~9:30 PM: **first full demo path in the app from a phone on Arc testnet** (lease l_75b8a3c6, links in the evidence table). Step 1 (create) still by script. Served from Pablo's laptop through Cloudflare tunnels (open mode + daily caps, D-012). Photo previews, 19× lighter, merged (D-013, PR #29).
 ## Next (max 5, in priority order)
-1. Pablo, tonight: host the server (persistent disk, testnet keys as host secrets), point the Vercel app at it in live mode, top up wallets. Then one full in-app run on testnet from a phone; record every tx link.
+1. Pablo: real hosting Tue 8 AM (laptop tunnel works for now, but its URL changes on restart); then turn on the demo token once the app sends it.
 2. Marcus, tonight: Create lease screen (step 1) if not in #25; fix whatever the phone run breaks. Settle Vite vs Next.js with `/decide` (keep Vite).
 3. Luka, tonight: merge PR #26 (demo script); shoot the demo photo set for the in-app run; README draft (architecture, Arc usage, contract address).
 4. Tue AM: qa-demo-tester + judge-panel on the hosted URL, fix the top 3. Noon: freeze.
@@ -34,9 +34,9 @@
 - Wed to Thu: buffer only (bug fixes, pitch drills). Sat 21: pitch in person.
 
 ## Blockers / open questions (for office hours, Telegram, or mentor)
-- Sun 9 PM check: app gaps for Mon AM (Marcus): photos show "No photo attached" (prefix server URL to /files paths); $0 normal-wear line hidden; proof links not one tap away; persona switch only via ?as=. App has no create/deposit/photo screens yet (steps 1–2 run by script).
+- App gaps after the Mon night phone run (Marcus): no Create lease screen (step 1 by script); UI polish ("kinda ugly"); must send `X-Demo-Token` (D-012) before the token is turned on.
 - Law check done (verified against Civil Code §1950.5 text (Justia)): AB 2801 move-out photos required since Apr 1 2025 (all tenancies); move-in photos for tenancies starting on/after Jul 1 2025; photos go with the itemized statement within 21 days; bad-faith penalty up to 2x deposit (subd. (m)).
-- Fri-night milestone slipped: contract is written and tested but not deployed; no app or server code on the remote yet (Sat Nov 14 night).
+- Escrow contract holds 11 USDC from earlier unfinished test leases (they unlock only via timeouts). Say "escrow back to 0" per lease, not for the whole contract.
 - Open (from the vision spike): how to treat a tenant's own rug vs built-in carpet (the model calls area rugs belongings even when told otherwise). Pipeline location and API settled by D-005/D-008.
 - Open product decisions: where interest goes, who pays the fee, appeal window length, price-table costs in v1.
 
@@ -48,6 +48,7 @@
 | Server → Arc testnet (HTTP API, lease #2, $1) | create, deposit, both photo commits; manifest hashes match onchain | deposit https://explorer.testnet.arc.io/tx/0x761597e3d3d70b27fdffce526d1996db747b93904e3da9cad777c07990f924f8 · commit out https://explorer.testnet.arc.io/tx/0xd09bd0ab4726f11cd50dec63b8e1d1876302caa3ba0786adc6a5d3c62bbd5576 |
 | Claude vision (claude-sonnet-5-5, structured JSON) | GO: 2 staged wall-mark pairs flagged 3/3 at 0.7 cutoff, 0 false positives; carpet stain unproven | spikes/vision/results/run11_p3_reshoot_bold_x3/p3_run1.json (damage/repaint @0.90, req_011Ch4Dcp8squfvzcHUqzwm7); run8_reshoot_closeup/p4_run1.json (damage/repaint @0.90, req_011Ch2MWf4fxn5qdcX69gCVR); runs 9–10 for p4 3/3 and clean pairs; summary: spikes/vision/README.md |
 | Vision pipeline in the real server (analyze() via FastAPI on Arc testnet) | Proven Nov 15 | Pablo’s smoke run, lease l_cf673463: report in 24 s, p3 + p4 damage 120¢ @0.90, clean pairs no findings, deduction capped at 100¢ deposit ($1 test lease); txs createLease https://explorer.testnet.arc.io/tx/0x39efa863c69ff1b57157e2cef09d1eaac5c15acc504104ed9782a21ba4183714, accept https://explorer.testnet.arc.io/tx/0xced477e2b09f26d7345a7acb8d11acc65dbda8f6f4102420dbf668407dceab59 |
+| **Full demo path in the app, from a phone (Mon Nov 16, lease l_75b8a3c6)** | Working: 6/6 receipts status 1, USDC moves read from the RPC; AI: wall mark $1.20 @0.90 + nail hole $0 @0.60 | create https://explorer.testnet.arc.io/tx/0x6e82191f0a33c0625a04b30e09cdc749aefba4837111caa88648293e42e9a429 · deposit (10 USDC tenant→escrow) https://explorer.testnet.arc.io/tx/0x2f8f7f16b0a6d584485a36c1379ea4d6e787408bf5e331077ad150aff6c92d4a · move-in commit https://explorer.testnet.arc.io/tx/0x4d8a9b059da15addaf219e9d74430f859399605c0dac890512c3cf8e18338952 · move-out commit https://explorer.testnet.arc.io/tx/0x4b4983c8aefe027bffc6d8876fe9bcabad827c0437c9a1e3866fa7043b6582c3 · send report (8.80 escrow→tenant) https://explorer.testnet.arc.io/tx/0xfc8fae8018253a9001e40b69be6c8a1ef63f83b024d62219fe03f9049f01924f · accept (1.20 escrow→landlord) https://explorer.testnet.arc.io/tx/0xba6877a082395d842855182b170858afd96ce44d76b9681f7065041bee688261 |
 
 ## Judge runs (date · Tech/UX/Innov/Impact/Demo · verdict)
 -
