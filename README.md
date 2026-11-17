@@ -121,7 +121,7 @@ This is a testnet demo. Be clear about what is simplified:
 - Amounts are scaled 1:100. A $10 test deposit stands for $1,000.
 - Identity is a demo header (`landlord_demo` / `tenant_demo`), not real sign-in.
 - The server holds the testnet keys and signs for both roles. A real product would use user wallets.
-- Every write needs an `X-Demo-Token` header, and the server enforces daily limits (`DK_DEMO_TOKEN`, `DK_MAX_LEASES_PER_DAY`, `DK_MAX_REPORTS_PER_DAY`). The hosted demo has the token on. The app sends it from `VITE_DEMO_TOKEN`, which ships in the public JS bundle, so the daily limits are the real protection. To turn it on: set `VITE_DEMO_TOKEN` on the app and rebuild first, then set `DK_DEMO_TOKEN` on the API.
+- When `DK_DEMO_TOKEN` is set, every write needs an `X-Demo-Token` header; the server always enforces daily limits (`DK_DEMO_TOKEN`, `DK_MAX_LEASES_PER_DAY`, `DK_MAX_REPORTS_PER_DAY`). The hosted demo has the token on. The app sends it from `VITE_DEMO_TOKEN`, which ships in the public JS bundle, so the daily limits are the real protection. To turn it on: set `VITE_DEMO_TOKEN` on the app and rebuild first, then set `DK_DEMO_TOKEN` on the API.
 - Nothing here is legal or financial advice.
 
 ## What's next
