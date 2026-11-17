@@ -1,11 +1,17 @@
 # Luka: status (your Claude session updates this after each task)
 
 **Lane:** AI vision + integrations + demo (integrations/, docs/, README.md, demo assets)
-**Today's lane goal (Fri Nov 13):** Vision spike results on 5 photo pairs. GO/NO-GO at the Sat Nov 14, 1 PM sync (moved up from EOD).
+**Today's lane goal (Tue Nov 17, morning):** README, and a rerun on a fresh lease with the final photo set.
 **Full plan:** docs/PLAN.md (your section)
-**Branch:** feat/vision-spike
+**Branch:** docs/demo-script-update
 
 ## Done (with evidence: tx hash, PR link, screenshot)
+- Mon Nov 16 (night): Render-hosted app tested end to end with photos p1–p5. Two findings at $1.20 each; the report showed $7.60 to send and $2.40 held. The proof link opens on the Arc testnet explorer with status Success, and the target is the escrow `0xe3791a88E125ce9e826FB07f84BF88625d9f3e98`. Monday-night test run (not the final demo run): https://explorer.testnet.arc.io/tx/0x8a8f2053fc2fb52ab523d0d2423ed4267193b2a1be699fc206ae9d2c08b6c54b
+- Mon Nov 16 (night): demo photos p1, p2, p3, p5, p7 sent to Pablo on Drive, location data stripped, one label per shot.
+- Mon Nov 16: demo video script matched to the app's real labels on main (commit 75ac89f on docs/demo-script-update). Simulated interest cut, 269 words over 2:30 (≤ 2.3 words/s per row), tx links still placeholders.
+- Mon Nov 16: Photos screen (`PhotoCapturePage`, move-in/move-out upload, Done → Record photos, landlord Analyze photos). PR #23 merged into Marcus's stacked branch feat/photo-service-wiring. It reached main with PR #25 (b307534).
+- Sun Nov 15: normal-wear cutoff 0.5, damage stays 0.7 (D-010, b543d90 on main). p7 nail hole shows as normal wear $0 in 3/3 runs; no new findings on p1, p2, p5.
+- Sun Nov 15: vision pipeline merged to main and proven in the real server (Pablo's smoke run, lease l_cf673463). Report in 24 s, p3 + p4 damage 120¢ @0.90, clean pairs no findings. Txs: createLease https://explorer.testnet.arc.io/tx/0x39efa863c69ff1b57157e2cef09d1eaac5c15acc504104ed9782a21ba4183714 · accept https://explorer.testnet.arc.io/tx/0xced477e2b09f26d7345a7acb8d11acc65dbda8f6f4102420dbf668407dceab59 (PR #18).
 - Sun Nov 15: vision pipeline packaged in integrations/vision/ (`analyze()` per API.md, cents, rules in code, retry/timeout/spend cap). 47 unit tests pass; real 5-pair run 5/5 (p3 wall_mark_repaint @0.88, p4 @0.90, p1/p2/p5 clean). sample_report.json from p3 (privacy-checked).
 - Fri Nov 13: picked the vision provider: Anthropic, `claude-sonnet-5-5` (researcher confirmed model ID + API).
 - Fri Nov 13: vision spike, 8 runs. Result: **conditional GO** (note below). Evidence: `spikes/vision/results/`, `spikes/vision/README.md`.
@@ -62,13 +68,17 @@ where the pipeline code lives (server/ vs integrations/); who owns the API.
 Evidence: raw responses in spikes/vision/results/ (run8_reshoot_closeup for p4);
 summary in spikes/vision/README.md.
 
-## Next (max 3)
-1. Get the vision pipeline reviewed (security-auditor) and opened as a PR from feat/vision-pipeline.
-2. Region boxes: p4 box landed ~9% of the height below the mark; decide if that's OK for the demo or needs a prompt tweak.
-3. Prove a second damage type: a stain on the built-in carpet (demo-path item), before and after shot together from the same spot; rerun the spike 3×.
+## Next (Tue morning)
+1. README on branch `docs/readme` (`/readme`).
+2. Price table check: `integrations/vision/price_table.json` (the one the server loads, `server/app/config.py`).
+3. PR #26 follow-up: Create lease and the token.
+4. Rerun on a fresh lease with the final set (p1, p2, p3, p5, p7). Expect one damage finding ($1.20) and $8.80 sent, matching the demo script.
+5. After that rerun, replace the `<..._TX_URL>` placeholders in docs/DEMO-VIDEO.md with its real explorer links.
+6. Devpost written answers (built / problem / how it works / unique / next).
 
 ## Blocked by / waiting on
-- Sat 1 PM sync decisions (pipeline location, API owner).
+- Hosting: on Render as of Mon night, so the tunnel is no longer needed.
+- The app doesn't show the "Testnet demo: amounts scaled 1:100" note or simulated interest (Marcus). The video uses a caption for 1:100 and leaves interest out until the app has them.
 
 ## Requests from others (teammates write here instead of editing your files)
 - Mon Nov 16, 11 PM, from Pablo: **the demo now runs 24/7 without my laptop.** App: https://deposit-keeper-app.onrender.com · API: https://deposit-keeper-api.onrender.com. I'll send you a funded lease id by chat (start at move-in photos; `?as=landlord_demo` for the landlord), or make your own with one command. How to make more leases, the shot list, photo rules and daily limits: server/README.md, "Using the hosted demo". Please use your p1/p2/p3/p5/p7 pairs (JPEG, location off) so the result is the demo one ($1.20 wall mark, $0 nail holes, $8.80 back). Good for README screenshots and the video; finish each lease you start (each locks 10 testnet USDC).
