@@ -48,12 +48,30 @@ class Settings:
     price_table_path: Path
     cors_origins: list[str] = field(default_factory=list)
     autosend: bool = True
+    demo_token: str | None = None  # when set, every write needs X-Demo-Token equal to it
+    max_leases_per_day: int = 0  # 0 = no cap
+    max_reports_per_day: int = 0
+    max_deposit_cents: int = MAX_DEPOSIT_CENTS
 
     def explorer_tx(self, tx_hash: str) -> str:
         return f"{self.explorer}/tx/{tx_hash}"
 
 
+def check_not_open(s: Settings, allow_open: bool) -> None:
+    """Fail closed: a server that allows a non-local browser origin must have a demo token."""
+    public = [o for o in s.cors_origins if not o.startswith(("http://localhost", "http://127.0.0.1"))]
+    if public and not s.demo_token and not allow_open:
+        raise RuntimeError(f"DK_DEMO_TOKEN is not set but DK_CORS_ORIGINS allows {public}; "
+                           "set the token (or DK_ALLOW_OPEN=1 to run open on purpose)")
+
+
 def load_settings() -> Settings:
+    s = _load()
+    check_not_open(s, os.environ.get("DK_ALLOW_OPEN") == "1")
+    return s
+
+
+def _load() -> Settings:
     addrs = json.loads((REPO_ROOT / "shared" / "addresses.json").read_text())["arc_testnet"]
     return Settings(
         rpc_url=os.environ.get("ARC_RPC_URL", "https://rpc.testnet.arc.io"),
@@ -66,4 +84,8 @@ def load_settings() -> Settings:
         price_table_path=REPO_ROOT / "integrations" / "vision" / "price_table.json",
         cors_origins=[o for o in os.environ.get("DK_CORS_ORIGINS", "http://localhost:3000").split(",") if o],
         autosend=os.environ.get("DK_AUTOSEND", "1") != "0",
+        demo_token=os.environ.get("DK_DEMO_TOKEN") or None,
+        max_leases_per_day=int(os.environ.get("DK_MAX_LEASES_PER_DAY", "20")),
+        max_reports_per_day=int(os.environ.get("DK_MAX_REPORTS_PER_DAY", "20")),
+        max_deposit_cents=int(os.environ.get("DK_MAX_DEPOSIT_CENTS", str(MAX_DEPOSIT_CENTS))),
     )

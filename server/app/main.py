@@ -4,8 +4,9 @@
 from __future__ import annotations
 
 import asyncio
+import hmac
 import logging
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 
 from fastapi import Depends, FastAPI, File, Header, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
@@ -17,6 +18,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from .config import MAX_PHOTO_BYTES, PERSONAS, Settings, load_settings
 from .errors import ApiError, bad_request, not_allowed
 from .leases import Service
+from .quota import DailyQuota
 from .store import Store
 
 log = logging.getLogger("dk")
@@ -29,6 +31,7 @@ def create_app(settings: Settings | None = None, chain=None, analyze_fn=None, pr
         chain = Chain(s)
     store = Store(s.data_dir)
     svc = Service(store, chain, s, analyze_fn=analyze_fn, price_table=price_table)
+    quota = DailyQuota(s.data_dir, {"leases": s.max_leases_per_day, "reports": s.max_reports_per_day})
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -49,7 +52,7 @@ def create_app(settings: Settings | None = None, chain=None, analyze_fn=None, pr
     app = FastAPI(title="Deposit Keeper API", lifespan=lifespan)
     app.state.svc = svc
     app.add_middleware(CORSMiddleware, allow_origins=s.cors_origins, allow_methods=["*"],
-                       allow_headers=["Content-Type", "X-User-Id"])
+                       allow_headers=["Content-Type", "X-User-Id", "X-Demo-Token"])
     app.mount("/files", StaticFiles(directory=store.files_dir), name="files")
 
     @app.middleware("http")
@@ -85,7 +88,22 @@ def create_app(settings: Settings | None = None, chain=None, analyze_fn=None, pr
         log.exception("unhandled error")
         return err(500, "internal", "Something went wrong on the server")
 
-    def user(x_user_id: str | None = Header(default=None)) -> str:
+    @contextmanager
+    def counted(kind: str):
+        # Count against the daily cap, but give it back if the request is rejected (4xx), so junk
+        # requests can't burn the cap. 5xx (chain/vision) stays counted: it may have spent gas or credits.
+        quota.take(kind)
+        try:
+            yield
+        except ApiError as e:
+            if e.status < 500:
+                quota.give_back(kind)
+            raise
+
+    def user(x_user_id: str | None = Header(default=None), x_demo_token: str | None = Header(default=None)) -> str:
+        # Every write goes through here. The token keeps strangers from spending the hosted testnet wallets.
+        if s.demo_token and not hmac.compare_digest((x_demo_token or "").encode(), s.demo_token.encode()):
+            raise ApiError(401, "unauthorized", "Missing or wrong X-Demo-Token")
         if x_user_id not in PERSONAS:
             raise not_allowed("Set X-User-Id to tenant_demo or landlord_demo")
         return x_user_id
@@ -104,11 +122,14 @@ def create_app(settings: Settings | None = None, chain=None, analyze_fn=None, pr
 
     @app.get("/health")
     def health():
-        return {"ok": True, "chain_id": s.chain_id, "escrow": s.escrow_address, "onchain_leases": chain.lease_count()}
+        return {"ok": True, "chain_id": s.chain_id, "network": "arc_testnet", "explorer": s.explorer,
+                "escrow": s.escrow_address, "onchain_leases": chain.lease_count(),
+                "demo_token_required": bool(s.demo_token)}
 
     @app.post("/leases", status_code=201)
     def create(u: str = Depends(user), body: dict = Depends(json_body)):
-        return svc.create(u, body)
+        with counted("leases"):
+            return svc.create(u, body)
 
     @app.get("/leases/{lease_id}")
     def get(lease_id: str):
@@ -129,7 +150,8 @@ def create_app(settings: Settings | None = None, chain=None, analyze_fn=None, pr
 
     @app.post("/leases/{lease_id}/report", status_code=202)
     def report(lease_id: str, u: str = Depends(user)):
-        return svc.start_report(u, lease_id)
+        with counted("reports"):
+            return svc.start_report(u, lease_id)
 
     @app.post("/leases/{lease_id}/report/send")
     def send(lease_id: str, u: str = Depends(user), body: dict = Depends(json_body)):

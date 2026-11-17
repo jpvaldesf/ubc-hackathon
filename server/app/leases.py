@@ -8,7 +8,7 @@ import secrets
 import threading
 from datetime import date, datetime, timedelta, timezone
 
-from .config import (CENTS_TO_UNITS, MAX_DEPOSIT_CENTS, DEFAULT_SHOT_LIST, DEMO_SCALE, LANDLORD_ID, LANDLORD_NAME,
+from .config import (CENTS_TO_UNITS, DEFAULT_SHOT_LIST, DEMO_SCALE, LANDLORD_ID, LANDLORD_NAME,
                      MAX_ANALYZE_ATTEMPTS, MAX_PHOTO_BYTES, REVIEW_HOURS, SIMULATED_APY, TENANT_ID, Settings)
 from .errors import bad_request, not_allowed, not_found, vision_error, wrong_state
 from .store import Store
@@ -81,8 +81,8 @@ class Service:
         deposit = body.get("deposit_cents")
         if not isinstance(deposit, int) or isinstance(deposit, bool) or deposit <= 0:
             raise bad_request("deposit_cents must be a positive integer")
-        if deposit > MAX_DEPOSIT_CENTS:
-            raise bad_request(f"deposit_cents is capped at {MAX_DEPOSIT_CENTS} on testnet")
+        if deposit > self.s.max_deposit_cents:
+            raise bad_request(f"deposit_cents is capped at {self.s.max_deposit_cents} on testnet")
         if body.get("tenant_id", TENANT_ID) != TENANT_ID:
             raise bad_request("tenant_id must be tenant_demo in v1")
         for f in ("address", "tenant_name"):

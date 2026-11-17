@@ -14,6 +14,15 @@ Public values (escrow, USDC, explorer, arbiter) come from `shared/addresses.json
 
 Optional env: `DK_CORS_ORIGINS` (comma-separated, default `http://localhost:3000`), `DK_DATA_DIR`
 (default `server/data/`, gitignored), `DK_AUTOSEND=0` to turn off the 48 h auto-send loop.
+Hosting env: `DK_DEMO_TOKEN` (when set, every write needs header `X-Demo-Token` with this value, else 401
+`unauthorized`; reads and `/health` stay open; smoke.py sends it from the same env var),
+`DK_MAX_LEASES_PER_DAY` / `DK_MAX_REPORTS_PER_DAY` (default 20 each, 0 = no cap; over the cap: 429
+`rate_limited`; counts are kept in `DK_DATA_DIR/quota.json` so restarts don't reset them).
+`DK_MAX_DEPOSIT_CENTS` (default 10000; set 1000 on the host). The server refuses to start when
+`DK_CORS_ORIGINS` has a non-localhost origin and no `DK_DEMO_TOKEN` (override: `DK_ALLOW_OPEN=1`).
+Rejected requests (4xx) don't use up a daily cap. `/health` also returns `network`, `explorer` and `demo_token_required`.
+Host settings (D-012): `DK_DEMO_TOKEN=<random>`, `DK_MAX_LEASES_PER_DAY=5`, `DK_MAX_REPORTS_PER_DAY=10`,
+`DK_MAX_DEPOSIT_CENTS=1000`, `DK_DATA_DIR` on a persistent disk. Also set a monthly spend limit on the Anthropic key.
 
 ## Scripts
 - `uv run --project server python -m server.scripts.smoke [--photos DIR] [--deposit-cents 100]`: runs the demo path
@@ -40,6 +49,6 @@ Optional env: `DK_CORS_ORIGINS` (comma-separated, default `http://localhost:3000
 - Deposits are capped at $100 (10,000 cents) on testnet; request bodies over ~26 MB are rejected before parsing.
 - Either party can upload and commit photos for either phase (the contract allows both; API.md says "Tenant or landlord").
 - **Run one worker only** (no `--workers N`): nonces and per-lease locks are in-process.
-- **Before hosting (Mon):** add a shared demo token header so strangers can't spend testnet gas or act as a persona.
+- Demo token + daily caps are in (`DK_DEMO_TOKEN`, see above). Set them before hosting.
 - Known v1 limits: no real auth; uploaded photos are served without auth under unguessable lease ids;
   one server instance (txs are serialized by a process lock).
