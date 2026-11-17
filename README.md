@@ -4,7 +4,7 @@ Rental deposits, held in USDC escrow and checked by AI, so tenants get their mon
 
 Built for the UBC 2026 blockchain hackathon. Track: Consumer. Chain: Arc testnet.
 
-- Live demo: https://deposit-keeper-app.onrender.com (the API is https://deposit-keeper-api.onrender.com). The app opens a lease by its id. A ready lease id for judges is in our Devpost submission. A finished example run, with all six transactions, is under "Contract & Arc" below.
+- Live demo: https://deposit-keeper-app.onrender.com (the API is https://deposit-keeper-api.onrender.com). Tap **Start a demo deposit** to get a fresh $10 testnet lease, then follow the four steps on screen. On the photo screens, **Use sample photos** fills in our tested photo set, which gives the demo result ($1.20 wall mark, $0 nail holes, $8.80 back). A finished example run, with all six transactions, is under "Contract & Arc" below.
 - Demo video: TO FILL
 
 ## The problem
