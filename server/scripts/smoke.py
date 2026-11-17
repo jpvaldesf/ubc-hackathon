@@ -17,6 +17,7 @@ Demo reset / hybrid demo (step 1 scripted, the app takes over at the photos):
 from __future__ import annotations
 
 import argparse
+import os
 import io
 import sys
 import time
@@ -83,7 +84,8 @@ def main():
             a.deposit_cents = 1000
         a.stop_at = a.stop_at or "draft"
     pair_for = {}
-    c = httpx.Client(base_url=a.base, timeout=120)
+    token = os.environ.get("DK_DEMO_TOKEN")  # hosted server: same value as the host secret
+    c = httpx.Client(base_url=a.base, timeout=120, headers={"X-Demo-Token": token} if token else {})
 
     print("health:", ok(c.get("/health")))
     lease = ok(c.post("/leases", headers=L, json={

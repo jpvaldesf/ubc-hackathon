@@ -48,6 +48,9 @@ class Settings:
     price_table_path: Path
     cors_origins: list[str] = field(default_factory=list)
     autosend: bool = True
+    demo_token: str | None = None  # when set, every write needs X-Demo-Token equal to it
+    max_leases_per_day: int = 0  # 0 = no cap
+    max_reports_per_day: int = 0
 
     def explorer_tx(self, tx_hash: str) -> str:
         return f"{self.explorer}/tx/{tx_hash}"
@@ -66,4 +69,7 @@ def load_settings() -> Settings:
         price_table_path=REPO_ROOT / "integrations" / "vision" / "price_table.json",
         cors_origins=[o for o in os.environ.get("DK_CORS_ORIGINS", "http://localhost:3000").split(",") if o],
         autosend=os.environ.get("DK_AUTOSEND", "1") != "0",
+        demo_token=os.environ.get("DK_DEMO_TOKEN") or None,
+        max_leases_per_day=int(os.environ.get("DK_MAX_LEASES_PER_DAY", "20")),
+        max_reports_per_day=int(os.environ.get("DK_MAX_REPORTS_PER_DAY", "20")),
     )

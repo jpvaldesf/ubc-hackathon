@@ -302,3 +302,55 @@ def test_audit_fixes(env):
     svc.start_report("landlord_demo", lid, background=False)
     r = c.post(f"/leases/{lid}/report/send", headers=L, json={"remove_finding_ids": [{"id": "f1"}]})
     assert r.status_code == 400
+
+
+def _app(tmp_path, **kw):
+    s = Settings(rpc_url="x", chain_id=5042002, explorer="https://explorer.test", escrow_address="0x0",
+                 usdc_address="0x0", arbiter_address="0x0", data_dir=tmp_path, price_table_path=tmp_path / "p.json",
+                 cors_origins=[], autosend=False, **kw)
+    app = create_app(s, chain=FakeChain(), analyze_fn=fake_analyze, price_table={"wall_mark_repaint": 120})
+    return TestClient(app), app.state.svc
+
+
+def test_demo_token_required_for_writes(tmp_path):
+    c, _ = _app(tmp_path, demo_token="s3cret")
+    body = {"address": "1 Main St", "tenant_name": "Alex Kim", "deposit_cents": 1000, "move_in_date": "2026-08-15"}
+    for h in ({}, {"X-Demo-Token": "wrong"}):
+        r = c.post("/leases", headers={**L, **h}, json=body)
+        assert r.status_code == 401 and r.json()["error"]["code"] == "unauthorized"
+    r = c.post("/leases", headers={**L, "X-Demo-Token": "s3cret"}, json=body)
+    assert r.status_code == 201
+    lid = r.json()["lease_id"]
+    assert c.get(f"/leases/{lid}").status_code == 200  # reads stay open
+    h = c.get("/health").json()
+    assert h["demo_token_required"] is True and h["network"] == "arc_testnet" and h["explorer"] == "https://explorer.test"
+
+
+def test_no_token_configured_keeps_local_dev_open(env):
+    c, _, _ = env
+    new_lease(c)
+    assert c.get("/health").json()["demo_token_required"] is False
+
+
+def test_daily_lease_cap_survives_restart(tmp_path):
+    c, _ = _app(tmp_path, max_leases_per_day=2)
+    new_lease(c)
+    new_lease(c)
+    r = c.post("/leases", headers=L, json={"address": "1 Main St", "tenant_name": "Alex Kim", "deposit_cents": 1000,
+                                           "move_in_date": "2026-08-15"})
+    assert r.status_code == 429 and r.json()["error"]["code"] == "rate_limited"
+    c2, _ = _app(tmp_path, max_leases_per_day=2)  # fresh app, same data dir
+    r = c2.post("/leases", headers=L, json={"address": "1 Main St", "tenant_name": "Alex Kim", "deposit_cents": 1000,
+                                            "move_in_date": "2026-08-15"})
+    assert r.status_code == 429
+
+
+def test_daily_report_cap(tmp_path):
+    c, svc = _app(tmp_path, max_reports_per_day=1)
+    lid = new_lease(c)
+    c.post(f"/leases/{lid}/deposit", headers=T)
+    photos(c, lid, "in")
+    photos(c, lid, "out")
+    assert c.post(f"/leases/{lid}/report", headers=L).status_code == 202
+    lid2 = new_lease(c)
+    assert c.post(f"/leases/{lid2}/report", headers=L).status_code == 429
