@@ -22,9 +22,10 @@
 - Mon Nov 16, ~11 PM: **hosted on Render** (PR #31): API (Docker, persistent disk, D-012 caps, open mode until the app sends the token) + app as a static site in live mode. Smoke lease on the host: createLease https://explorer.testnet.arc.io/tx/0x8a8f2053fc2fb52ab523d0d2423ed4267193b2a1be699fc206ae9d2c08b6c54b · deposit https://explorer.testnet.arc.io/tx/0xaf7e01bc0256070a19ee2b7cc56ed7ed8098e22169ec59b8b36df422246878df; data survived a redeploy.
 - Mon Nov 16, night (Luka): demo video script matched to the app's labels (PR #26); README draft open (PR #33). Luka's hosted test used p1–p5 (p4 = second wall mark), so it showed $7.60 / $2.40, not the demo amounts.
 - Tue Nov 17, ~9 AM: **demo amounts proven on the hosted stack** (Pablo's phone, lease l_62839344, demo set p1 p2 p3 p5 p7). Create by script; Pay deposit → photos → Analyze → Send report → Accept all in the app. AI: wall mark $1.20 @0.90, nail holes normal wear $0 @0.60, one finding dropped under the cutoff, nothing removed or lowered. 6/6 receipts status 1; USDC read from the logs: 10.00 in, 8.80 to tenant, 1.20 to landlord, lease escrow back to 0. Links in the evidence table.
+- Tue Nov 17, ~9:20 AM: **demo token on (D-012)**. App sends `X-Demo-Token` on writes (PR #36, done by Pablo while Marcus was offline); Render app rebuilt with it, then the API set `DK_DEMO_TOKEN`. `/health` → `demo_token_required: true`; no or wrong token → 401, the app's token passes.
 ## Next (max 5, in priority order)
-1. Marcus, by noon: send `X-Demo-Token` on writes; show the "Testnet demo: amounts scaled 1:100" note; Create lease screen only if both are done by ~10:30.
-2. Pablo: README "Contract & Arc" section + review PR #33; turn the token on once Marcus's PR is live (else open mode + caps for the freeze).
+1. Marcus, by noon: show the "Testnet demo: amounts scaled 1:100" note (video requirement shot); review PR #36; Create lease screen only if time. Vercel: still sample mode; leave it or set `VITE_DEMO_TOKEN` too if it goes live.
+2. Luka: fix the 3 review points on PR #33 (README), then merge. Contract & Arc section and token line are done.
 3. Luka: fill the `<..._TX_URL>` placeholders in docs/DEMO-VIDEO.md (from lease l_62839344 or the final recording run); README numbers; Devpost answers.
 4. Tue 11 AM: qa-demo-tester + judge-panel on the hosted URL, fix the top 3. Noon: freeze.
 5. Tue PM: record the 2–3 min video on a fresh lease (backup: Pablo's l_62839344 screen recording), `/submit-check`, submit by 11:59 PM PT.
@@ -38,7 +39,7 @@
 - Wed to Thu: buffer only (bug fixes, pitch drills). Sat 21: pitch in person.
 
 ## Blockers / open questions (for office hours, Telegram, or mentor)
-- App gaps after the Mon night phone run (Marcus): no Create lease screen (step 1 by script); UI polish ("kinda ugly"); must send `X-Demo-Token` (D-012) before the token is turned on.
+- App gaps after the Mon night phone run (Marcus): no Create lease screen (step 1 by script); UI polish ("kinda ugly"); token header done (PR #36).
 - Law check done (verified against Civil Code §1950.5 text (Justia)): AB 2801 move-out photos required since Apr 1 2025 (all tenancies); move-in photos for tenancies starting on/after Jul 1 2025; photos go with the itemized statement within 21 days; bad-faith penalty up to 2x deposit (subd. (m)).
 - Escrow contract holds 11 USDC from earlier unfinished test leases (they unlock only via timeouts). Say "escrow back to 0" per lease, not for the whole contract.
 - Open (from the vision spike): how to treat a tenant's own rug vs built-in carpet (the model calls area rugs belongings even when told otherwise). Pipeline location and API settled by D-005/D-008.
