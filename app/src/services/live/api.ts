@@ -88,9 +88,23 @@ const CODE_MAP: Record<string, { code: ErrorCode; retryable: boolean }> = {
 const FRIENDLY: Record<string, string> = {
   wrong_state: 'This deposit has already moved on, so that action is no longer available. The page will refresh with the latest status.',
   not_allowed: "Your account can't do that on this deposit.",
-  unauthorized: "This demo link isn't allowed to make changes right now. Reload the page, or ask the team for a fresh demo link.",
-  rate_limited: "The demo has reached today's limit. Please try again tomorrow.",
 };
+
+/** 401 means the demo access token is missing or wrong (the only 401 the API sends). Shown even where the server's own text is kept. */
+const TOKEN_MESSAGE =
+  "The demo access token is missing or isn't valid, so changes are blocked. The demo's configuration needs to be updated by the team; reloading won't fix it.";
+
+/** 429 is the daily demo cap. The API documents the reset only as "tomorrow", so no time is invented; Retry-After is used only when the server sends it. */
+function limitMessage(retryAfter: string | null): string {
+  const base = 'The daily demo limit has been reached.';
+  const raw = retryAfter?.trim();
+  let seconds: number | undefined;
+  if (raw && /^\d+$/.test(raw)) seconds = Number(raw);
+  else if (raw && !Number.isNaN(Date.parse(raw))) seconds = Math.max(0, Math.ceil((Date.parse(raw) - Date.now()) / 1000));
+  if (seconds === undefined) return `${base} Please try again tomorrow.`;
+  const minutes = Math.max(1, Math.ceil(seconds / 60));
+  return `${base} Please try again in about ${minutes >= 120 ? `${Math.ceil(minutes / 60)} hours` : minutes === 1 ? '1 minute' : `${minutes} minutes`}.`;
+}
 
 /** `keepServerMessage`: show the server's own text (for example "Missing shots: s2, s3") instead of the generic wording. */
 export interface CallOptions {
@@ -128,6 +142,9 @@ export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = fetch
       /* non-JSON body: handled below */
     }
     if (response.ok) return payload;
+    // Writes are never retried here. These two get fixed wording whatever `keepServerMessage` says.
+    if (response.status === 401) throw new ServiceError('unauthorized', TOKEN_MESSAGE, false);
+    if (response.status === 429) throw new ServiceError('service_failure', limitMessage(response.headers?.get?.('Retry-After') ?? null), false);
     const err = (payload as { error?: { code?: string; message?: string } } | null)?.error;
     if (err?.code && typeof err.message === 'string') {
       const mapped = CODE_MAP[err.code] ?? { code: 'service_failure' as ErrorCode, retryable: response.status >= 500 };
