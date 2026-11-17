@@ -6,7 +6,7 @@
 **Branch:** docs/demo-script-update
 
 ## Done (with evidence: tx hash, PR link, screenshot)
-- Mon Nov 16 (night): Render-hosted app tested end to end with photos p1–p5. Two findings at $1.20 each; the report showed $7.60 to send and $2.40 held. The proof link opens on the Arc testnet explorer with status Success, and the target is the escrow `0xe3791a88E125ce9e826FB07f84BF88625d9f3e98`. Monday-night test run (not the final demo run): https://explorer.testnet.arc.io/tx/0x8a8f2053fc2fb52ab523d0d2423ed4267193b2a1be699fc206ae9d2c08b6c54b
+- Mon Nov 16 (night): Render-hosted app tested end to end with photos p1–p5. Two findings at $1.20 each; the report showed $7.60 to send and $2.40 held. The createLease proof link opens on the Arc testnet explorer with status Success, and the target is the escrow `0xe3791a88E125ce9e826FB07f84BF88625d9f3e98` (Monday-night test run, not the final demo run): https://explorer.testnet.arc.io/tx/0x8a8f2053fc2fb52ab523d0d2423ed4267193b2a1be699fc206ae9d2c08b6c54b
 - Mon Nov 16 (night): demo photos p1, p2, p3, p5, p7 sent to Pablo on Drive, location data stripped, one label per shot.
 - Mon Nov 16: demo video script matched to the app's real labels on main (commit 75ac89f on docs/demo-script-update). Simulated interest cut, 269 words over 2:30 (≤ 2.3 words/s per row), tx links still placeholders.
 - Mon Nov 16: Photos screen (`PhotoCapturePage`, move-in/move-out upload, Done → Record photos, landlord Analyze photos). PR #23 merged into Marcus's stacked branch feat/photo-service-wiring. It reached main with PR #25 (b307534).
@@ -73,8 +73,9 @@ summary in spikes/vision/README.md.
 2. Price table check: `integrations/vision/price_table.json` (the one the server loads, `server/app/config.py`).
 3. PR #26 follow-up: Create lease and the token.
 4. Rerun on a fresh lease with the final set (p1, p2, p3, p5, p7). Expect one damage finding ($1.20) and $8.80 sent, matching the demo script.
-5. After that rerun, replace the `<..._TX_URL>` placeholders in docs/DEMO-VIDEO.md with its real explorer links.
-6. Devpost written answers (built / problem / how it works / unique / next).
+5. Open the payout, accept and record-photos proof links on the fresh-lease rerun and confirm each.
+6. After that rerun, replace the `<..._TX_URL>` placeholders in docs/DEMO-VIDEO.md with its real explorer links.
+7. Devpost written answers (built / problem / how it works / unique / next).
 
 ## Blocked by / waiting on
 - Hosting: on Render as of Mon night, so the tunnel is no longer needed.
