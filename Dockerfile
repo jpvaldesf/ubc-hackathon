@@ -18,10 +18,10 @@ COPY shared/ shared/
 COPY integrations/ integrations/
 COPY server/ server/
 
-# Run as a non-root user; the persistent disk (DK_DATA_DIR) must be writable by it.
-RUN useradd --create-home --uid 10001 app && mkdir -p /var/data && chown app /var/data
-USER app
+# The server runs as the unprivileged "app" user. entrypoint.sh starts as root only to take ownership
+# of the runtime-mounted disk, then drops privileges with setpriv (fail the build if it's missing).
+RUN useradd --create-home --uid 10001 app && command -v setpriv
 
 EXPOSE 10000
 # One worker only: nonces and per-lease locks live in this process (server/README.md).
-CMD ["sh", "-c", "exec server/.venv/bin/uvicorn server.app.main:app --host 0.0.0.0 --port ${PORT:-10000} --proxy-headers"]
+CMD ["server/entrypoint.sh"]
