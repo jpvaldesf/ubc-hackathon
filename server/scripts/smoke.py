@@ -89,7 +89,7 @@ def main():
 
     print("health:", ok(c.get("/health")))
     lease = ok(c.post("/leases", headers=L, json={
-        "address": "1234 W 30th St, Apt 4, Los Angeles, CA", "tenant_name": "Alex Kim",
+        "address": "6200 W 3rd St, Los Angeles, CA 90036", "tenant_name": "John Doe",
         "deposit_cents": a.deposit_cents, "move_in_date": "2026-08-15",
         **({"shot_list": [sh for _, sh in DEMO_SHOTS]} if a.demo else {})}))
     if a.demo:
