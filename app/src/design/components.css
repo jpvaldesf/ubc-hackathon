@@ -819,24 +819,6 @@
   text-align: center;
 }
 
-/* Five labels need about 380px. Below that, write the current step out once instead. */
-@media (max-width: 379px) {
-  .timeline__label,
-  .timeline__note {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-  }
-
-  .timeline__summary {
-    display: block;
-  }
-}
-
 /* Evidence and activity: open rows with rules, not cards. */
 .folds {
   display: grid;

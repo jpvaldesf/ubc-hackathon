@@ -1,10 +1,10 @@
 import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AllTransactions, ProofHighlight } from '../../components/ProofLinks';
-import { ExampleNote, PropertyHeader } from '../../components/PropertyHeader';
+import { PropertyHeader } from '../../components/PropertyHeader';
 import { Disclosure } from '../../components/Disclosure';
 import { LifecycleStatus } from '../../components/LifecycleTimeline';
-import { formatDateTime, roleLabel } from '../../lib/format';
+import { roleLabel } from '../../lib/format';
 import { counterpartyOf } from '../../lib/participants';
 import { useMutation } from '../../services/hooks';
 import { useServices } from '../../services/ServiceContext';
@@ -106,37 +106,24 @@ function PayDepositControl({ label }: { label: string }) {
   );
 }
 
-/** Evidence and recent activity: open rows, not cards, so the summary stays the one focal surface. */
+/** Transactions and evidence: open rows, not cards, so the summary stays the one focal surface. */
 function Folds({ lease }: { lease: Lease }) {
-  // Oldest-first sort is stable, so entries sharing a timestamp keep their recorded order; reversing gives newest first.
-  const events = [...lease.events].sort((a, b) => a.at.localeCompare(b.at)).reverse().slice(0, 5);
   const evidenceCount = lease.evidence.length;
   return (
-    <div className="folds">
-      <AllTransactions lease={lease} />
-      <Disclosure title="Evidence" meta={`${evidenceCount} ${evidenceCount === 1 ? 'item' : 'items'}`}>
-        <ul className="fold__rows">
-          {lease.evidence.map((entry) => (
-            <li key={entry.id} className="fold__row fold__row--stacked">
-              <span className="fold__row-title">{entry.label}</span>
-              <span className="fold__row-note">{entry.detail}</span>
-            </li>
-          ))}
-        </ul>
-      </Disclosure>
-
-      <Disclosure title="Recent activity" meta={events[0]?.text ?? 'Nothing yet'}>
-        <ul className="fold__rows">
-          {events.map((event) => (
-            <li key={event.id} className="fold__row">
-              <span>{event.text}</span>
-              <span className="fold__row-note">{formatDateTime(event.at)}</span>
-            </li>
-          ))}
-        </ul>
-      </Disclosure>
-
-      <ExampleNote />
-    </div>
+    <>
+      <div className="folds">
+        <AllTransactions lease={lease} />
+        <Disclosure title="Evidence" meta={`${evidenceCount} ${evidenceCount === 1 ? 'item' : 'items'}`}>
+          <ul className="fold__rows">
+            {lease.evidence.map((entry) => (
+              <li key={entry.id} className="fold__row fold__row--stacked">
+                <span className="fold__row-title">{entry.label}</span>
+                <span className="fold__row-note">{entry.detail}</span>
+              </li>
+            ))}
+          </ul>
+        </Disclosure>
+      </div>
+    </>
   );
 }

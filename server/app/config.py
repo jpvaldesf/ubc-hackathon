@@ -16,7 +16,7 @@ load_dotenv(REPO_ROOT / ".env")
 
 TENANT_ID = "tenant_demo"
 LANDLORD_ID = "landlord_demo"
-LANDLORD_NAME = "Sunrise Properties"
+LANDLORD_NAME = "Jane Doe"
 PERSONAS = {TENANT_ID, LANDLORD_ID}
 
 DEMO_SCALE = 100  # D-002: testnet amounts are 1:100 of real ones

@@ -76,8 +76,8 @@ Landlord creates a lease. The server calls `createLease(tenant, arbiter, amount)
 Request:
 ```json
 {
-  "address": "1234 W 30th St, Apt 4, Los Angeles, CA",
-  "tenant_name": "Alex Kim",
+  "address": "6200 W 3rd St, Los Angeles, CA 90036",
+  "tenant_name": "John Doe",
   "tenant_id": "tenant_demo",
   "deposit_cents": 1000,
   "move_in_date": "2026-08-15",
@@ -199,9 +199,9 @@ Everything a screen needs, including the payout timeline. Fields are `null` unti
 {
   "lease_id": "l_7f3a",
   "status": "proposed",
-  "address": "1234 W 30th St, Apt 4, Los Angeles, CA",
-  "tenant": { "id": "tenant_demo", "name": "Alex Kim" },
-  "landlord": { "id": "landlord_demo", "name": "Sunrise Properties" },
+  "address": "6200 W 3rd St, Los Angeles, CA 90036",
+  "tenant": { "id": "tenant_demo", "name": "John Doe" },
+  "landlord": { "id": "landlord_demo", "name": "Jane Doe" },
   "deposit_cents": 1000,
   "demo_scale": 100,
   "escrow_balance_cents": 120,

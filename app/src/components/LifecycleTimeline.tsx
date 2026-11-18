@@ -1,6 +1,5 @@
 import { stepStates } from '../lib/lifecycle';
 import type { Stage } from '../services/types';
-import { Disclosure } from './Disclosure';
 
 function CheckIcon() {
   return (
@@ -53,15 +52,13 @@ export function LifecycleTimeline({ stage, complete }: { stage: Stage; complete:
 }
 
 /**
- * Current status as one line with the full lifecycle timeline behind it, so the overview opens with
- * where things stand and the five-step list is one tap away.
+ * The lifecycle bar. Always visible and not collapsible: where the lease stands is the first thing the
+ * page says. All five steps stay labelled on phones.
  */
 export function LifecycleStatus({ stage, complete }: { stage: Stage; complete: boolean }) {
-  const current = stepStates(stage, complete).find((step) => step.state === 'current');
-  const title = complete ? 'Settlement complete' : current ? `${current.label}: in progress` : 'Status';
   return (
-    <Disclosure title={title} meta="Timeline" metaIsAction standalone>
+    <section className="lifecycle" aria-label="Lease status">
       <LifecycleTimeline stage={stage} complete={complete} />
-    </Disclosure>
+    </section>
   );
 }

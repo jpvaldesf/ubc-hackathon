@@ -4,11 +4,19 @@
  */
 :root {
   --gutter: 1rem;
+  /* One shared content column for the header, role switch and every screen. */
+  --content-max: 47.5rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   :root {
     --gutter: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --gutter: 2rem;
   }
 }
 
@@ -28,8 +36,6 @@ html {
 /* One column that holds a readable width on large screens instead of stretching. */
 .overview,
 .review {
-  max-width: 40rem;
-  margin-inline: auto;
   gap: var(--space-4);
 }
 
@@ -188,12 +194,6 @@ html {
   gap: var(--space-3);
 }
 
-@media (min-width: 640px) {
-  .button-row {
-    display: flex;
-    flex-wrap: wrap;
-  }
-}
 
 /* Inputs: 16px so phones do not zoom on focus. */
 input,
@@ -355,4 +355,113 @@ video {
   padding-block: 0.75rem;
   margin-block: -0.75rem;
   font-size: 0.8125rem;
+}
+
+/* Lifecycle bar: always visible, all five labels, fits down to 320px. */
+.lifecycle {
+  padding-block: var(--space-2);
+  border-block: 1px solid var(--color-border);
+}
+
+.timeline__label {
+  font-size: 0.8125rem;
+  overflow-wrap: normal;
+}
+
+@media (max-width: 359px) {
+  .timeline__label {
+    font-size: 0.6875rem;
+  }
+
+  .timeline__note {
+    font-size: 0.6875rem;
+  }
+}
+
+/* Recent activity shown directly; About is plain compact text. */
+.activity__title,
+.about__title {
+  font-size: var(--text-large);
+}
+
+.activity {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.about {
+  display: grid;
+  gap: var(--space-1);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--color-muted);
+}
+
+.about p {
+  margin: 0;
+}
+
+/* Demo bar: just the centered Tenant / Landlord switch, slim. */
+.demo-bar {
+  padding-block: var(--space-1);
+}
+
+/* Inside the shared .page container; only the switch is centered. */
+.demo-bar__inner {
+  display: flex;
+  justify-content: center;
+}
+
+.demo-bar__switch {
+  margin-left: 0;
+}
+
+.demo-bar__choice {
+  min-height: var(--target-min);
+  min-width: 6rem;
+}
+
+.alltx__order {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+.proof__when {
+  display: block;
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+/* One column at every width: the amount summary never splits into side-by-side columns, so the
+   property, lifecycle bar, summary, button, rows and sections share the same left and right edges. */
+@container (min-width: 44rem) {
+  .summary,
+  .summary--lean {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: 0;
+  }
+
+  .summary--lean .summary__main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .summary--lean .summary__lead,
+  .summary--lean .summary__detail,
+  .summary--lean .summary__waiting,
+  .summary--lean .summary__main > .button-row {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+@container (min-width: 46rem) {
+  .folds {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .folds .fold:last-child {
+    border-bottom: 1px solid var(--color-border);
+  }
 }
