@@ -359,7 +359,7 @@ video {
 
 /* Lifecycle bar: always visible, all five labels, fits down to 320px. */
 .lifecycle {
-  padding-block: var(--space-2);
+  padding-block: 1.5rem;
   border-block: 1px solid var(--color-border);
 }
 
@@ -403,7 +403,7 @@ video {
 
 /* Demo bar: just the centered Tenant / Landlord switch, slim. */
 .demo-bar {
-  padding-block: var(--space-1);
+  padding-block: 1rem;
 }
 
 /* Inside the shared .page container; only the switch is centered. */
@@ -419,12 +419,6 @@ video {
 .demo-bar__choice {
   min-height: var(--target-min);
   min-width: 6rem;
-}
-
-.alltx__order {
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: var(--color-muted);
 }
 
 .proof__when {
@@ -464,4 +458,15 @@ video {
   .folds .fold:last-child {
     border-bottom: 1px solid var(--color-border);
   }
+}
+
+/* Equal space above and below the lifecycle bar content, wrapped labels included. */
+.lifecycle .timeline,
+.lifecycle .timeline__list {
+  margin: 0;
+  padding: 0;
+}
+
+.timeline__step {
+  align-content: start;
 }

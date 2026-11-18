@@ -57,7 +57,7 @@ export function AllTransactions({ lease }: { lease: Lease }) {
   const proofs = newestFirst(lease.proofs ?? []);
   if (proofs.length === 0 && !lease.proofNote) return null;
   return (
-    <Disclosure title="All transactions" meta={proofs.length > 0 ? `${proofs.length} · Newest first` : undefined}>
+    <Disclosure title="All transactions">
       {proofs.length > 0 && (
         <ul className="proof__list">
           {proofs.map((proof) => (
