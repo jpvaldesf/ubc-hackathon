@@ -11,7 +11,7 @@
  * - The tenant never sees a landlord draft, and the landlord's draft-editing flow has no matching
  *   endpoint (edits are applied only at /report/send), so a proposal exists only once it was sent.
  */
-import { propertyFromAddress } from '../../demo/demoProperty';
+import { demoDisplayName, propertyFromAddress } from '../../demo/demoProperty';
 import type { ApiFinding, ApiLease, ApiStatus, DevUserId } from './api';
 import type {
   AllowedAction,
@@ -129,8 +129,8 @@ export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = N
   }
 
   const participants: Participant[] = [
-    { id: api.tenant.id, role: 'tenant', displayName: api.tenant.name },
-    { id: api.landlord.id, role: 'landlord', displayName: api.landlord.name },
+    { id: api.tenant.id, role: 'tenant', displayName: demoDisplayName(api.tenant.id, api.tenant.name) },
+    { id: api.landlord.id, role: 'landlord', displayName: demoDisplayName(api.landlord.id, api.landlord.name) },
   ];
 
   let allowedActions: AllowedAction[] = [];
@@ -177,7 +177,7 @@ export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = N
 
   const eventText = (t: ApiLease['timeline'][number]) =>
     t.step === 'proposed' && role === 'landlord' && api.payout.to_tenant_cents != null
-      ? `$${(api.payout.to_tenant_cents / 100).toFixed(2)} sent to ${api.tenant.name}`
+      ? `$${(api.payout.to_tenant_cents / 100).toFixed(2)} sent to ${demoDisplayName(api.tenant.id, api.tenant.name)}`
       : t.label;
   const withTx = api.timeline.filter((t) => t.tx);
   const proofs = api.timeline.flatMap((t, order) => {
@@ -276,7 +276,7 @@ export function mapProposal(api: ApiLease, viewerId: DevUserId = 'tenant_demo', 
     status: 'submitted',
     noChargeItems: noChargeFindings(api, ctx),
     submittedAt: sent?.at,
-    submittedBy: api.report.sent_by === 'auto' ? 'Automatic send after 48 hours' : api.landlord.name,
+    submittedBy: api.report.sent_by === 'auto' ? 'Automatic send after 48 hours' : demoDisplayName(api.landlord.id, api.landlord.name),
     items,
     deductionTotal: centsToUnits(total),
     refundAmount: centsToUnits(api.payout.to_tenant_cents ?? 0),

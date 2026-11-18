@@ -44,8 +44,23 @@ export interface PropertyInfo {
  * short property name; any other address is shown exactly as stored.
  */
 export function propertyFromAddress(address: string): PropertyInfo {
-  if (address.trim().toLowerCase() === DEMO_PROPERTY.address.toLowerCase()) {
+  const normalized = address.trim().toLowerCase();
+  if (normalized === DEMO_PROPERTY.address.toLowerCase() || normalized === LEGACY_DEMO_ADDRESS.toLowerCase()) {
     return { label: DEMO_PROPERTY.name, address: DEMO_PROPERTY.address, isExample: true };
   }
   return { label: address };
 }
+
+/**
+ * Demo-only: the two fixed demo personas are always shown with the canonical names. Leases created before
+ * the server's demo names changed still carry "Alex Kim" and "Sunrise Properties" in their stored record;
+ * the record is left alone (ids, transactions, amounts) and only what is displayed is mapped, by user id.
+ */
+export function demoDisplayName(userId: string, serverName: string): string {
+  if (userId === 'tenant_demo') return DEMO_PEOPLE.tenantName;
+  if (userId === 'landlord_demo') return DEMO_PEOPLE.landlordName;
+  return serverName;
+}
+
+/** The address earlier demo leases were created with; shown as the same example property. */
+const LEGACY_DEMO_ADDRESS = '1234 W 30th St, Apt 4, Los Angeles, CA';

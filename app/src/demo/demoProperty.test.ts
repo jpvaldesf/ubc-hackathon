@@ -3,7 +3,7 @@ import { newestFirst, relevantProof } from '../components/ProofLinks';
 import { DEMO_LEASE } from '../services/live/demoLease';
 import { createSampleService } from '../services/sample';
 import type { Lease } from '../services/types';
-import { DEMO_PEOPLE, DEMO_PROPERTY, propertyFromAddress } from './demoProperty';
+import { DEMO_PEOPLE, DEMO_PROPERTY, demoDisplayName, propertyFromAddress } from './demoProperty';
 
 describe('canonical demo configuration', () => {
   it('names the fictional participants and the real example property', () => {
@@ -59,5 +59,16 @@ describe('newestFirst', () => {
   });
   it('falls back to server order when timestamps are missing', () => {
     expect(newestFirst([p('a', undefined, 0), p('b', undefined, 1)]).map((x) => x.id)).toEqual(['b', 'a']);
+  });
+});
+
+describe('existing demo leases', () => {
+  it('shows the canonical names for the two demo personas whatever the stored record says', () => {
+    expect(demoDisplayName('tenant_demo', 'Alex Kim')).toBe('John Doe');
+    expect(demoDisplayName('landlord_demo', 'Sunrise Properties')).toBe('Jane Doe');
+    expect(demoDisplayName('someone_else', 'Real Name')).toBe('Real Name');
+  });
+  it('shows the earlier demo address as the same example property', () => {
+    expect(propertyFromAddress('1234 W 30th St, Apt 4, Los Angeles, CA').label).toBe('Park La Brea');
   });
 });
