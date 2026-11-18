@@ -71,11 +71,8 @@ export interface PropertyInfo {
   address?: string;
   /** Present for the canonical example properties. */
   isExample?: boolean;
-  /** "Dorm Room" and the context label, for the active demo property. */
+  /** "Dorm Room", for the active demo property. */
   type?: string;
-  context?: string;
-  /** Shown under the property on every screen that shows it. */
-  disclaimer?: string;
   /** No photo is available: show a simple building icon in the thumbnail. */
   icon?: 'building';
   /** Small context image and its credit, for the example properties only. */
@@ -95,10 +92,7 @@ export function propertyFromAddress(address: string): PropertyInfo {
     return {
       label: MARKS_TOWER.name,
       address: MARKS_TOWER.street,
-      isExample: true,
       type: MARKS_TOWER.type,
-      context: MARKS_TOWER.context,
-      disclaimer: MARKS_TOWER.disclaimer,
       icon: 'building',
       evidenceNote: 'Staged demo photos, not documented conditions at Marks Tower.',
     };

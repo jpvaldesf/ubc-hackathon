@@ -23,7 +23,7 @@ export function BuildingIcon() {
  * label and a photo credit; any other address is shown as stored, without an image.
  */
 export function PropertyHeader({ lease, other, headingLevel = 1 }: { lease: Pick<Lease, 'property'>; other?: string; headingLevel?: 1 | 2 }) {
-  const { label, address, isExample, image, credit, type, context, icon, disclaimer } = lease.property;
+  const { label, address, isExample, image, credit, type, icon } = lease.property;
   return (
     <section className="property" aria-label="Property">
       {icon === 'building' && !image && <BuildingIcon />}
@@ -39,8 +39,7 @@ export function PropertyHeader({ lease, other, headingLevel = 1 }: { lease: Pick
         {address && <p className="property__address">{address}</p>}
         {other && <p className="property__meta">{other}</p>}
         {type && <p className="property__meta">{type}</p>}
-        {isExample && <p className="property__meta">{context ?? 'Example property · fictional demo lease'}</p>}
-        {disclaimer && <p className="property__meta">{disclaimer}</p>}
+        {isExample && <p className="property__meta">Example property · fictional demo lease</p>}
         {credit && (
           <a className="property__credit" href={credit.sourceUrl} target="_blank" rel="noopener noreferrer">
             Photo: {credit.author}, {credit.license}

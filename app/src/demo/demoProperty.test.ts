@@ -23,9 +23,7 @@ describe('canonical demo configuration', () => {
       label: 'Marks Tower',
       address: '612 Hellman Way, Los Angeles, CA 90089',
       type: 'Dorm Room',
-      context: 'Staged dorm inspection · fictional demo lease',
       icon: 'building',
-      disclaimer: expect.stringContaining('Not affiliated with USC'),
     });
     expect(propertyFromAddress(MARKS_TOWER.address).image).toBeUndefined();
     expect(propertyFromAddress('Example Apartment')).toMatchObject({ label: 'Example Apartment', isExample: true });

@@ -13,11 +13,7 @@ const DEPOSIT = `$${(DEMO_LEASE.deposit_cents / 100).toFixed(2)}`;
 
 /** The property, as a small summary shared by the tenant's invitation and the landlord's lease details. */
 function PropertySummary({ person }: { person: string }) {
-  return (
-    <>
-      <PropertyHeader lease={{ property: propertyFromAddress(MARKS_TOWER.address) }} other={person} headingLevel={2} />
-    </>
-  );
+  return <PropertyHeader lease={{ property: propertyFromAddress(MARKS_TOWER.address) }} other={person} headingLevel={2} />;
 }
 
 /**
@@ -56,7 +52,6 @@ export function SetupPage() {
           <dd className="fact__value">{DEPOSIT}</dd>
         </div>
       </dl>
-      <p className="small muted">Testnet demo: amounts scaled 1:100. No real money moves.</p>
     </>
   );
   const errorBox = error && (
