@@ -8,7 +8,7 @@ const memory = () => {
 
 describe('demo sessions', () => {
   it('start at Setup with no lease id and nothing simulated', () => {
-    expect(newSession('tenant')).toMatchObject({ role: 'tenant', leaseId: null, simulated: [], moveOutOpened: false });
+    expect(newSession('tenant')).toMatchObject({ role: 'tenant', leaseId: null, simulated: [], moveOutOpened: false, invitationOpened: false });
   });
 
   it('survive a refresh and ignore corrupt or unsafe stored data', () => {
@@ -29,6 +29,13 @@ describe('demo sessions', () => {
     archiveSession(store, { ...newSession('tenant'), leaseId: 'l_1' });
     archiveSession(store, { ...newSession('landlord'), leaseId: 'l_2' });
     expect(loadArchive(store).map((a) => a.leaseId)).toEqual(['l_2', 'l_1']);
+  });
+
+  it('keeps a session saved before invitations existed, as already opened', () => {
+    const store = memory();
+    const { invitationOpened: _drop, ...old } = { ...newSession('tenant'), leaseId: 'l_old1' };
+    store.setItem('deposit-keeper.demo.session', JSON.stringify(old));
+    expect(loadSession(store, 'tenant')).toMatchObject({ leaseId: 'l_old1', invitationOpened: true });
   });
 
   it('works with no storage at all', () => {

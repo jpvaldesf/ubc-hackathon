@@ -20,7 +20,21 @@ export function OverviewPage() {
   const { bundle, demo } = useServices();
   // Between move-in and move-out nothing external is required by the backend. The demo makes that wait explicit.
   const moveOutGated = !!bundle.live && lease.serverStatus === 'move_in_recorded' && !demo.session.moveOutOpened;
-  const next = describeLease(lease, proposal);
+  const described = describeLease(lease, proposal);
+  // In the landlord journey the tenant's photo steps are demo controls, not the landlord's own buttons.
+  const landlordWaitsForPhotos =
+    !!bundle.live && lease.viewer.role === 'landlord' && described.primary?.kind === 'link' && described.primary.to === 'photos' && !!lease.capture?.openPhase;
+  const tenantName = lease.participants.find((p) => p.role === 'tenant')?.displayName ?? 'The tenant';
+  const next = landlordWaitsForPhotos
+    ? {
+        ...described,
+        detail: 'The deposit is held.',
+        primary: undefined,
+        waiting: lease.capture?.openPhase === 'in' ? `Waiting on ${tenantName} to take the move-in photos.` : `Waiting on ${tenantName} to take the move-out photos.`,
+      }
+    : !!bundle.live && lease.viewer.role === 'landlord' && lease.serverStatus === 'created'
+      ? { ...described, detail: `Invitation sent to ${tenantName}. Photos open once the deposit is paid.` }
+      : described;
   const summary = summarizeDeposit(lease, proposal);
   const summaryId = useId();
   const other = counterpartyOf(lease.participants, lease.viewer.userId);

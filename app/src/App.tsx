@@ -11,7 +11,8 @@ function Home() {
   const { bundle, demo } = useServices();
   if (bundle.defaultLeaseId) return <Navigate to={`/leases/${bundle.defaultLeaseId}`} replace />;
   // A refresh keeps the current session and stage: its lease is reopened. A fresh session has no lease yet and shows Setup.
-  if (demo.session.leaseId) return <Navigate to={`/leases/${demo.session.leaseId}`} replace />;
+  // A tenant's prepared lease first shows as an invitation (Setup); everything else reopens its lease.
+  if (demo.session.leaseId && (demo.session.role === 'landlord' || demo.session.invitationOpened)) return <Navigate to={`/leases/${demo.session.leaseId}`} replace />;
   return <SetupPage />;
 }
 

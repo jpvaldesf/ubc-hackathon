@@ -21,6 +21,8 @@ export interface DemoSession {
   simulated: SimulatedStep[];
   /** UI-only: the demo "lease term ends" control was used, so the move-out step is open. The backend has no such call. */
   moveOutOpened: boolean;
+  /** Tenant sessions: the invitation to the prepared lease was opened with Review lease (or the lease came from a link). */
+  invitationOpened: boolean;
 }
 
 export interface ArchivedSession {
@@ -36,7 +38,7 @@ const ARCHIVE_KEY = 'deposit-keeper.demo.archive';
 const MAX_ARCHIVE = 20;
 
 export function newSession(role: DemoRole, now: Date = new Date()): DemoSession {
-  return { role, leaseId: null, startedAt: now.toISOString(), simulated: [], moveOutOpened: false };
+  return { role, leaseId: null, startedAt: now.toISOString(), simulated: [], moveOutOpened: false, invitationOpened: false };
 }
 
 function isSession(value: unknown): value is DemoSession {
@@ -47,7 +49,8 @@ function isSession(value: unknown): value is DemoSession {
     (v.leaseId === null || (typeof v.leaseId === 'string' && /^[A-Za-z0-9_-]+$/.test(v.leaseId))) &&
     typeof v.startedAt === 'string' &&
     Array.isArray(v.simulated) &&
-    typeof v.moveOutOpened === 'boolean'
+    typeof v.moveOutOpened === 'boolean' &&
+    (v.invitationOpened === undefined || typeof v.invitationOpened === 'boolean')
   );
 }
 
@@ -56,7 +59,8 @@ export function loadSession(store: Store, fallbackRole: DemoRole): DemoSession {
     const raw = store?.getItem(CURRENT_KEY);
     if (raw) {
       const parsed: unknown = JSON.parse(raw);
-      if (isSession(parsed)) return parsed;
+      // A session saved before invitations existed has no flag; its lease was already in use, so treat it as opened.
+      if (isSession(parsed)) return { ...parsed, invitationOpened: parsed.invitationOpened ?? true };
     }
   } catch {
     /* unavailable or corrupt: start fresh */

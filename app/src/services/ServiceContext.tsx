@@ -29,6 +29,8 @@ interface DemoSessionApi {
   /** Records a simulated step, but only if the session it was started in is still the current one. */
   recordSimulated(text: string, startedAt: string): void;
   openMoveOut(): void;
+  /** The tenant pressed Review lease on the invitation. */
+  openInvitation(): void;
 }
 
 interface ServiceContextValue {
@@ -72,6 +74,8 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
   // Every reset bumps the epoch. A request that started under an older epoch is discarded when it returns.
   const epoch = useRef(0);
   const sessionRef = useRef(session);
+  // One lease creation per session: a second call while it is in flight (StrictMode, double click) gets the same promise.
+  const startRef = useRef<{ epoch: number; promise: Promise<string | null> } | null>(null);
 
   const setSession = useCallback((next: DemoSession) => {
     sessionRef.current = next;
@@ -97,22 +101,29 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
       starting,
       switchRole: (role) => begin(role),
       restart: () => begin(sessionRef.current.role),
-      async startLease() {
+      startLease() {
+        if (startRef.current && startRef.current.epoch === epoch.current) return startRef.current.promise;
         const mine = epoch.current;
         const role = sessionRef.current.role;
         setStarting(true);
-        try {
-          const { leaseId } = await bundle.service.createDemoLease();
-          if (mine !== epoch.current) {
-            // The user restarted or switched while this was in flight. The lease exists on the server; keep it in the archive.
-            setArchive(archiveSession(longStore(), { ...newSession(role), leaseId }));
-            return null;
+        const entry: { epoch: number; promise: Promise<string | null> } = { epoch: mine, promise: Promise.resolve(null) };
+        entry.promise = (async () => {
+          try {
+            const { leaseId } = await bundle.service.createDemoLease();
+            if (mine !== epoch.current) {
+              // The user restarted or switched while this was in flight. The lease exists on the server; keep it in the archive.
+              setArchive(archiveSession(longStore(), { ...newSession(role), leaseId }));
+              return null;
+            }
+            setSession({ ...sessionRef.current, leaseId });
+            return leaseId;
+          } finally {
+            if (mine === epoch.current) setStarting(false);
+            if (startRef.current === entry) startRef.current = null;
           }
-          setSession({ ...sessionRef.current, leaseId });
-          return leaseId;
-        } finally {
-          if (mine === epoch.current) setStarting(false);
-        }
+        })();
+        startRef.current = entry;
+        return entry.promise;
       },
       adoptLease(leaseId, role) {
         if (!/^[A-Za-z0-9_-]+$/.test(leaseId)) return;
@@ -121,12 +132,15 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
         if (current.leaseId && current.leaseId !== leaseId) setArchive(archiveSession(longStore(), current));
         epoch.current += 1;
         bundle.live?.resetSession(idOf(role));
-        setSession({ ...newSession(role), leaseId });
+        setSession({ ...newSession(role), leaseId, invitationOpened: true });
       },
       recordSimulated(text, startedAt) {
         const current = sessionRef.current;
         if (current.startedAt !== startedAt) return; // the user restarted or switched meanwhile
         setSession({ ...current, simulated: [...current.simulated, { at: new Date().toISOString(), text }] });
+      },
+      openInvitation() {
+        setSession({ ...sessionRef.current, invitationOpened: true });
       },
       openMoveOut() {
         setSession({ ...sessionRef.current, moveOutOpened: true });

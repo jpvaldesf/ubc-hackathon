@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { Disclosure } from '../../components/Disclosure';
 import { isZero } from '../../lib/money';
 import type { SimulatedStepKind } from '../../services/live';
 import { useMutation } from '../../services/hooks';
@@ -44,6 +46,20 @@ export function counterpartControls(lease: Lease, proposal: Proposal | null): Co
   return [];
 }
 
+/** Landlord journey: the tenant's own photo steps. The API lets either person upload, so they open the capture screen from here. */
+function photoLinks(lease: Lease, moveOutOpened: boolean): { to: string; label: string }[] {
+  if (lease.viewer.role !== 'landlord') return [];
+  const tenant = name(lease, 'tenant');
+  if (lease.serverStatus === 'funded') return [{ to: 'photos', label: `Add ${tenant}'s move-in photos` }];
+  if (lease.serverStatus === 'move_in_recorded' && moveOutOpened) return [{ to: 'photos', label: `Add ${tenant}'s move-out photos` }];
+  return [];
+}
+
+/**
+ * Everything the demo does for the other person, in one compact collapsed section. The ordinary screens only ever
+ * show the viewer's own actions: a tenant never sees report editing or sending, and a landlord never sees the
+ * tenant's payment, photos or response as their own buttons.
+ */
 export function DemoControls() {
   const { lease, proposal, reloadNow } = useLeaseContext();
   const { bundle, demo } = useServices();
@@ -51,72 +67,85 @@ export function DemoControls() {
   const live = bundle.live;
   const controls = counterpartControls(lease, proposal);
   const moveOutGate = lease.serverStatus === 'move_in_recorded' && !demo.session.moveOutOpened;
+  const links = photoLinks(lease, demo.session.moveOutOpened);
   const simulated = demo.session.leaseId === lease.id ? demo.session.simulated : [];
   const appealed = lease.serverStatus === 'appealed';
-  if (!live || (controls.length === 0 && !moveOutGate && simulated.length === 0 && !appealed)) return null;
+  if (!live || (controls.length === 0 && !moveOutGate && links.length === 0 && simulated.length === 0 && !appealed)) return null;
 
+  const available = controls.length + links.length + (moveOutGate ? 1 : 0);
   const stillCurrent = demo.session.leaseId === lease.id;
   return (
-    <section className="demo-panel" aria-label="Demo-only controls">
-      <p className="demo-panel__badge">Demo only</p>
-      {moveOutGate && (
-        <div className="stack--tight">
-          <p>The lease term is the part of a rental that happens on its own. The demo skips ahead.</p>
-          <div className="button-row">
-            <button type="button" className="button button--hero" disabled={!stillCurrent} onClick={() => demo.openMoveOut()}>
-              Demo only: the lease ends, start move-out
-            </button>
+    <Disclosure title="Demo controls" meta={available > 0 ? `${available} step${available === 1 ? '' : 's'} available` : undefined} standalone>
+      <div className="demo-panel" aria-label="Demo-only controls">
+        <p className="demo-panel__badge">Demo only</p>
+        <p className="small">Steps that belong to the other person or to time passing. Nothing here runs until you press it.</p>
+        {moveOutGate && (
+          <div className="stack--tight">
+            <div className="button-row">
+              <button type="button" className="button button--hero" disabled={!stillCurrent} onClick={() => demo.openMoveOut()}>
+                Demo only: the lease ends, start move-out
+              </button>
+            </div>
+            <p className="small muted">This only opens the move-out step. The backend has no move-out request, so nothing is sent.</p>
           </div>
-          <p className="small muted">This only opens the move-out photo step. The backend has no move-out request, so nothing is sent.</p>
-        </div>
-      )}
-      {controls.map((control) => (
-        <div key={control.step} className="stack--tight">
-          <div className="button-row">
-            <button
-              type="button"
-              className="button button--hero"
-              disabled={pending || !stillCurrent}
-              aria-busy={pending}
-              onClick={() =>
-                void run(async () => {
-                  const startedAt = demo.session.startedAt;
-                  await live.simulate(control.step, lease.id);
-                  demo.recordSimulated(control.done, startedAt);
-                  await reloadNow();
-                })
-              }
-            >
-              Demo only: {control.label}
-            </button>
+        )}
+        {links.map((link) => (
+          <div key={link.label} className="stack--tight">
+            <div className="button-row">
+              <Link className="button button--hero" to={`/leases/${lease.id}/${link.to}`}>
+                Demo only: {link.label}
+              </Link>
+            </div>
+            <p className="small muted">You take them on the capture screen; the backend lets either person upload.</p>
           </div>
-          <p className="small muted">
-            Simulated for the other person: {control.onchain ? 'this sends the real request as them, which is a real testnet transaction on a live server.' : 'this sends the real request as them.'}{' '}
-            Nothing happens until you press it.
+        ))}
+        {controls.map((control) => (
+          <div key={control.step} className="stack--tight">
+            <div className="button-row">
+              <button
+                type="button"
+                className="button button--hero"
+                disabled={pending || !stillCurrent}
+                aria-busy={pending}
+                onClick={() =>
+                  void run(async () => {
+                    const startedAt = demo.session.startedAt;
+                    await live.simulate(control.step, lease.id);
+                    demo.recordSimulated(control.done, startedAt);
+                    await reloadNow();
+                  })
+                }
+              >
+                Demo only: {control.label}
+              </button>
+            </div>
+            <p className="small muted">
+              Simulated for the other person: {control.onchain ? 'this sends the real request as them, which is a real testnet transaction on a live server.' : 'this sends the real request as them.'}
+            </p>
+          </div>
+        ))}
+        {appealed && (
+          <p className="small">
+            Blocked in this demo: after a dispute the arbiter's ruling has no API (it runs from server scripts), so this lease stays at "Waiting for a ruling". Nothing is
+            simulated here.
           </p>
-        </div>
-      ))}
-      {appealed && (
-        <p className="small">
-          Blocked in this demo: after a dispute the arbiter's ruling has no API (it runs from server scripts), so this lease stays at "Waiting for a ruling". Nothing is
-          simulated here.
-        </p>
-      )}
-      {error && (
-        <div role="alert" className="callout callout--problem">
-          <p>{error.message}</p>
-        </div>
-      )}
-      {simulated.length > 0 && (
-        <div>
-          <p className="small">Simulated by the demo in this session:</p>
-          <ul className="journey journey--plain small">
-            {simulated.map((entry) => (
-              <li key={`${entry.at}-${entry.text}`}>{entry.text}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </section>
+        )}
+        {error && (
+          <div role="alert" className="callout callout--problem">
+            <p>{error.message}</p>
+          </div>
+        )}
+        {simulated.length > 0 && (
+          <div>
+            <p className="small">Simulated by the demo in this session:</p>
+            <ul className="journey journey--plain small">
+              {simulated.map((entry) => (
+                <li key={`${entry.at}-${entry.text}`}>{entry.text}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </Disclosure>
   );
 }
