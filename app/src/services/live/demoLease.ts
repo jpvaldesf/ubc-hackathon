@@ -1,11 +1,13 @@
+import { DEMO_PEOPLE, DEMO_PROPERTY } from '../../demo/demoProperty';
+
 /**
  * The demo lease the home screen's "Start a demo deposit" creates. Same values as server/scripts/smoke.py
  * (DEMO_SHOTS), so the shot labels match the sample photos and the AI reads the same context.
- * The address and tenant are made up. $10 = a $1,000 deposit at the 1:100 testnet scale (D-002).
+ * The property is the canonical example (src/demo/demoProperty.ts); the lease and tenant are fictional. $10 = a $1,000 deposit at the 1:100 testnet scale (D-002).
  */
 export const DEMO_LEASE = {
-  address: '1234 W 30th St, Apt 4, Los Angeles, CA',
-  tenant_name: 'Alex Kim',
+  address: DEMO_PROPERTY.address,
+  tenant_name: DEMO_PEOPLE.tenantName,
   deposit_cents: 1000,
   move_in_date: '2026-08-15',
   shot_list: [

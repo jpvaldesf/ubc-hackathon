@@ -6,6 +6,7 @@
  * The engine plays the role the server will play later: it decides allowed actions,
  * validates totals, checks proposal versions and keeps funds in exactly one bucket.
  */
+import { DEMO_PEOPLE, DEMO_PROPERTY, propertyFromAddress } from '../../demo/demoProperty';
 import { compareUnits, formatUsd, isPositive, isZero, subUnits, sumUnits, toBig, type BaseUnits } from '../../lib/money';
 import type { Funds } from '../../lib/funds';
 import { ServiceError } from '../errors';
@@ -31,8 +32,8 @@ export const SAMPLE_LEASE_ID = 'sample-lease';
 /** $1,000.00 in 6-decimal base units. */
 export const ORIGINAL_DEPOSIT: BaseUnits = '1000000000';
 
-export const TENANT: Participant = { id: 'sample-tenant', role: 'tenant', displayName: 'Alex Rivera' };
-export const LANDLORD: Participant = { id: 'sample-landlord', role: 'landlord', displayName: 'Jordan Lee' };
+export const TENANT: Participant = { id: 'sample-tenant', role: 'tenant', displayName: DEMO_PEOPLE.tenantName };
+export const LANDLORD: Participant = { id: 'sample-landlord', role: 'landlord', displayName: DEMO_PEOPLE.landlordName };
 
 export interface SampleState {
   phase: Phase;
@@ -416,7 +417,7 @@ export function selectLease(s: SampleState, viewerRole: Role): Lease {
   const viewer = viewerRole === 'tenant' ? TENANT : LANDLORD;
   return {
     id: SAMPLE_LEASE_ID,
-    property: { label: 'Maple Court, Unit 2B' },
+    property: propertyFromAddress(DEMO_PROPERTY.address),
     participants: [TENANT, LANDLORD],
     viewer: { userId: viewer.id, role: viewerRole },
     asset: { symbol: 'USDC', displayName: 'test USDC' },

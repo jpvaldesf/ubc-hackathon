@@ -53,15 +53,15 @@ export function LifecycleTimeline({ stage, complete }: { stage: Stage; complete:
 }
 
 /**
- * Shapes the lifecycle to the lease stage. While the lease is active the compact connected
- * timeline stays visible beside the property heading. Once settlement is complete the full
- * timeline is no longer the news, so it is replaced by "Settlement complete" and a disclosure.
+ * Current status as one line with the full lifecycle timeline behind it, so the overview opens with
+ * where things stand and the five-step list is one tap away.
  */
 export function LifecycleStatus({ stage, complete }: { stage: Stage; complete: boolean }) {
-  if (!complete) return <LifecycleTimeline stage={stage} complete={false} />;
+  const current = stepStates(stage, complete).find((step) => step.state === 'current');
+  const title = complete ? 'Settlement complete' : current ? `${current.label}: in progress` : 'Status';
   return (
-    <Disclosure title="Settlement complete" meta="View timeline" metaIsAction standalone>
-      <LifecycleTimeline stage={stage} complete />
+    <Disclosure title={title} meta="Timeline" metaIsAction standalone>
+      <LifecycleTimeline stage={stage} complete={complete} />
     </Disclosure>
   );
 }

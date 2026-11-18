@@ -81,7 +81,7 @@ describe('reviewFinancials', () => {
   it('keeps the landlord view on its own order, with the hold rule', () => {
     const landlord = financialsFor('refund_confirmed', 'landlord');
     expect(landlord.items[0]).toMatchObject({ label: 'Deductions under review', value: '$120.00' });
-    expect(landlord.note).toBe('$120.00 stays held until Alex Rivera accepts or a dispute is resolved.');
+    expect(landlord.note).toBe('$120.00 stays held until John Doe accepts or a dispute is resolved.');
     expect(landlord.note).not.toMatch(/accept or dispute/i);
   });
 
@@ -94,13 +94,13 @@ describe('reviewFinancials', () => {
       ['Deductions', '$120.00'],
       ['Still held', '$0.00'],
     ]);
-    expect(f.items.find((i) => i.id === 'deductions')?.note).toBe('Paid to Jordan Lee');
+    expect(f.items.find((i) => i.id === 'deductions')?.note).toBe('Paid to Jane Doe');
   });
 
   it('leads with what the landlord received once settled', () => {
     const f = financialsFor('settled', 'landlord');
     expect(f.items[0]).toMatchObject({ label: 'Paid to you', value: '$120.00', outcome: true });
-    expect(labels(f)).toContain('Returned to Alex Rivera');
+    expect(labels(f)).toContain('Returned to John Doe');
   });
 
   it('keeps the whole remaining balance held during a dispute', () => {
@@ -112,14 +112,14 @@ describe('reviewFinancials', () => {
     let state = buildScenario('refund_confirmed', now);
     state = acceptProposal(state, state.proposal.version, now);
     const f = reviewFinancials(selectLease(state, 'tenant'), selectProposal(state, 'tenant')!)!;
-    expect(f.items[0]).toMatchObject({ label: 'Payment to Jordan Lee', value: '$120.00', processing: true });
+    expect(f.items[0]).toMatchObject({ label: 'Payment to Jane Doe', value: '$120.00', processing: true });
     expect(f.items.find((i) => i.id === 'held')?.value).toBe('$0.00');
   });
 
   it('shows what the landlord is about to send before anything has moved', () => {
     const f = financialsFor('move_out', 'landlord');
     expect(f.items[0]).toMatchObject({ label: 'Proposed deductions', value: '$120.00' });
-    expect(f.items.find((i) => i.id === 'refund')).toMatchObject({ label: 'Refund to Alex Rivera', value: '$880.00', note: 'Starts when you submit' });
+    expect(f.items.find((i) => i.id === 'refund')).toMatchObject({ label: 'Refund to John Doe', value: '$880.00', note: 'Starts when you submit' });
   });
 
   it('shows a full refund as processing, with no deductions, for a zero-deduction proposal', () => {

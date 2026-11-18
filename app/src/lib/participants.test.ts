@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { Participant } from '../services/types';
 import { counterpartyOf } from './participants';
 
-const tenant: Participant = { id: 't', role: 'tenant', displayName: 'Alex Rivera' };
-const landlord: Participant = { id: 'l', role: 'landlord', displayName: 'Jordan Lee' };
+const tenant: Participant = { id: 't', role: 'tenant', displayName: 'John Doe' };
+const landlord: Participant = { id: 'l', role: 'landlord', displayName: 'Jane Doe' };
 
 describe('counterpartyOf', () => {
   it('gives each person the other party, never themselves', () => {
