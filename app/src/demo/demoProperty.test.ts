@@ -13,12 +13,14 @@ describe('canonical demo configuration', () => {
   });
 
   it('seeds the live demo lease from it', () => {
-    expect(DEMO_LEASE.address).toBe(DEMO_PROPERTY.address);
+    expect(DEMO_LEASE.address).toBe('Example Apartment');
     expect(DEMO_LEASE.tenant_name).toBe(DEMO_PEOPLE.tenantName);
   });
 
   it('gives the canonical address a short name and shows any other address as stored', () => {
-    expect(propertyFromAddress(DEMO_PROPERTY.address)).toEqual({ label: 'Park La Brea', address: DEMO_PROPERTY.address, isExample: true });
+    expect(propertyFromAddress('Example Apartment')).toMatchObject({ label: 'Example Apartment', isExample: true });
+    expect(propertyFromAddress('Example Apartment').address).toBeUndefined();
+    expect(propertyFromAddress(DEMO_PROPERTY.address)).toMatchObject({ label: 'Park La Brea', address: DEMO_PROPERTY.address, isExample: true });
     expect(propertyFromAddress('1 Main St')).toEqual({ label: '1 Main St' });
   });
 
@@ -27,7 +29,7 @@ describe('canonical demo configuration', () => {
     for (const role of ['tenant', 'landlord'] as const) {
       controls.setViewerRole(role);
       const lease = await service.getLease('sample-lease');
-      expect(lease.property.label).toBe('Park La Brea');
+      expect(lease.property.label).toBe('Example Apartment');
       expect(lease.participants.map((p) => p.displayName).sort()).toEqual(['Jane Doe', 'John Doe']);
     }
   });

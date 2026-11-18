@@ -68,7 +68,7 @@ export function GuidedStep({ row, moveInPhoto, position, count, phase, disabled,
             ) : (
               guide && (
                 <p className="step__note">
-                  Example apartment interior, not Park La Brea. Photo:{' '}
+                  Example apartment interior. Photo:{' '}
                   <a href={guide.sourceUrl} target="_blank" rel="noopener noreferrer">
                     {REFERENCE_CREDIT.author}
                   </a>

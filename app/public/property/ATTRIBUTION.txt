@@ -5,3 +5,9 @@ License: CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/
 Modification: downscaled (960px Commons thumbnail resized to 480px wide, JPEG recompressed). No other edits.
 This file is shared under the same license (CC BY-SA 4.0). The rest of the repository is not.
 Park La Brea official site: https://www.parklabrea.com/
+
+example-apartment.jpg
+Photo: "Lounge, Interior of apartment in Brisbane, 2025" by Chris Olszewski, own work.
+Source: https://commons.wikimedia.org/wiki/File:Lounge,_Interior_of_apartment_in_Brisbane,_2025,.jpg
+License: CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/
+Modification: downscaled to 480px wide and recompressed as JPEG; the in-app thumbnail crops it to a square with CSS only. This is an example apartment interior, not a real property or unit.

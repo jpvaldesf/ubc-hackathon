@@ -72,7 +72,7 @@ export interface Deadline {
 
 export interface Lease {
   id: string;
-  property: { label: string; address?: string; isExample?: boolean };
+  property: import('../demo/demoProperty').PropertyInfo;
   participants: Participant[];
   viewer: { userId: string; role: Role };
   asset: { symbol: string; displayName: string };
