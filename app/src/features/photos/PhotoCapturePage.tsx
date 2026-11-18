@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DemoEvidenceNote } from '../../components/PropertyHeader';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -7,9 +7,10 @@ import { useMutation } from '../../services/hooks';
 import { useServices } from '../../services/ServiceContext';
 import type { CaptureState, PhotoPhase, ProofLink } from '../../services/types';
 import { useLeaseContext } from '../lease/LeaseLayout';
+import { titleCase } from '../../lib/labels';
+import { GuidedStep } from './GuidedStep';
 import { offersSamplePhotos, samplePhotoUrl } from './samplePhotos';
 import {
-  ACCEPT_ATTR,
   analysisCopy,
   capturePhaseCopy,
   doneHint,
@@ -20,7 +21,6 @@ import {
   uploadCount,
   validateFile,
   type AnalysisSection as AnalysisSectionKind,
-  type ShotRow,
 } from './describeCapture';
 
 function BackIcon() {
@@ -71,7 +71,7 @@ export function PhotoCapturePage() {
 
       {recorded && (
         <section className="proof" aria-label="Photos recorded">
-          <h2 className="proof__title">{recorded.phase === 'in' ? 'Move-in photos recorded' : 'Move-out photos recorded'}</h2>
+          <h2 className="proof__title">{recorded.phase === 'in' ? 'Move-In Photos Recorded' : 'Move-Out Photos Recorded'}</h2>
           {recorded.proof && (
             <ul className="proof__list">
               <li className="proof__item">
@@ -118,6 +118,7 @@ function CaptureSection({ capture, phase, onRecorded }: { capture: CaptureState;
   const [selected, setSelected] = useState<string | null>(null);
 
   const rows = shotRows(capture, phase);
+  const inRows = shotRows(capture, 'in');
   const { uploaded, total } = uploadCount(capture, phase);
   const hint = doneHint(uploaded, total);
   const busy = upload.pending || commit.pending;
@@ -183,9 +184,10 @@ function CaptureSection({ capture, phase, onRecorded }: { capture: CaptureState;
       )}
 
       {current && (
-        <ShotCard
-          key={current.shot.id}
+        <GuidedStep
+          key={`${phase}-${current.shot.id}`}
           row={current}
+          moveInPhoto={phase === 'out' ? inRows.find((r) => r.shot.id === current.shot.id)?.photo : undefined}
           position={rows.indexOf(current) + 1}
           count={rows.length}
           phase={phase}
@@ -211,8 +213,8 @@ function CaptureSection({ capture, phase, onRecorded }: { capture: CaptureState;
                   {row.photo ? '✓' : ''}
                 </span>
                 <span className="checklist__text">
-                  <span className="checklist__room">{row.shot.room}</span>
-                  <span className="checklist__label">{row.shot.label}</span>
+                  <span className="checklist__room">{titleCase(row.shot.room)}</span>
+                  <span className="checklist__label">{titleCase(row.shot.label)}</span>
                 </span>
                 <span className="checklist__state">{row.photo ? 'Done' : 'Needed'}</span>
               </button>
@@ -266,86 +268,6 @@ function CaptureSection({ capture, phase, onRecorded }: { capture: CaptureState;
         </p>
       </ConfirmDialog>
     </section>
-  );
-}
-
-function ShotCard({
-  row,
-  position,
-  count,
-  phase,
-  disabled,
-  uploading,
-  fileError,
-  onFile,
-}: {
-  row: ShotRow;
-  position: number;
-  count: number;
-  phase: PhotoPhase;
-  disabled: boolean;
-  uploading: boolean;
-  fileError?: string;
-  onFile: (file: File) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const titleId = useId();
-  const errorId = useId();
-  const { shot, photo } = row;
-  const phaseLabel = phase === 'in' ? 'Move-in' : 'Move-out';
-
-  return (
-    <article className="surface stack--tight" aria-labelledby={titleId}>
-      <p className="shot__count">
-        Shot {position} of {count}
-      </p>
-      <h2 id={titleId} className="section-title">
-        {shot.room}
-      </h2>
-      <p>{shot.label}</p>
-      <div className="compare__frame shot__frame">
-        {photo ? (
-          <img className="compare__img" src={photo.src} alt={`${phaseLabel} photo: ${shot.room}, ${shot.label}`} />
-        ) : (
-          <span>No photo yet</span>
-        )}
-      </div>
-      <input
-        ref={inputRef}
-        className="sr-only"
-        type="file"
-        accept={ACCEPT_ATTR}
-        tabIndex={-1}
-        aria-hidden="true"
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          event.target.value = ''; // picking the same file again still fires a change
-          if (file) onFile(file);
-        }}
-      />
-      {fileError && (
-        <p id={errorId} className="field__error" role="alert">
-          {fileError}
-        </p>
-      )}
-      <div className="button-row">
-        <button
-          type="button"
-          className={`button button--hero${photo ? '' : ' button--primary'}`}
-          disabled={disabled}
-          aria-busy={uploading}
-          aria-describedby={fileError ? errorId : undefined}
-          onClick={() => inputRef.current?.click()}
-        >
-          {uploading ? 'Uploading…' : photo ? 'Retake photo' : 'Take or choose photo'}
-        </button>
-        {uploading && (
-          <span role="status" className="sr-only">
-            Uploading the {shot.room} photo
-          </span>
-        )}
-      </div>
-    </article>
   );
 }
 

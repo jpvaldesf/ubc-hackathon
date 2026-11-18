@@ -2,9 +2,9 @@ import type { Stage } from '../services/types';
 
 export const LIFECYCLE_STEPS: { stage: Stage; label: string }[] = [
   { stage: 'setup', label: 'Setup' },
-  { stage: 'move_in', label: 'Move-in' },
+  { stage: 'move_in', label: 'Move-In' },
   { stage: 'active', label: 'Active' },
-  { stage: 'move_out', label: 'Move-out' },
+  { stage: 'move_out', label: 'Move-Out' },
   { stage: 'settlement', label: 'Settlement' },
 ];
 

@@ -7,6 +7,7 @@ import './design/tokens.css';
 import './design/base.css';
 import './design/components.css';
 import './design/phone.css';
+import './design/photos.css';
 import App from './App';
 
 createRoot(document.getElementById('root')!).render(

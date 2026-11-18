@@ -352,7 +352,7 @@ describe('$0 findings', () => {
   it('lists normal wear separately, without changing counts or totals', () => {
     const p = mapProposal(api(), 'tenant_demo', undefined, ctx)!;
     expect(p.items.map((i) => i.id)).toEqual(['f1']);
-    expect(p.noChargeItems!.map((i) => [i.id, i.tag, i.amount, i.included])).toEqual([['f2', 'Normal wear', '0', false]]);
+    expect(p.noChargeItems!.map((i) => [i.id, i.tag, i.amount, i.included])).toEqual([['f2', 'Normal Wear', '0', false]]);
     expect(p.deductionTotal).toBe('1200000');
   });
 

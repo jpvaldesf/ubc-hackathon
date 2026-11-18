@@ -11,6 +11,7 @@
  * - The tenant never sees a landlord draft, and the landlord's draft-editing flow has no matching
  *   endpoint (edits are applied only at /report/send), so a proposal exists only once it was sent.
  */
+import { areaLabel } from '../../lib/labels';
 import { propertyFromAddress } from '../../demo/demoProperty';
 import type { ApiFinding, ApiLease, ApiStatus, DevUserId } from './api';
 import type {
@@ -170,8 +171,8 @@ export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = N
   };
 
   const evidence = [
-    { id: 'in', label: 'Move-in photos', detail: `${api.photos.in.length} recorded${stepTx(api, 'move_in_recorded') ? ', fingerprint saved' : ''}` },
-    { id: 'out', label: 'Move-out photos', detail: `${api.photos.out.length} recorded${stepTx(api, 'move_out_recorded') ? ', fingerprint saved' : ''}` },
+    { id: 'in', label: 'Move-In Photos', detail: `${api.photos.in.length} recorded${stepTx(api, 'move_in_recorded') ? ', fingerprint saved' : ''}` },
+    { id: 'out', label: 'Move-Out Photos', detail: `${api.photos.out.length} recorded${stepTx(api, 'move_out_recorded') ? ', fingerprint saved' : ''}` },
   ];
   if (api.report?.report_hash) evidence.push({ id: 'report', label: 'Report fingerprint', detail: api.report.report_hash });
 
@@ -234,12 +235,12 @@ function mapFinding(f: ApiFinding, api: ApiLease, ctx: MapContext): Finding {
   const edited = f.edited_by_landlord && f.original_cost_cents != null ? ` Lowered by the landlord from $${(f.original_cost_cents / 100).toFixed(2)}.` : '';
   return {
     id: f.id,
-    label: `${f.room}: ${f.item}`,
+    label: areaLabel(f.room, f.item),
     observation: f.description,
     amount: centsToUnits(f.cost_cents),
     rationale: `Found by comparing move-in and move-out photos (confidence ${Math.round(f.confidence * 100)}%).${edited}`,
     included: true,
-    photoPair: { moveIn: photoFor(f.before_photo, 'Move-in', api, ctx), moveOut: photoFor(f.after_photo, 'Move-out', api, ctx) },
+    photoPair: { moveIn: photoFor(f.before_photo, 'Move-In', api, ctx), moveOut: photoFor(f.after_photo, 'Move-Out', api, ctx) },
   };
 }
 
@@ -250,7 +251,7 @@ function noChargeFindings(api: ApiLease, ctx: MapContext): Finding[] {
     .map((f) => ({
       ...mapFinding(f, api, ctx),
       included: false,
-      tag: f.category === 'normal_wear' ? 'Normal wear' : 'No charge',
+      tag: f.category === 'normal_wear' ? 'Normal Wear' : 'No Charge',
     }));
 }
 
@@ -285,7 +286,7 @@ export function mapProposal(api: ApiLease, viewerId: DevUserId = 'tenant_demo', 
         source: 'analysis',
         items: chargedFindings(api).map((f) => ({
           id: f.id,
-          label: `${f.room}: ${f.item}`,
+          label: areaLabel(f.room, f.item),
           amount: centsToUnits(f.original_cost_cents ?? f.cost_cents),
           rationale: f.description,
         })),
@@ -318,7 +319,7 @@ function mapDraft(api: ApiLease, staged: StagedEdits | undefined, ctx: MapContex
     history: {
       original: {
         source: 'analysis',
-        items: findings.map((f) => ({ id: f.id, label: `${f.room}: ${f.item}`, amount: centsToUnits(f.cost_cents), rationale: f.description })),
+        items: findings.map((f) => ({ id: f.id, label: areaLabel(f.room, f.item), amount: centsToUnits(f.cost_cents), rationale: f.description })),
       },
       revisions: [],
     },
