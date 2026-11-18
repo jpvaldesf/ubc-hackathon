@@ -1,4 +1,4 @@
-import { createLiveService, type LiveService } from './live';
+import { createLiveService, type LiveService, type SimulatedStepKind } from './live';
 import type { DevUserId } from './live/api';
 import { SAMPLE_LEASE_ID } from './sample/engine';
 import { createSampleService, type SampleControls } from './sample';
@@ -11,12 +11,19 @@ export interface ServiceBundle {
   /** Where "/" goes. Undefined in live mode: the API has no lease list, so the user enters a server-issued lease id. */
   defaultLeaseId?: string;
   /** Live mode only. The development identity (X-User-Id) is demo identity, not authentication. */
-  live?: { apiUrl: string; getUserId(): DevUserId; setUserId(id: DevUserId): void };
+  live?: {
+    apiUrl: string;
+    getUserId(): DevUserId;
+    setUserId(id: DevUserId): void;
+    switchIdentity(id: DevUserId): void;
+    resetSession(id: DevUserId): void;
+    simulate(step: SimulatedStepKind, leaseId: string): Promise<void>;
+  };
 }
 
 const IDENTITY_KEY = 'deposit-keeper.live.user';
 
-/** Dev identity: `?as=tenant_demo|landlord_demo` once, then remembered for the tab. Defaults to the tenant. */
+/** Dev identity: `?as=tenant_demo|landlord_demo` once, then remembered for the tab. Defaults to the landlord, who creates the lease. */
 function devIdentity(): DevUserId {
   const valid = (v: string | null): v is DevUserId => v === 'tenant_demo' || v === 'landlord_demo';
   try {
@@ -30,7 +37,8 @@ function devIdentity(): DevUserId {
   } catch {
     /* storage unavailable: fall through to the default */
   }
-  return 'tenant_demo';
+  // The presentation starts with the landlord creating the lease.
+  return 'landlord_demo';
 }
 
 /** Remembers the choice for this tab and drops a stale ?as= so a reload doesn't undo the switch. */
@@ -68,6 +76,15 @@ export function createServices(): ServiceBundle {
           rememberIdentity(id);
           service.setUserId(id);
         },
+        switchIdentity(id) {
+          rememberIdentity(id);
+          service.switchIdentity(id);
+        },
+        resetSession(id) {
+          rememberIdentity(id);
+          service.resetSession(id);
+        },
+        simulate: (step, leaseId) => service.simulate(step, leaseId),
       },
     };
   }

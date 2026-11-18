@@ -408,8 +408,46 @@ video {
 
 /* Inside the shared .page container; only the switch is centered. */
 .demo-bar__inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.demo-bar__side--end {
+  justify-self: end;
+}
+
+.demo-bar__restart {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  gap: var(--space-1);
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  padding: 0 var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--color-demo-text);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.demo-bar__restart-label {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .demo-bar__restart-label {
+    display: inline;
+  }
+}
+
+@media (max-width: 379px) {
+  .demo-bar__choice {
+    min-width: 5rem;
+  }
 }
 
 .demo-bar__switch {
@@ -464,4 +502,49 @@ video {
   .folds .fold:last-child {
     border-bottom: 1px solid var(--color-border);
   }
+}
+
+/* Demo-only controls and the journey list */
+.demo-panel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-surface);
+  background: var(--color-demo-bg);
+  color: var(--color-demo-text);
+}
+
+.demo-panel__badge {
+  margin: 0;
+  justify-self: start;
+  padding: 0 var(--space-2);
+  border: 1px dashed currentColor;
+  border-radius: var(--radius-control);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.journey {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: 1.5rem;
+  list-style: decimal;
+}
+
+.journey--plain {
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.journey__tag {
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border: 1px dashed currentColor;
+  border-radius: var(--radius-control);
+  color: var(--color-demo-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
 }

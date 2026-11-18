@@ -194,6 +194,7 @@ export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = N
   return {
     id: api.lease_id,
     property: propertyFromAddress(api.address),
+    serverStatus: api.status,
     participants,
     viewer: { userId: viewerId, role },
     asset: { symbol: 'USDC', displayName: 'test USDC' },
