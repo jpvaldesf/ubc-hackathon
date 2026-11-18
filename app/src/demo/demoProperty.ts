@@ -30,22 +30,56 @@ export const DEMO_PEOPLE = {
   landlordName: 'Jane Doe',
 } as const;
 
+/**
+ * The fresh apartment scenario: a fictional "Example Apartment" with no street address. The interiors are
+ * example photos (one apartment series by Chris Olszewski, Wikimedia Commons, CC BY-SA 4.0); they are
+ * guidance and context, not a real unit, and are not interiors of any real property.
+ */
+export const EXAMPLE_APARTMENT = {
+  name: 'Example Apartment',
+  image: {
+    src: '/property/example-apartment.jpg',
+    alt: 'Example apartment lounge with a sofa, TV wall, ceiling fan and balcony doors',
+    credit: {
+      author: 'Chris Olszewski',
+      sourceUrl: 'https://commons.wikimedia.org/wiki/File:Lounge,_Interior_of_apartment_in_Brisbane,_2025,.jpg',
+      license: 'CC BY-SA 4.0',
+    },
+  },
+} as const;
+
 export interface PropertyInfo {
   /** Short name shown as the heading. */
   label: string;
-  /** Street address shown beneath it. Absent when the label is already the address. */
+  /** Street address shown beneath it. Absent when the label is already the address or there is none. */
   address?: string;
-  /** Present only for the canonical example property. */
+  /** Present for the canonical example properties. */
   isExample?: boolean;
+  /** Small context image and its credit, for the example properties only. */
+  image?: { src: string; alt: string };
+  credit?: { author: string; license: string; sourceUrl: string };
+  /** One line about the inspection photos, when they are staged demo evidence. */
+  evidenceNote?: string;
 }
 
 /**
- * Turns the address a lease carries into what the screen shows. The canonical demo address gets the
- * short property name; any other address is shown exactly as stored.
+ * Turns the address a lease carries into what the screen shows. "Example Apartment" is the fresh scenario;
+ * the Park La Brea address is kept for older demo leases; any other address is shown exactly as stored.
  */
 export function propertyFromAddress(address: string): PropertyInfo {
-  if (address.trim().toLowerCase() === DEMO_PROPERTY.address.toLowerCase()) {
-    return { label: DEMO_PROPERTY.name, address: DEMO_PROPERTY.address, isExample: true };
+  const normalized = address.trim().toLowerCase();
+  if (normalized === EXAMPLE_APARTMENT.name.toLowerCase()) {
+    return { label: EXAMPLE_APARTMENT.name, isExample: true, image: EXAMPLE_APARTMENT.image, credit: EXAMPLE_APARTMENT.image.credit };
+  }
+  if (normalized === DEMO_PROPERTY.address.toLowerCase()) {
+    return {
+      label: DEMO_PROPERTY.name,
+      address: DEMO_PROPERTY.address,
+      isExample: true,
+      image: DEMO_PROPERTY.image,
+      credit: DEMO_PROPERTY.image.credit,
+      evidenceNote: `Staged demo photos, not documented conditions at ${DEMO_PROPERTY.name}.`,
+    };
   }
   return { label: address };
 }

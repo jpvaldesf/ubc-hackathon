@@ -116,7 +116,7 @@ describe('pageSections', () => {
     const tenant = liveLease('tenant', capture(null, { in: true, out: true }));
     expect(idleCopy(tenant, pageSections(tenant, null)).title).toBe('Photos recorded');
     const movedIn = liveLease('tenant', capture(null, { in: true, out: false }));
-    expect(idleCopy(movedIn, pageSections(movedIn, null)).title).toBe('Move-in photos recorded');
+    expect(idleCopy(movedIn, pageSections(movedIn, null)).title).toBe('Move-In Photos Recorded');
   });
 });
 

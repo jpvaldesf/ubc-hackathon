@@ -60,11 +60,11 @@ export function pageSections(lease: Lease, proposal: Proposal | null): PageSecti
 export function capturePhaseCopy(phase: PhotoPhase): { title: string; lead: string } {
   return phase === 'in'
     ? {
-        title: 'Move-in photos',
+        title: 'Move-In Photos',
         lead: 'Take one photo of each spot on the list. Together they record the condition of the home on move-in day.',
       }
     : {
-        title: 'Move-out photos',
+        title: 'Move-Out Photos',
         lead: 'Take the same spots from the same angle as at move-in, so each pair can be compared.',
       };
 }
@@ -139,7 +139,7 @@ export function idleCopy(lease: Lease, sections: PageSections): { title: string;
         : 'Move-in and move-out photos are recorded.',
     };
   }
-  if (committed.in) return { title: 'Move-in photos recorded', body: 'Move-out photos open when move-out starts.' };
+  if (committed.in) return { title: 'Move-In Photos Recorded', body: 'Move-out photos open when move-out starts.' };
   return { title: 'Nothing to photograph yet', body: 'Photos open once the deposit is paid.' };
 }
 

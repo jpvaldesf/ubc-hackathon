@@ -18,6 +18,6 @@ describe('stepStates', () => {
   });
 
   it('keeps the five milestones in order', () => {
-    expect(stepStates('setup', false).map((s) => s.label)).toEqual(['Setup', 'Move-in', 'Active', 'Move-out', 'Settlement']);
+    expect(stepStates('setup', false).map((s) => s.label)).toEqual(['Setup', 'Move-In', 'Active', 'Move-Out', 'Settlement']);
   });
 });

@@ -134,7 +134,7 @@ export function ReviewPage() {
           {proposal.noChargeItems && proposal.noChargeItems.length > 0 && (
             <section className="stack" aria-labelledby={`${findingsId}-nocharge`}>
               <h2 id={`${findingsId}-nocharge`} className="section-title">
-                Normal wear, no charge ({proposal.noChargeItems.length})
+                Normal Wear, No Charge ({proposal.noChargeItems.length})
               </h2>
               <ul className="stack">
                 {proposal.noChargeItems.map((item) => (

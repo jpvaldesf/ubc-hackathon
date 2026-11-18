@@ -1,0 +1,12 @@
+Reference photos for the guided capture steps (ref1.jpg to ref5.jpg).
+Author: Chris Olszewski (Wikimedia Commons user Kgbo). Series: "Interior of apartment in Brisbane, 2025". Own work, 2025-06-29.
+License: CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/
+Modification: each original was resized to 960px wide and recompressed as JPEG. No cropping or other edits; framing is unchanged.
+These are example apartment interiors (the "Example Apartment" demo scenario), not any real property, and they are guidance only, never inspection evidence.
+
+ref1.jpg  Lounge     https://commons.wikimedia.org/wiki/File:Lounge,_Interior_of_apartment_in_Brisbane,_2025,.jpg
+ref2.jpg  Kitchen    https://commons.wikimedia.org/wiki/File:Kitchen,_Interior_of_apartment_in_Brisbane,_2025,_03.jpg
+ref3.jpg  Dining     https://commons.wikimedia.org/wiki/File:Dinning,_Interior_of_apartment_in_Brisbane,_2025,_04.jpg
+ref4.jpg  Bedroom    https://commons.wikimedia.org/wiki/File:Bedroom,_Interior_of_apartment_in_Brisbane,_2025,_02.jpg
+ref5.jpg  Bathroom   https://commons.wikimedia.org/wiki/File:Bathroom,_Interior_of_apartment_in_Brisbane,_2025,_08.jpg
+These files are shared under CC BY-SA 4.0. The rest of the repository is not.

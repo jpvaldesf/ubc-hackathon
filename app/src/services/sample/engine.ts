@@ -6,7 +6,7 @@
  * The engine plays the role the server will play later: it decides allowed actions,
  * validates totals, checks proposal versions and keeps funds in exactly one bucket.
  */
-import { DEMO_PEOPLE, DEMO_PROPERTY, propertyFromAddress } from '../../demo/demoProperty';
+import { DEMO_PEOPLE, EXAMPLE_APARTMENT, propertyFromAddress } from '../../demo/demoProperty';
 import { compareUnits, formatUsd, isPositive, isZero, subUnits, sumUnits, toBig, type BaseUnits } from '../../lib/money';
 import type { Funds } from '../../lib/funds';
 import { ServiceError } from '../errors';
@@ -417,7 +417,7 @@ export function selectLease(s: SampleState, viewerRole: Role): Lease {
   const viewer = viewerRole === 'tenant' ? TENANT : LANDLORD;
   return {
     id: SAMPLE_LEASE_ID,
-    property: propertyFromAddress(DEMO_PROPERTY.address),
+    property: propertyFromAddress(EXAMPLE_APARTMENT.name),
     participants: [TENANT, LANDLORD],
     viewer: { userId: viewer.id, role: viewerRole },
     asset: { symbol: 'USDC', displayName: 'test USDC' },

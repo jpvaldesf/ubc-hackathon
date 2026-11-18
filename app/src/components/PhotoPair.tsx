@@ -38,7 +38,7 @@ function RemotePhoto({ photo }: { photo: Extract<Photo, { kind: 'image' }> }) {
 }
 
 /** Full-size view in a native dialog: Escape or the Close button dismisses it, and the page never scrolls sideways. */
-function Enlarged({ photo, title, onClose }: { photo: Extract<Photo, { kind: 'image' }>; title: string; onClose: () => void }) {
+export function Enlarged({ photo, title, onClose }: { photo: Extract<Photo, { kind: 'image' }>; title: string; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
@@ -88,8 +88,21 @@ function Region({ title, photo }: { title: string; photo: Photo }) {
 export function PhotoPair({ pair }: { pair: PhotoPairData }) {
   return (
     <div className="compare">
-      <Region title="Move-in" photo={pair.moveIn} />
-      <Region title="Move-out" photo={pair.moveOut} />
+      <Region title="Move-In" photo={pair.moveIn} />
+      <Region title="Move-Out" photo={pair.moveOut} />
     </div>
+  );
+}
+
+/** A button that opens the image full size. Used by the capture steps for both the reference and the saved photo. */
+export function EnlargeButton({ src, alt, title }: { src: string; alt: string; title: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" className="compare__enlarge" onClick={() => setOpen(true)}>
+        Enlarge<span className="sr-only"> {title}</span>
+      </button>
+      {open && <Enlarged photo={{ kind: 'image', src, alt, caption: title }} title={title} onClose={() => setOpen(false)} />}
+    </>
   );
 }

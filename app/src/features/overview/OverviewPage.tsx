@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AllTransactions, ProofHighlight } from '../../components/ProofLinks';
 import { PropertyHeader } from '../../components/PropertyHeader';
+import { DemoControls } from '../demo/DemoControls';
 import { Disclosure } from '../../components/Disclosure';
 import { LifecycleStatus } from '../../components/LifecycleTimeline';
 import { roleLabel } from '../../lib/format';
@@ -16,7 +17,27 @@ import { summarizeDeposit } from './summarizeDeposit';
 
 export function OverviewPage() {
   const { lease, proposal } = useLeaseContext();
-  const next = describeLease(lease, proposal);
+  const { bundle, demo } = useServices();
+  // Between move-in and move-out nothing external is required by the backend. The demo makes that wait explicit.
+  const moveOutGated = !!bundle.live && lease.serverStatus === 'move_in_recorded' && !demo.session.moveOutOpened;
+  const described = describeLease(lease, proposal);
+  // In the landlord journey the tenant's photo steps are demo controls, not the landlord's own buttons.
+  const landlordWaitsForPhotos =
+    !!bundle.live && lease.viewer.role === 'landlord' && described.primary?.kind === 'link' && described.primary.to === 'photos' && !!lease.capture?.openPhase;
+  const landlordName = lease.participants.find((p) => p.role === 'landlord')?.displayName ?? 'The landlord';
+  const tenantName = lease.participants.find((p) => p.role === 'tenant')?.displayName ?? 'The tenant';
+  const next = landlordWaitsForPhotos
+    ? {
+        ...described,
+        detail: 'The deposit is held.',
+        primary: undefined,
+        waiting: lease.capture?.openPhase === 'in' ? `Waiting on ${tenantName} to take the move-in photos.` : `Waiting on ${tenantName} to take the move-out photos.`,
+      }
+    : !!bundle.live && lease.viewer.role === 'tenant' && ['move_out_recorded', 'analyzing', 'report_draft'].includes(lease.serverStatus ?? '')
+      ? { ...described, waiting: `Waiting on ${landlordName} to review the move-out photos and send a proposal.` }
+      : !!bundle.live && lease.viewer.role === 'landlord' && lease.serverStatus === 'created'
+      ? { ...described, detail: `Invitation sent to ${tenantName}. Photos open once the deposit is paid.` }
+      : described;
   const summary = summarizeDeposit(lease, proposal);
   const summaryId = useId();
   const other = counterpartyOf(lease.participants, lease.viewer.userId);
@@ -31,9 +52,9 @@ export function OverviewPage() {
         <DepositSummaryPanel
           headingId={summaryId}
           summary={summary}
-          detail={summary.detail ?? next.detail}
+          detail={moveOutGated ? 'The lease is active. Nothing needs doing until move-out.' : (summary.detail ?? next.detail)}
           waiting={next.waiting}
-          action={next.primary && <ActionControl action={next.primary} />}
+          action={next.primary && !moveOutGated && <ActionControl action={next.primary} />}
           proof={<ProofHighlight lease={lease} />}
         />
       ) : (
@@ -42,6 +63,8 @@ export function OverviewPage() {
           <p>They don't add up to the original deposit, so we won't display numbers we can't stand behind. Reload to try again.</p>
         </section>
       )}
+
+      <DemoControls />
 
       {lease.unavailableNotice && (
         <p role="status" className="callout callout--caution">

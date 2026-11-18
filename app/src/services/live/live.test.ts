@@ -228,6 +228,48 @@ describe('live service', () => {
     expect(c.post).toHaveBeenCalledWith('/leases', 'landlord_demo', expect.objectContaining({ deposit_cents: 1000, shot_list: expect.arrayContaining([expect.objectContaining({ shot_id: 's3' })]) }), { keepServerMessage: true });
   });
 
+  it('simulate sends the real request as the other participant, and resetSession never calls the backend', async () => {
+    const c = client();
+    const svc = createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: c });
+    svc.resetSession('tenant_demo');
+    expect(svc.getUserId()).toBe('tenant_demo');
+    expect(c.post).not.toHaveBeenCalled();
+    expect(c.put).not.toHaveBeenCalled();
+    await svc.simulate('pay_deposit', 'l_1');
+    await svc.simulate('start_report', 'l_1');
+    await svc.simulate('send_report', 'l_1');
+    await svc.simulate('accept', 'l_1');
+    expect((c.post.mock.calls as unknown as [string, string][]).map((call) => [call[0], call[1]])).toEqual([
+      ['/leases/l_1/deposit', 'tenant_demo'],
+      ['/leases/l_1/report', 'landlord_demo'],
+      ['/leases/l_1/report/send', 'landlord_demo'],
+      ['/leases/l_1/accept', 'tenant_demo'],
+    ]);
+    expect(svc.getUserId()).toBe('tenant_demo'); // simulating never changes who is viewing
+  });
+
+  it('switchIdentity changes who is viewing without calling the backend or touching the lease', async () => {
+    const c = client();
+    const svc = createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: c });
+    const seen: string[] = [];
+    svc.subscribe?.(() => seen.push('refetch'));
+    svc.switchIdentity('tenant_demo');
+    expect(svc.getUserId()).toBe('tenant_demo');
+    expect(seen).toEqual(['refetch']);
+    expect(c.post).not.toHaveBeenCalled();
+    expect(c.put).not.toHaveBeenCalled();
+    await svc.getLease('l_1');
+    expect(c.get).toHaveBeenCalledWith('/leases/l_1');
+  });
+
+  it('simulate refuses to dispute when there is nothing to dispute, and surfaces backend errors', async () => {
+    const c = client();
+    c.get.mockResolvedValueOnce({ ...api(), report: { findings: [] } } as never);
+    await expect(createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: c }).simulate('appeal', 'l_1')).rejects.toMatchObject({ code: 'validation' });
+    c.post.mockRejectedValueOnce(new ServiceError('invalid_state', 'The lease already moved on.'));
+    await expect(createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: c }).simulate('accept', 'l_1')).rejects.toMatchObject({ code: 'invalid_state' });
+  });
+
   it('createDemoLease rejects a response without a usable lease id', async () => {
     const c = client();
     c.post.mockResolvedValueOnce({ lease_id: '../x' } as never);
@@ -352,7 +394,7 @@ describe('$0 findings', () => {
   it('lists normal wear separately, without changing counts or totals', () => {
     const p = mapProposal(api(), 'tenant_demo', undefined, ctx)!;
     expect(p.items.map((i) => i.id)).toEqual(['f1']);
-    expect(p.noChargeItems!.map((i) => [i.id, i.tag, i.amount, i.included])).toEqual([['f2', 'Normal wear', '0', false]]);
+    expect(p.noChargeItems!.map((i) => [i.id, i.tag, i.amount, i.included])).toEqual([['f2', 'Normal Wear', '0', false]]);
     expect(p.deductionTotal).toBe('1200000');
   });
 
