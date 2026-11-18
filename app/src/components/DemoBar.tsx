@@ -26,18 +26,20 @@ export function DemoBar() {
 
   return (
     <div className="demo-bar" role="region" aria-label="Demo role">
-      <div className="demo-bar__switch" role="group" aria-label="Demo role: tenant or landlord">
-        {OPTIONS.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            className="demo-bar__choice"
-            aria-pressed={isCurrent(option)}
-            onClick={() => choose(option)}
-          >
-            {option.label}
-          </button>
-        ))}
+      <div className="page demo-bar__inner">
+        <div className="demo-bar__switch" role="group" aria-label="Demo role: tenant or landlord">
+          {OPTIONS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className="demo-bar__choice"
+              aria-pressed={isCurrent(option)}
+              onClick={() => choose(option)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
