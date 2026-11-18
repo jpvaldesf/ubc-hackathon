@@ -180,9 +180,10 @@ export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = N
       ? `$${(api.payout.to_tenant_cents / 100).toFixed(2)} sent to ${api.tenant.name}`
       : t.label;
   const withTx = api.timeline.filter((t) => t.tx);
-  const proofs = withTx.flatMap((t, i) => {
+  const proofs = api.timeline.flatMap((t, order) => {
+    if (!t.tx) return [];
     const url = genuineTxUrl(t.tx, ctx);
-    return url ? [{ id: `${t.step}-${i}`, label: eventText(t), url, step: t.step }] : [];
+    return url ? [{ id: `${t.step}-${order}`, label: eventText(t), url, step: t.step, at: t.at, order }] : [];
   });
   const proofNote =
     withTx.length > proofs.length

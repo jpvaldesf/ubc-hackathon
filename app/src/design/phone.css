@@ -400,3 +400,31 @@ video {
 .about p {
   margin: 0;
 }
+
+/* Demo bar: just the centered Tenant / Landlord switch, slim. */
+.demo-bar {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-1) var(--gutter);
+}
+
+.demo-bar__switch {
+  margin-left: 0;
+}
+
+.demo-bar__choice {
+  min-height: var(--target-min);
+  min-width: 6rem;
+}
+
+.alltx__order {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+.proof__when {
+  display: block;
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}

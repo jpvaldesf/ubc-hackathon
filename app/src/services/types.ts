@@ -167,6 +167,10 @@ export interface ProofLink {
   url: string;
   /** The lifecycle step this transaction belongs to, when the adapter knows it (live mode). */
   step?: string;
+  /** When the transaction happened (ISO), from the server's timeline. */
+  at?: string;
+  /** Position in the server's event order, used to break ties between equal timestamps. */
+  order?: number;
 }
 
 export type Photo =

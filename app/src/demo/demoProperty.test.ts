@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { relevantProof } from '../components/ProofLinks';
+import { newestFirst, relevantProof } from '../components/ProofLinks';
 import { DEMO_LEASE } from '../services/live/demoLease';
 import { createSampleService } from '../services/sample';
 import type { Lease } from '../services/types';
@@ -44,5 +44,20 @@ describe('relevantProof', () => {
   it('falls back to the latest and returns nothing without verified proofs', () => {
     expect(relevantProof(lease('tenant', [proofs[0]!]))?.step).toBe('created');
     expect(relevantProof(lease('tenant', []))).toBeUndefined();
+  });
+});
+
+describe('newestFirst', () => {
+  const p = (id: string, at: string | undefined, order?: number) => ({ id, label: id, url: `https://x/${id}`, at, order });
+  it('sorts by real timestamp, newest first, and keeps every proof', () => {
+    const sorted = newestFirst([p('a', '2026-11-17T10:00:00Z', 0), p('c', '2026-11-17T12:00:00Z', 2), p('b', '2026-11-17T11:00:00Z', 1)]);
+    expect(sorted.map((x) => x.id)).toEqual(['c', 'b', 'a']);
+  });
+  it('uses the server event order for equal timestamps', () => {
+    const t = '2026-11-17T10:00:00Z';
+    expect(newestFirst([p('a', t, 0), p('b', t, 1), p('c', t, 2)]).map((x) => x.id)).toEqual(['c', 'b', 'a']);
+  });
+  it('falls back to server order when timestamps are missing', () => {
+    expect(newestFirst([p('a', undefined, 0), p('b', undefined, 1)]).map((x) => x.id)).toEqual(['b', 'a']);
   });
 });
