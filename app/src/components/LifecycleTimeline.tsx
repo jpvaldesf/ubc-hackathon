@@ -27,18 +27,20 @@ export function LifecycleTimeline({ stage, complete }: { stage: Stage; complete:
           const note = step.state === 'current' ? 'In progress' : complete && index === lastIndex ? 'Complete' : null;
           return (
             <li key={step.stage} className={`timeline__step timeline__step--${step.state}`} aria-current={step.state === 'current' ? 'step' : undefined}>
-              <span className="timeline__node" aria-hidden="true">
-                {step.state === 'done' && <CheckIcon />}
+              <span className="timeline__nodecell" aria-hidden="true">
+                <span className="timeline__node">{step.state === 'done' && <CheckIcon />}</span>
               </span>
-              <span className="timeline__label">
-                {step.label}
-                <span className="sr-only">, {spoken}</span>
-              </span>
-              {note && (
-                <span className="timeline__note" aria-hidden="true">
-                  {note}
+              <span className="timeline__text">
+                <span className="timeline__label">
+                  {step.label}
+                  <span className="sr-only">, {spoken}</span>
                 </span>
-              )}
+                {note && (
+                  <span className="timeline__note" aria-hidden="true">
+                    {note}
+                  </span>
+                )}
+              </span>
             </li>
           );
         })}

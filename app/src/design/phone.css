@@ -470,3 +470,66 @@ video {
 .timeline__step {
   align-content: start;
 }
+
+/*
+ * Lifecycle bar: the node row (circles and teal line) sits exactly halfway between the two dividers.
+ * Three rows: space above | node row | labels plus space below. The two outer rows are both 1fr, so
+ * with an auto-height section they are always equal, whatever the labels wrap to.
+ */
+.lifecycle {
+  padding: 0;
+}
+
+.timeline__list {
+  grid-template-rows: 1fr 1.25rem 1fr;
+}
+
+.timeline__step {
+  grid-row: 1 / span 3;
+  grid-template-rows: subgrid;
+  align-content: normal;
+  align-items: start;
+  gap: 0;
+}
+
+.timeline__step::before {
+  display: none;
+}
+
+.timeline__nodecell {
+  grid-row: 2;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+}
+
+/* The line runs from the previous node's centre to this node's centre, behind both nodes. */
+.timeline__nodecell::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--color-border);
+}
+
+.timeline__step:first-child .timeline__nodecell::before {
+  display: none;
+}
+
+.timeline__step--done .timeline__nodecell::before,
+.timeline__step--current .timeline__nodecell::before {
+  background: var(--color-teal);
+}
+
+.timeline__text {
+  grid-row: 3;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 2px;
+  padding-block: 0.25rem;
+}
