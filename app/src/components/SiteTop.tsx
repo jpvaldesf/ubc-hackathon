@@ -4,7 +4,7 @@ import { DemoBar } from './DemoBar';
 import { Header } from './Header';
 
 /**
- * The sticky top bar: the compact simulated-data notice plus the header. It publishes its real
+ * The top block: the header, then the compact demo notice. It scrolls with the page (nothing is fixed over the content). It publishes its real
  * height as --top-h so scroll padding and sticky panels can sit below it. That is what keeps a
  * focused element from ever being hidden behind the bar, whatever the screen size or wrapping.
  */
@@ -23,8 +23,8 @@ export function SiteTop({ lease, showProperty }: { lease?: Lease; showProperty?:
 
   return (
     <div className="site-top" ref={ref}>
-      <DemoBar />
       <Header lease={lease} showProperty={showProperty} />
+      <DemoBar />
     </div>
   );
 }

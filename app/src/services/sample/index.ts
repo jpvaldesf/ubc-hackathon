@@ -31,7 +31,7 @@ function requireVersion(version: number | undefined): number {
 const STORAGE_KEY = 'deposit-keeper.sample.v1';
 
 interface Persisted {
-  schema: 1;
+  schema: 2;
   viewerRole: Role;
   state: SampleState;
   seenKeys: string[];
@@ -76,7 +76,7 @@ function defaultStorage(): SampleOptions['storage'] {
 
 function isPersisted(value: unknown): value is Persisted {
   const v = value as Persisted | null;
-  return !!v && v.schema === 1 && (v.viewerRole === 'tenant' || v.viewerRole === 'landlord') && !!v.state?.phase && Array.isArray(v.seenKeys);
+  return !!v && v.schema === 2 && (v.viewerRole === 'tenant' || v.viewerRole === 'landlord') && !!v.state?.phase && Array.isArray(v.seenKeys);
 }
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -108,7 +108,7 @@ export function createSampleService(options: SampleOptions = {}): { service: Dep
 
   const persist = () => {
     try {
-      const data: Persisted = { schema: 1, viewerRole, state, seenKeys: [...seenKeys] };
+      const data: Persisted = { schema: 2, viewerRole, state, seenKeys: [...seenKeys] };
       storage?.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch {
       /* storage may be unavailable; sample mode still works for this page view */

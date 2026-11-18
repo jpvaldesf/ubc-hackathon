@@ -72,7 +72,7 @@ export interface Deadline {
 
 export interface Lease {
   id: string;
-  property: { label: string };
+  property: { label: string; address?: string; isExample?: boolean };
   participants: Participant[];
   viewer: { userId: string; role: Role };
   asset: { symbol: string; displayName: string };
@@ -165,6 +165,8 @@ export interface ProofLink {
   id: string;
   label: string;
   url: string;
+  /** The lifecycle step this transaction belongs to, when the adapter knows it (live mode). */
+  step?: string;
 }
 
 export type Photo =

@@ -11,6 +11,7 @@
  * - The tenant never sees a landlord draft, and the landlord's draft-editing flow has no matching
  *   endpoint (edits are applied only at /report/send), so a proposal exists only once it was sent.
  */
+import { propertyFromAddress } from '../../demo/demoProperty';
 import type { ApiFinding, ApiLease, ApiStatus, DevUserId } from './api';
 import type {
   AllowedAction,
@@ -181,7 +182,7 @@ export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = N
   const withTx = api.timeline.filter((t) => t.tx);
   const proofs = withTx.flatMap((t, i) => {
     const url = genuineTxUrl(t.tx, ctx);
-    return url ? [{ id: `${t.step}-${i}`, label: eventText(t), url }] : [];
+    return url ? [{ id: `${t.step}-${i}`, label: eventText(t), url, step: t.step }] : [];
   });
   const proofNote =
     withTx.length > proofs.length
@@ -190,7 +191,7 @@ export function mapLease(api: ApiLease, viewerId: DevUserId, ctx: MapContext = N
 
   return {
     id: api.lease_id,
-    property: { label: api.address },
+    property: propertyFromAddress(api.address),
     participants,
     viewer: { userId: viewerId, role },
     asset: { symbol: 'USDC', displayName: 'test USDC' },

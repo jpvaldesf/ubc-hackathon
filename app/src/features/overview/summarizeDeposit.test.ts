@@ -35,7 +35,7 @@ describe('summarizeDeposit', () => {
       ['Original deposit', '$1,000.00'],
       ['Deductions', '$120.00'],
     ]);
-    expect(s.facts.find((f) => f.note)?.note).toBe('Paid to Jordan Lee');
+    expect(s.facts.find((f) => f.note)?.note).toBe('Paid to Jane Doe');
     expect(s.facts.some((f) => f.value === '$880.00')).toBe(false);
   });
 
@@ -67,7 +67,7 @@ describe('summarizeDeposit', () => {
     // Same label for both roles: it names the amount, while the sentence says who acts.
     expect(s.label).toBe('Deductions under review');
     expect(s.tone).toBe('neutral');
-    expect(labels(s)).toContain('Returned to Alex Rivera');
+    expect(labels(s)).toContain('Returned to John Doe');
   });
 
   it('keeps the whole remaining balance held during a dispute', () => {

@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { DemoEvidenceNote } from '../../components/PropertyHeader';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ServiceError } from '../../services/errors';
 import { useMutation } from '../../services/hooks';
@@ -65,6 +66,7 @@ export function PhotoCapturePage() {
         </h1>
         <p className="review-property">{lease.property.label}</p>
         <p className="lead">{lead}</p>
+        <DemoEvidenceNote lease={lease} />
       </div>
 
       {recorded && (
@@ -113,12 +115,14 @@ function CaptureSection({ capture, phase, onRecorded }: { capture: CaptureState;
   const [activeShot, setActiveShot] = useState<string | null>(null);
   const [fileError, setFileError] = useState<{ shotId: string; message: string } | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [selected, setSelected] = useState<string | null>(null);
 
   const rows = shotRows(capture, phase);
   const { uploaded, total } = uploadCount(capture, phase);
   const hint = doneHint(uploaded, total);
   const busy = upload.pending || commit.pending;
   const phaseName = phase === 'in' ? 'move-in' : 'move-out';
+  const current = rows.find((row) => row.shot.id === selected) ?? rows.find((row) => !row.photo) ?? rows[0];
 
   const onFile = async (shotId: string, file: File) => {
     const invalid = validateFile(file);
@@ -128,11 +132,14 @@ function CaptureSection({ capture, phase, onRecorded }: { capture: CaptureState;
     }
     setFileError(null);
     setActiveShot(shotId);
-    await upload.run(async () => {
+    const wasEmpty = !rows.find((row) => row.shot.id === shotId)?.photo;
+    const ok = await upload.run(async () => {
       await service.uploadPhoto(lease.id, phase, shotId, file);
       await reloadNow(); // the new photo and count come back from the server
     });
     setActiveShot(null);
+    // A first photo moves on to the next missing spot. A retake stays put so the new preview is what you see.
+    setSelected(ok && wasEmpty ? null : shotId);
   };
 
   const [sampleProgress, setSampleProgress] = useState<number | null>(null);
@@ -175,6 +182,45 @@ function CaptureSection({ capture, phase, onRecorded }: { capture: CaptureState;
         </div>
       )}
 
+      {current && (
+        <ShotCard
+          key={current.shot.id}
+          row={current}
+          position={rows.indexOf(current) + 1}
+          count={rows.length}
+          phase={phase}
+          disabled={busy}
+          uploading={activeShot === current.shot.id}
+          fileError={fileError?.shotId === current.shot.id ? fileError.message : undefined}
+          onFile={(file) => void onFile(current.shot.id, file)}
+        />
+      )}
+
+      <section aria-label="Required shots" className="checklist">
+        <h2 className="checklist__title">Required shots</h2>
+        <ul className="checklist__list">
+          {rows.map((row) => (
+            <li key={row.shot.id}>
+              <button
+                type="button"
+                className="checklist__item"
+                aria-current={current?.shot.id === row.shot.id ? 'true' : undefined}
+                onClick={() => setSelected(row.shot.id)}
+              >
+                <span className={`checklist__mark${row.photo ? ' checklist__mark--done' : ''}`} aria-hidden="true">
+                  {row.photo ? '✓' : ''}
+                </span>
+                <span className="checklist__text">
+                  <span className="checklist__room">{row.shot.room}</span>
+                  <span className="checklist__label">{row.shot.label}</span>
+                </span>
+                <span className="checklist__state">{row.photo ? 'Done' : 'Needed'}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       {canUseSamples && (
         <div className="surface stack--tight">
           <p className="small">No room to photograph? Use our sample photos for every spot. You can still retake any of them.</p>
@@ -185,21 +231,6 @@ function CaptureSection({ capture, phase, onRecorded }: { capture: CaptureState;
           </div>
         </div>
       )}
-
-      <ul className="stack">
-        {rows.map((row) => (
-          <li key={row.shot.id}>
-            <ShotCard
-              row={row}
-              phase={phase}
-              disabled={busy}
-              uploading={activeShot === row.shot.id}
-              fileError={fileError?.shotId === row.shot.id ? fileError.message : undefined}
-              onFile={(file) => void onFile(row.shot.id, file)}
-            />
-          </li>
-        ))}
-      </ul>
 
       <div className="surface stack--tight">
         {hint && <p className="muted">{hint}</p>}
@@ -240,6 +271,8 @@ function CaptureSection({ capture, phase, onRecorded }: { capture: CaptureState;
 
 function ShotCard({
   row,
+  position,
+  count,
   phase,
   disabled,
   uploading,
@@ -247,6 +280,8 @@ function ShotCard({
   onFile,
 }: {
   row: ShotRow;
+  position: number;
+  count: number;
   phase: PhotoPhase;
   disabled: boolean;
   uploading: boolean;
@@ -261,11 +296,14 @@ function ShotCard({
 
   return (
     <article className="surface stack--tight" aria-labelledby={titleId}>
+      <p className="shot__count">
+        Shot {position} of {count}
+      </p>
       <h2 id={titleId} className="section-title">
         {shot.room}
       </h2>
       <p>{shot.label}</p>
-      <div className="compare__frame">
+      <div className="compare__frame shot__frame">
         {photo ? (
           <img className="compare__img" src={photo.src} alt={`${phaseLabel} photo: ${shot.room}, ${shot.label}`} />
         ) : (
@@ -293,13 +331,13 @@ function ShotCard({
       <div className="button-row">
         <button
           type="button"
-          className="button"
+          className={`button button--hero${photo ? '' : ' button--primary'}`}
           disabled={disabled}
           aria-busy={uploading}
           aria-describedby={fileError ? errorId : undefined}
           onClick={() => inputRef.current?.click()}
         >
-          {uploading ? 'Uploading…' : photo ? 'Retake' : 'Add photo'}
+          {uploading ? 'Uploading…' : photo ? 'Retake photo' : 'Take or choose photo'}
         </button>
         {uploading && (
           <span role="status" className="sr-only">

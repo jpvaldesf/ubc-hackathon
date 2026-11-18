@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { Photo, PhotoPair as PhotoPairData } from '../services/types';
 
 /** A real photo with visible loading and failure states. Nothing is substituted when it can't load. */
@@ -37,13 +37,43 @@ function RemotePhoto({ photo }: { photo: Extract<Photo, { kind: 'image' }> }) {
   );
 }
 
+/** Full-size view in a native dialog: Escape or the Close button dismisses it, and the page never scrolls sideways. */
+function Enlarged({ photo, title, onClose }: { photo: Extract<Photo, { kind: 'image' }>; title: string; onClose: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  useEffect(() => {
+    const dialog = ref.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
+  return (
+    <dialog ref={ref} className="dialog dialog--photo" aria-labelledby={titleId} onClose={onClose}>
+      <div className="dialog__content">
+        <h2 id={titleId} className="dialog__title">
+          {title}
+        </h2>
+        <img className="enlarged__img" src={photo.src} alt={photo.alt} />
+        <div className="button-row">
+          <button type="button" className="button button--primary" onClick={() => ref.current?.close()}>
+            Close
+          </button>
+        </div>
+      </div>
+    </dialog>
+  );
+}
+
 function Region({ title, photo }: { title: string; photo: Photo }) {
+  const [enlarged, setEnlarged] = useState(false);
   return (
     <figure className="compare__region">
       <figcaption className="compare__label">{title}</figcaption>
       {photo.kind === 'image' ? (
         <div className="compare__frame">
           <RemotePhoto photo={photo} />
+          <button type="button" className="compare__enlarge" onClick={() => setEnlarged(true)}>
+            Enlarge<span className="sr-only"> {title} photo</span>
+          </button>
+          {enlarged && <Enlarged photo={photo} title={`${title} photo`} onClose={() => setEnlarged(false)} />}
         </div>
       ) : (
         <div className="compare__frame" role="img" aria-label={photo.alt}>

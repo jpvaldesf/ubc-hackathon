@@ -6,6 +6,7 @@ import '@fontsource/source-sans-3/700.css';
 import './design/tokens.css';
 import './design/base.css';
 import './design/components.css';
+import './design/phone.css';
 import App from './App';
 
 createRoot(document.getElementById('root')!).render(

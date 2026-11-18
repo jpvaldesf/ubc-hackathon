@@ -14,8 +14,8 @@ function api(over: Partial<ApiLease> = {}): ApiLease {
     lease_id: 'l_1',
     status: 'proposed',
     address: '1 Main St',
-    tenant: { id: 'tenant_demo', name: 'Alex Kim' },
-    landlord: { id: 'landlord_demo', name: 'Sunrise Properties' },
+    tenant: { id: 'tenant_demo', name: 'John Doe' },
+    landlord: { id: 'landlord_demo', name: 'Jane Doe' },
     deposit_cents: 1000,
     demo_scale: 100,
     escrow_balance_cents: 120,
@@ -105,7 +105,7 @@ describe('mapLease', () => {
   });
 
   it('tells the landlord who the refund went to', () => {
-    expect(mapLease(api(), 'landlord_demo').events[0].text).toBe('$8.80 sent to Alex Kim');
+    expect(mapLease(api(), 'landlord_demo').events[0].text).toBe('$8.80 sent to John Doe');
   });
 });
 

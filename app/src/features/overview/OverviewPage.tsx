@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ProofLinks } from '../../components/ProofLinks';
+import { AllTransactions, ProofHighlight } from '../../components/ProofLinks';
+import { ExampleNote, PropertyHeader } from '../../components/PropertyHeader';
 import { Disclosure } from '../../components/Disclosure';
 import { LifecycleStatus } from '../../components/LifecycleTimeline';
 import { formatDateTime, roleLabel } from '../../lib/format';
@@ -22,20 +23,9 @@ export function OverviewPage() {
 
   return (
     <div className="overview">
-      <div className="overview__head">
-        <div className="overview__title">
-          <h1 className="overview__property" tabIndex={-1}>
-            {lease.property.label}
-          </h1>
-          {other && (
-            <p className="overview__people">
-              {roleLabel(other.role)}: {other.displayName}
-            </p>
-          )}
-        </div>
+      <PropertyHeader lease={lease} other={other ? `${roleLabel(other.role)}: ${other.displayName}` : undefined} />
 
-        <LifecycleStatus stage={lease.stage} complete={lease.phase === 'settled'} />
-      </div>
+      <LifecycleStatus stage={lease.stage} complete={lease.phase === 'settled'} />
 
       {summary ? (
         <DepositSummaryPanel
@@ -44,6 +34,7 @@ export function OverviewPage() {
           detail={summary.detail ?? next.detail}
           waiting={next.waiting}
           action={next.primary && <ActionControl action={next.primary} />}
+          proof={<ProofHighlight lease={lease} />}
         />
       ) : (
         <section className="callout callout--problem" role="alert">
@@ -57,8 +48,6 @@ export function OverviewPage() {
           {lease.unavailableNotice}
         </p>
       )}
-
-      <ProofLinks lease={lease} />
 
       <Folds lease={lease} />
     </div>
@@ -124,6 +113,7 @@ function Folds({ lease }: { lease: Lease }) {
   const evidenceCount = lease.evidence.length;
   return (
     <div className="folds">
+      <AllTransactions lease={lease} />
       <Disclosure title="Evidence" meta={`${evidenceCount} ${evidenceCount === 1 ? 'item' : 'items'}`}>
         <ul className="fold__rows">
           {lease.evidence.map((entry) => (
@@ -145,6 +135,8 @@ function Folds({ lease }: { lease: Lease }) {
           ))}
         </ul>
       </Disclosure>
+
+      <ExampleNote />
     </div>
   );
 }

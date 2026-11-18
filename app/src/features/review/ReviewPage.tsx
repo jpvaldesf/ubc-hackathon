@@ -4,7 +4,8 @@ import { pluralize } from '../../lib/format';
 import { formatUsd } from '../../lib/money';
 import type { Lease, Proposal } from '../../services/types';
 import { useLeaseContext } from '../lease/LeaseLayout';
-import { ProofLinks } from '../../components/ProofLinks';
+import { DemoEvidenceNote } from '../../components/PropertyHeader';
+import { AllTransactions, ProofHighlight } from '../../components/ProofLinks';
 import { FindingEditor, FindingView, NoChargeView } from './FindingCards';
 import { ProposalDetails, ProposalHistory } from './ProposalHistory';
 import { FinancialSummary } from './FinancialSummary';
@@ -101,12 +102,13 @@ export function ReviewPage() {
         {/* The header carries the property on wider screens; narrow screens show it here instead. */}
         <p className="review-property">{lease.property.label}</p>
         <p className="lead">{lead}</p>
+        <DemoEvidenceNote lease={lease} />
       </div>
 
       {mode === 'empty' || !proposal ? null : (
         <>
           <FinancialSummary lease={lease} proposal={proposal} />
-          <ProofLinks lease={lease} />
+          <ProofHighlight lease={lease} />
 
           <section className="stack" aria-labelledby={findingsId}>
             <h2 id={findingsId} className="section-title">
@@ -157,6 +159,7 @@ export function ReviewPage() {
               {mode === 'draft' && <DraftSubmit lease={lease} proposal={proposal} hasUnsavedEdits={dirtyIds.size > 0} />}
             </>
           )}
+          <AllTransactions lease={lease} />
         </>
       )}
     </div>

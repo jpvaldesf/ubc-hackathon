@@ -32,7 +32,7 @@ describe('describeLease', () => {
     expect(describeFor('move_out', 'landlord').primary).toMatchObject({ label: 'Review proposed charges' });
     const tenant = describeFor('move_out', 'tenant');
     expect(tenant.primary).toBeUndefined();
-    expect(tenant.waiting).toContain('Waiting on Jordan Lee');
+    expect(tenant.waiting).toContain('Waiting on Jane Doe');
   });
 
   it('offers one review action and says the amount stays held until accepted or a dispute is resolved', () => {
@@ -51,10 +51,10 @@ describe('describeLease', () => {
 
   it('tells the landlord the tenant has to respond, without offering an action that is not theirs', () => {
     const landlord = describeFor('refund_confirmed', 'landlord');
-    expect(landlord.waiting).toContain('Waiting on Alex Rivera');
+    expect(landlord.waiting).toContain('Waiting on John Doe');
     expect(landlord.primary).toMatchObject({ variant: 'secondary' });
     // The actor is named once. The sentence above it only states the hold rule.
-    expect(landlord.detail).not.toContain('Alex Rivera');
+    expect(landlord.detail).not.toContain('John Doe');
     expect(landlord.detail).toBe('This amount stays held until the deductions are accepted or a dispute is resolved.');
   });
 
@@ -91,7 +91,7 @@ describe('describeLease', () => {
     const tenant = describeLease(selectLease(state, 'tenant'), selectProposal(state, 'tenant'));
     const landlord = describeLease(selectLease(state, 'landlord'), selectProposal(state, 'landlord'));
     expect(tenant.detail).toBe('You accepted the deductions.');
-    expect(landlord.detail).toBe('Alex Rivera accepted the deductions.');
+    expect(landlord.detail).toBe('John Doe accepted the deductions.');
     expect(tenant.waiting).toBe('Waiting for the transfer to confirm.');
   });
 
@@ -114,7 +114,7 @@ describe('describeLease', () => {
     const tenant = describeFor('settled', 'tenant');
     expect(tenant.headline).toBe('Settlement complete.');
     expect(tenant.detail).toContain('$880.00');
-    expect(tenant.detail).toContain('$120.00 was paid to Jordan Lee');
+    expect(tenant.detail).toContain('$120.00 was paid to Jane Doe');
     expect(tenant.detail).toContain('Nothing is held');
   });
 

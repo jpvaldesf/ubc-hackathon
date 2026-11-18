@@ -9,6 +9,8 @@ interface DepositSummaryPanelProps {
   waiting?: string;
   /** The single action for this role and stage. */
   action?: ReactNode;
+  /** The one transaction link for the confirmed outcome, when there is one. */
+  proof?: ReactNode;
   headingId: string;
 }
 
@@ -19,7 +21,7 @@ interface DepositSummaryPanelProps {
  * deposit becomes a quiet line under the amount, and the sentence and action sit beside it.
  * Figures are separate buckets, so a processing transfer is never shown as returned or as held.
  */
-export function DepositSummaryPanel({ summary, detail, waiting, action, headingId }: DepositSummaryPanelProps) {
+export function DepositSummaryPanel({ summary, detail, waiting, action, proof, headingId }: DepositSummaryPanelProps) {
   const hasBreakdown = summary.facts.length > 0;
   return (
     <section className={`summary${hasBreakdown ? '' : ' summary--lean'}`} aria-labelledby={headingId}>
@@ -37,6 +39,7 @@ export function DepositSummaryPanel({ summary, detail, waiting, action, headingI
         </div>
         <p className="summary__detail">{detail}</p>
         {waiting && <p className="summary__waiting">{waiting}</p>}
+        {proof}
         {action}
       </div>
 
