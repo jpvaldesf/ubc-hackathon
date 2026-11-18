@@ -6,7 +6,7 @@
 **Branch:** docs/demo-script-update
 
 ## Done (with evidence: tx hash, PR link, screenshot)
-- Mon Nov 16 (night): Render-hosted app tested end to end with photos p1–p5. Two findings at $1.20 each; the report showed $7.60 to send and $2.40 held. The createLease proof link opens on the Arc testnet explorer with status Success, and the target is the escrow `0xe3791a88E125ce9e826FB07f84BF88625d9f3e98` (Monday-night test run, not the final demo run): https://explorer.testnet.arc.io/tx/0x8a8f2053fc2fb52ab523d0d2423ed4267193b2a1be699fc206ae9d2c08b6c54b
+- Mon Nov 16 (night): Render-hosted app tested end to end with photos p1–p5. Two findings at $1.20 each; the report showed $7.60 to send and $2.40 held. (p1–p5 includes p4, a second wall mark; the demo set is p1, p2, p3, p5, p7. A demo-set run on Tuesday morning, lease l_62839344, gave exactly $1.20 deducted and $8.80 paid out.) The createLease proof link opens on the Arc testnet explorer with status Success, and the target is the escrow `0xe3791a88E125ce9e826FB07f84BF88625d9f3e98` (Monday-night test run, not the final demo run): https://explorer.testnet.arc.io/tx/0x8a8f2053fc2fb52ab523d0d2423ed4267193b2a1be699fc206ae9d2c08b6c54b
 - Mon Nov 16 (night): demo photos p1, p2, p3, p5, p7 sent to Pablo on Drive, location data stripped, one label per shot.
 - Mon Nov 16: demo video script matched to the app's real labels on main (commit 75ac89f on docs/demo-script-update). Simulated interest cut, 269 words over 2:30 (≤ 2.3 words/s per row), tx links still placeholders.
 - Mon Nov 16: Photos screen (`PhotoCapturePage`, move-in/move-out upload, Done → Record photos, landlord Analyze photos). PR #23 merged into Marcus's stacked branch feat/photo-service-wiring. It reached main with PR #25 (b307534).
