@@ -24,6 +24,7 @@ export function OverviewPage() {
   // In the landlord journey the tenant's photo steps are demo controls, not the landlord's own buttons.
   const landlordWaitsForPhotos =
     !!bundle.live && lease.viewer.role === 'landlord' && described.primary?.kind === 'link' && described.primary.to === 'photos' && !!lease.capture?.openPhase;
+  const landlordName = lease.participants.find((p) => p.role === 'landlord')?.displayName ?? 'The landlord';
   const tenantName = lease.participants.find((p) => p.role === 'tenant')?.displayName ?? 'The tenant';
   const next = landlordWaitsForPhotos
     ? {
@@ -32,7 +33,9 @@ export function OverviewPage() {
         primary: undefined,
         waiting: lease.capture?.openPhase === 'in' ? `Waiting on ${tenantName} to take the move-in photos.` : `Waiting on ${tenantName} to take the move-out photos.`,
       }
-    : !!bundle.live && lease.viewer.role === 'landlord' && lease.serverStatus === 'created'
+    : !!bundle.live && lease.viewer.role === 'tenant' && ['move_out_recorded', 'analyzing', 'report_draft'].includes(lease.serverStatus ?? '')
+      ? { ...described, waiting: `Waiting on ${landlordName} to review the move-out photos and send a proposal.` }
+      : !!bundle.live && lease.viewer.role === 'landlord' && lease.serverStatus === 'created'
       ? { ...described, detail: `Invitation sent to ${tenantName}. Photos open once the deposit is paid.` }
       : described;
   const summary = summarizeDeposit(lease, proposal);

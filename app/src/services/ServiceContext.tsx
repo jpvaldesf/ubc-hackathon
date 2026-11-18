@@ -18,9 +18,9 @@ interface DemoSessionApi {
   archive: ArchivedSession[];
   /** True while the first step of a fresh session is creating the lease. */
   starting: boolean;
-  /** Starts a separate fresh session at Setup for that role. The previous one is archived, never deleted. */
+  /** Shows the same lease as the other participant: the lease, photos, findings and transactions are untouched. */
   switchRole(role: DemoRole): void;
-  /** Starts a fresh session at Setup for the current role. */
+  /** The only reset: starts a fresh demo at Setup for the current role. The previous lease record is archived, never deleted. */
   restart(): void;
   /** Creates the lease for this session. Returns the server-issued id, or null if the session was replaced meanwhile. */
   startLease(): Promise<string | null>;
@@ -99,12 +99,17 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
       session,
       archive,
       starting,
-      switchRole: (role) => begin(role),
+      switchRole(role) {
+        const current = sessionRef.current;
+        if (role === current.role) return;
+        // Same lease, other view: refetch with the other identity. No new session, no epoch bump, nothing is sent.
+        bundle.live?.switchIdentity(idOf(role));
+        setSession({ ...current, role });
+      },
       restart: () => begin(sessionRef.current.role),
       startLease() {
         if (startRef.current && startRef.current.epoch === epoch.current) return startRef.current.promise;
         const mine = epoch.current;
-        const role = sessionRef.current.role;
         setStarting(true);
         const entry: { epoch: number; promise: Promise<string | null> } = { epoch: mine, promise: Promise.resolve(null) };
         entry.promise = (async () => {
@@ -112,7 +117,7 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
             const { leaseId } = await bundle.service.createDemoLease();
             if (mine !== epoch.current) {
               // The user restarted or switched while this was in flight. The lease exists on the server; keep it in the archive.
-              setArchive(archiveSession(longStore(), { ...newSession(role), leaseId }));
+              setArchive(archiveSession(longStore(), { ...newSession(sessionRef.current.role), leaseId }));
               return null;
             }
             setSession({ ...sessionRef.current, leaseId });
@@ -128,8 +133,15 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
       adoptLease(leaseId, role) {
         if (!/^[A-Za-z0-9_-]+$/.test(leaseId)) return;
         const current = sessionRef.current;
-        if (current.leaseId === leaseId && current.role === role) return;
-        if (current.leaseId && current.leaseId !== leaseId) setArchive(archiveSession(longStore(), current));
+        if (current.leaseId === leaseId) {
+          // Same lease: only the viewing role can differ (a link with ?as=). Progress is kept.
+          if (current.role !== role) {
+            bundle.live?.switchIdentity(idOf(role));
+            setSession({ ...current, role });
+          }
+          return;
+        }
+        if (current.leaseId) setArchive(archiveSession(longStore(), current));
         epoch.current += 1;
         bundle.live?.resetSession(idOf(role));
         setSession({ ...newSession(role), leaseId, invitationOpened: true });

@@ -15,10 +15,10 @@ function RestartIcon() {
 }
 
 /**
- * The demo bar: the Tenant / Landlord switch, centered, plus a compact Restart. In live mode choosing a role
- * starts a separate fresh demo session at Setup for that role (the old session is archived, nothing on the
- * server is deleted); it never just relabels the lease that is already in progress, and it never moves money.
- * In sample mode it previews as that role, as before.
+ * The demo bar: the Tenant / Landlord switch, centered, plus a compact Restart. In live mode the two roles are two
+ * views of the SAME lease: switching keeps the lease, photos, findings and transactions, refetches with the other
+ * identity and shows that role's next step. It never submits, pays, approves or advances anything. Restart is the
+ * only thing that starts a fresh demo (the old lease record is kept). In sample mode it previews as that role.
  */
 export function DemoBar() {
   const { bundle, revision, demo } = useServices();
@@ -54,7 +54,7 @@ export function DemoBar() {
               type="button"
               className="demo-bar__restart"
               aria-label="Restart demo"
-              title="Restart demo at Setup. The current lease and its evidence stay on the server."
+              title="Restart: start a fresh demo at Setup. The current lease and its evidence stay on the server."
               onClick={() => {
                 demo.restart();
                 navigate('/');

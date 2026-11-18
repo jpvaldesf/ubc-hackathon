@@ -7,11 +7,17 @@ import { ReviewPage } from './features/review/ReviewPage';
 import { SetupPage } from './features/demo/SetupPage';
 import { ServiceProvider, useServices } from './services/ServiceContext';
 
+/** Remounts the lease screens when the viewing role changes, so no form or request state from the other role carries over. */
+function RoleKeyedLeaseLayout() {
+  const { demo } = useServices();
+  return <LeaseLayout key={demo.session.role} />;
+}
+
 function Home() {
   const { bundle, demo } = useServices();
   if (bundle.defaultLeaseId) return <Navigate to={`/leases/${bundle.defaultLeaseId}`} replace />;
   // A refresh keeps the current session and stage: its lease is reopened. A fresh session has no lease yet and shows Setup.
-  // A tenant's prepared lease first shows as an invitation (Setup); everything else reopens its lease.
+  // A tenant's first look at the lease is the invitation (Setup); everything else reopens the current lease, whichever role is viewing.
   if (demo.session.leaseId && (demo.session.role === 'landlord' || demo.session.invitationOpened)) return <Navigate to={`/leases/${demo.session.leaseId}`} replace />;
   return <SetupPage />;
 }
@@ -41,7 +47,7 @@ export default function App() {
         </a>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/leases/:leaseId" element={<LeaseLayout />}>
+          <Route path="/leases/:leaseId" element={<RoleKeyedLeaseLayout />}>
             <Route index element={<OverviewPage />} />
             <Route path="review" element={<ReviewPage />} />
             <Route path="photos" element={<PhotoCapturePage />} />

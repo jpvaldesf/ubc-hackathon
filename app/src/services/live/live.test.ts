@@ -248,6 +248,20 @@ describe('live service', () => {
     expect(svc.getUserId()).toBe('tenant_demo'); // simulating never changes who is viewing
   });
 
+  it('switchIdentity changes who is viewing without calling the backend or touching the lease', async () => {
+    const c = client();
+    const svc = createLiveService({ baseUrl: 'x', userId: 'landlord_demo', client: c });
+    const seen: string[] = [];
+    svc.subscribe?.(() => seen.push('refetch'));
+    svc.switchIdentity('tenant_demo');
+    expect(svc.getUserId()).toBe('tenant_demo');
+    expect(seen).toEqual(['refetch']);
+    expect(c.post).not.toHaveBeenCalled();
+    expect(c.put).not.toHaveBeenCalled();
+    await svc.getLease('l_1');
+    expect(c.get).toHaveBeenCalledWith('/leases/l_1');
+  });
+
   it('simulate refuses to dispute when there is nothing to dispute, and surfaces backend errors', async () => {
     const c = client();
     c.get.mockResolvedValueOnce({ ...api(), report: { findings: [] } } as never);

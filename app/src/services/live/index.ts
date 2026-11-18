@@ -67,6 +67,11 @@ export type LiveService = DepositService & {
   /** Switches the dev identity and makes every subscriber refetch. */
   setUserId(id: DevUserId): void;
   /**
+   * Same lease, other participant: switches the identity and drops what belongs to the previous view (cached requests,
+   * staged landlord edits) so subscribers refetch with the new identity. Never calls the backend, never changes the lease.
+   */
+  switchIdentity(id: DevUserId): void;
+  /**
    * Starts over for a new demo session: switches identity, drops cached requests, staged edits and the polling
    * state of the old session, and makes subscribers refetch. Never calls the backend and never moves money.
    */
@@ -130,6 +135,12 @@ export function createLiveService({
     getUserId: () => userId,
     setUserId(id) {
       userId = id;
+      listeners.forEach((l) => l());
+    },
+    switchIdentity(id) {
+      userId = id;
+      inflight.clear();
+      staged.clear();
       listeners.forEach((l) => l());
     },
     resetSession(id) {
@@ -211,8 +222,10 @@ export function createLiveService({
       return proposal;
     },
     async submitProposal(leaseId) {
-      const lease = await fetchLease(leaseId);
+      // Read who is sending and the edits before the first await, so a role switch mid-request cannot change either.
+      const who = userId;
       const edits = staged.get(leaseId) ?? new Map();
+      const lease = await fetchLease(leaseId);
       const remove_finding_ids: string[] = [];
       const lower_costs: Record<string, number> = {};
       for (const f of lease.report?.findings ?? []) {
@@ -220,7 +233,7 @@ export function createLiveService({
         if (edit?.included === false) remove_finding_ids.push(f.id);
         else if (edit?.cents !== undefined && edit.cents < f.cost_cents) lower_costs[f.id] = edit.cents;
       }
-      await client.post(leasePath(leaseId, '/report/send'), userId, { remove_finding_ids, lower_costs });
+      await client.post(leasePath(leaseId, '/report/send'), who, { remove_finding_ids, lower_costs });
       staged.delete(leaseId);
     },
     async acceptProposal(leaseId) {

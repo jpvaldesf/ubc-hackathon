@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Disclosure } from '../../components/Disclosure';
 import { LifecycleStatus } from '../../components/LifecycleTimeline';
@@ -28,12 +28,12 @@ function ApartmentSummary({ children }: { children?: React.ReactNode }) {
 }
 
 /**
- * Where every demo session starts (live mode), at Setup, in the role's own words.
- *  - Tenant: an invitation to an already prepared lease. The lease is prepared with the existing create-lease
- *    request (as the landlord) when the session starts. That is not a payment: the deposit is only paid when the
- *    tenant presses Pay deposit on the next screen.
- *  - Landlord: Create lease, then the property, tenant and deposit status on the lease screen.
- * Demo-only extras (earlier sessions, open by id) live in the collapsed Demo controls.
+ * Setup, in the viewing role's words. Tenant and landlord are two views of one lease, so what shows depends on
+ * where that lease is:
+ *  - Landlord, no lease yet: Create lease (the landlord's own step).
+ *  - Tenant, no lease yet: waiting for the landlord. A collapsed demo shortcut can create it on the landlord's behalf.
+ *  - Tenant, lease created: the invitation (apartment, landlord, deposit) and Review lease.
+ * Nothing is created or paid by switching roles; only the buttons below do anything.
  */
 export function SetupPage() {
   const navigate = useNavigate();
@@ -42,76 +42,42 @@ export function SetupPage() {
   const [id, setId] = useState('');
   const valid = /^[A-Za-z0-9_-]+$/.test(id.trim());
   const role = demo.session.role;
-  const tried = useRef<string | null>(null);
+  const leaseId = demo.session.leaseId;
+  const busy = pending || demo.starting;
 
-  const prepare = () =>
+  const create = (simulated: boolean) =>
     void run(async () => {
-      const leaseId = await demo.startLease();
-      // null: this session was replaced while the lease was being created. Stay put; the lease is archived.
-      if (leaseId && role === 'landlord') navigate(`/leases/${leaseId}`);
+      const startedAt = demo.session.startedAt;
+      const created = await demo.startLease();
+      // null: the demo was restarted while the lease was being created. Stay put; the lease is archived.
+      if (!created) return;
+      if (simulated) demo.recordSimulated(`${DEMO_PEOPLE.landlordName} created the lease`, startedAt);
+      if (!simulated) navigate(`/leases/${created}`);
     });
 
-  // A tenant's invitation is prepared once per session, automatically. A failure is shown with a retry, never retried in a loop.
-  useEffect(() => {
-    if (role !== 'tenant' || demo.session.leaseId || demo.starting || tried.current === demo.session.startedAt) return;
-    tried.current = demo.session.startedAt;
-    prepare();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role, demo.session.startedAt, demo.session.leaseId]);
-
-  const preparing = pending || demo.starting;
-  const leaseId = demo.session.leaseId;
+  const details = (
+    <>
+      <dl className="facts">
+        <div className="fact">
+          <dt className="fact__label">Deposit</dt>
+          <dd className="fact__value">{DEPOSIT}</dd>
+        </div>
+      </dl>
+      <p className="small muted">Testnet demo: amounts scaled 1:100. No real money moves.</p>
+    </>
+  );
+  const errorBox = error && (
+    <div role="alert" className="callout callout--problem">
+      <p>{error.message}</p>
+    </div>
+  );
 
   return (
     <>
       <SiteTop />
       <main id="main" className="main" tabIndex={-1}>
         <div className="page stack">
-          {role === 'tenant' ? (
-            <section className="stack" aria-labelledby="invite-title">
-              <div className="stack--tight">
-                <h1 id="invite-title" className="page-title__heading">
-                  You're invited
-                </h1>
-                <p className="muted">{DEMO_PEOPLE.landlordName} has prepared a deposit for you.</p>
-              </div>
-              <LifecycleStatus stage="setup" complete={false} />
-              <ApartmentSummary>
-                <p className="property__meta">Landlord: {DEMO_PEOPLE.landlordName}</p>
-                <p className="property__meta">Example property · fictional demo lease</p>
-              </ApartmentSummary>
-              <dl className="facts">
-                <div className="fact">
-                  <dt className="fact__label">Deposit</dt>
-                  <dd className="fact__value">{DEPOSIT}</dd>
-                </div>
-              </dl>
-              <p className="small muted">Testnet demo: amounts scaled 1:100. No real money moves.</p>
-              {error && (
-                <div role="alert" className="callout callout--problem">
-                  <p>{error.message}</p>
-                </div>
-              )}
-              <div className="button-row">
-                {leaseId ? (
-                  <button type="button" className="button button--hero button--primary" onClick={() => {
-                      demo.openInvitation();
-                      navigate(`/leases/${leaseId}`);
-                    }}>
-                    Review lease
-                  </button>
-                ) : error ? (
-                  <button type="button" className="button button--hero button--primary" disabled={preparing} onClick={prepare}>
-                    Try again
-                  </button>
-                ) : (
-                  <button type="button" className="button button--hero button--primary" disabled aria-busy="true">
-                    Preparing your invitation…
-                  </button>
-                )}
-              </div>
-            </section>
-          ) : (
+          {role === 'landlord' ? (
             <section className="stack" aria-labelledby="landlord-title">
               <div className="stack--tight">
                 <h1 id="landlord-title" className="page-title__heading">
@@ -124,44 +90,83 @@ export function SetupPage() {
                 <p className="property__meta">Tenant: {DEMO_PEOPLE.tenantName}</p>
                 <p className="property__meta">Example property · fictional demo lease</p>
               </ApartmentSummary>
-              <dl className="facts">
-                <div className="fact">
-                  <dt className="fact__label">Deposit</dt>
-                  <dd className="fact__value">{DEPOSIT}</dd>
-                </div>
-              </dl>
-              <p className="small muted">Testnet demo: amounts scaled 1:100. Creating the lease sends the invitation; nothing is paid.</p>
-              {error && (
-                <div role="alert" className="callout callout--problem">
-                  <p>{error.message}</p>
-                </div>
-              )}
+              {details}
+              {errorBox}
               <div className="button-row">
-                <button type="button" className="button button--hero button--primary" disabled={preparing} aria-busy={preparing} onClick={prepare}>
-                  {preparing ? 'Creating the lease…' : 'Create lease'}
+                <button type="button" className="button button--hero button--primary" disabled={busy} aria-busy={busy} onClick={() => create(false)}>
+                  {busy ? 'Creating the lease…' : 'Create lease'}
                 </button>
               </div>
             </section>
+          ) : leaseId ? (
+            <section className="stack" aria-labelledby="invite-title">
+              <div className="stack--tight">
+                <h1 id="invite-title" className="page-title__heading">
+                  You're invited
+                </h1>
+                <p className="muted">{DEMO_PEOPLE.landlordName} has prepared a deposit for you.</p>
+              </div>
+              <LifecycleStatus stage="setup" complete={false} />
+              <ApartmentSummary>
+                <p className="property__meta">Landlord: {DEMO_PEOPLE.landlordName}</p>
+                <p className="property__meta">Example property · fictional demo lease</p>
+              </ApartmentSummary>
+              {details}
+              <div className="button-row">
+                <button
+                  type="button"
+                  className="button button--hero button--primary"
+                  onClick={() => {
+                    demo.openInvitation();
+                    navigate(`/leases/${leaseId}`);
+                  }}
+                >
+                  Review lease
+                </button>
+              </div>
+            </section>
+          ) : (
+            <section className="stack" aria-labelledby="waiting-title">
+              <div className="stack--tight">
+                <h1 id="waiting-title" className="page-title__heading">
+                  Waiting for your landlord
+                </h1>
+                <p className="muted">{DEMO_PEOPLE.landlordName} has not created the lease yet.</p>
+              </div>
+              <LifecycleStatus stage="setup" complete={false} />
+              <p>Your invitation appears here as soon as the lease exists. Switch to the landlord to create it, or open Demo controls.</p>
+              {errorBox}
+            </section>
           )}
 
-          <Disclosure title="Demo controls" meta="Earlier sessions, open by id" standalone>
+          <Disclosure title="Demo controls" meta={role === 'tenant' && !leaseId ? '1 step available' : undefined} standalone>
             <div className="stack--tight">
-              <p className="small muted">Demo only. Not part of the product flow.</p>
+              <p className="small muted">Demo only. Not part of the product flow. Nothing here runs until you press it.</p>
+              {role === 'tenant' && !leaseId && (
+                <div className="stack--tight">
+                  <div className="button-row">
+                    <button type="button" className="button button--hero" disabled={busy} aria-busy={busy} onClick={() => create(true)}>
+                      {busy ? 'Creating the lease…' : `Demo only: ${DEMO_PEOPLE.landlordName} creates the lease`}
+                    </button>
+                  </div>
+                  <p className="small muted">Simulated for the landlord: this sends the real create-lease request as them. It is not a payment.</p>
+                </div>
+              )}
               {demo.archive.length > 0 ? (
                 <>
-                  <p className="small">Earlier sessions are kept as they were; their leases, photos and transactions are not deleted.</p>
+                  <p className="small">Earlier demo leases are kept as they were; their photos and transactions are not deleted.</p>
                   <ul className="journey journey--plain">
                     {demo.archive.slice(0, 5).map((a) => (
                       <li key={a.leaseId}>
                         <Link to={`/leases/${a.leaseId}`} onClick={() => demo.adoptLease(a.leaseId, a.role)}>
-                          {a.role === 'tenant' ? 'Tenant' : 'Landlord'} session · {a.leaseId}
+                          {a.role === 'tenant' ? 'Tenant' : 'Landlord'} view · {a.leaseId}
                         </Link>
                       </li>
                     ))}
                   </ul>
                 </>
               ) : (
-                <p className="small muted">No earlier sessions.</p>
+                <p className="small muted">No earlier demo leases.</p>
               )}
               <form
                 className="stack--tight"
