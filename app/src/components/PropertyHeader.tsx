@@ -1,5 +1,4 @@
 import { DEMO_PEOPLE, DEMO_PROPERTY } from '../demo/demoProperty';
-import { Disclosure } from './Disclosure';
 import type { Lease } from '../services/types';
 
 /**
@@ -31,34 +30,35 @@ export function PropertyHeader({ lease, other }: { lease: Lease; other?: string 
   );
 }
 
-/** Plain statement of what is real and what is demo, plus the full photo credit. */
+/** Plain statement of what is real and what is demo, plus the full photo credit. Static text, not a control. */
 export function ExampleNote() {
   const credit = DEMO_PROPERTY.image.credit;
   return (
-    <Disclosure title="About this example">
-      <div className="stack--text">
-        <p>
-          {DEMO_PROPERTY.name} ({DEMO_PROPERTY.address}) is a real community used only as an example location; see{' '}
-          <a href={DEMO_PROPERTY.officialUrl} target="_blank" rel="noopener noreferrer">
-            the official site
-          </a>
-          . The lease, the deposit, and the people are fictional. {DEMO_PEOPLE.tenantName} and {DEMO_PEOPLE.landlordName} are demo participants, not the
-          property's owner or residents. No unit, rent, or availability is claimed.
-        </p>
-        <p>Inspection photos are staged demo evidence, not documented conditions at this property.</p>
-        <p>
-          Property photo: “{credit.title}” by{' '}
-          <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer">
-            {credit.author}
-          </a>{' '}
-          on Wikimedia Commons, licensed{' '}
-          <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer">
-            {credit.license}
-          </a>
-          . {credit.modification}
-        </p>
-      </div>
-    </Disclosure>
+    <section className="about" aria-labelledby="about-example">
+      <h2 id="about-example" className="about__title">
+        About this example
+      </h2>
+      <p>
+        {DEMO_PROPERTY.name} ({DEMO_PROPERTY.address}) is a real community used only as an example location (
+        <a href={DEMO_PROPERTY.officialUrl} target="_blank" rel="noopener noreferrer">
+          official site
+        </a>
+        ). The lease, deposit and people are fictional: {DEMO_PEOPLE.tenantName} and {DEMO_PEOPLE.landlordName} are demo participants, not the
+        property's owner or residents. No unit, rent or availability is claimed. Inspection photos are staged demo evidence, not documented
+        conditions at this property.
+      </p>
+      <p>
+        Property photo: “{credit.title}” by{' '}
+        <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer">
+          {credit.author}
+        </a>
+        , Wikimedia Commons,{' '}
+        <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer">
+          {credit.license}
+        </a>
+        . {credit.modification}
+      </p>
+    </section>
   );
 }
 
