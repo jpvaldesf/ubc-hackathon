@@ -31,9 +31,25 @@ export const DEMO_PEOPLE = {
 } as const;
 
 /**
- * The fresh apartment scenario: a fictional "Example Apartment" with no street address. The interiors are
- * example photos (one apartment series by Chris Olszewski, Wikimedia Commons, CC BY-SA 4.0); they are
- * guidance and context, not a real unit, and are not interiors of any real property.
+ * The active demo property: Marks Tower, a USC residence hall (source: https://housing.usc.edu/index.php/buildings/marks-tower/).
+ * The inspection is staged and the lease is fictional: USC is not the landlord, does not use this product, and no
+ * room number is claimed. No building photo is bundled; the thumbnail is a building icon until a genuine one is supplied
+ * (set `image` in propertyFromAddress and add the file with its credit).
+ */
+export const MARKS_TOWER = {
+  name: 'Marks Tower',
+  street: '612 Hellman Way, Los Angeles, CA 90089',
+  /** What a lease created for this demo stores as its address. */
+  address: 'Marks Tower, 612 Hellman Way, Los Angeles, CA 90089',
+  type: 'Dorm Room',
+  context: 'Staged dorm inspection · fictional demo lease',
+  disclaimer: 'Not affiliated with USC. USC is not the landlord and does not use this product.',
+  sourceUrl: 'https://housing.usc.edu/index.php/buildings/marks-tower/',
+} as const;
+
+/**
+ * The previous fictional "Example Apartment" scenario, kept only so leases created with it still display as they did.
+ * Its interiors were example photos (one apartment series by Chris Olszewski, Wikimedia Commons, CC BY-SA 4.0).
  */
 export const EXAMPLE_APARTMENT = {
   name: 'Example Apartment',
@@ -55,6 +71,13 @@ export interface PropertyInfo {
   address?: string;
   /** Present for the canonical example properties. */
   isExample?: boolean;
+  /** "Dorm Room" and the context label, for the active demo property. */
+  type?: string;
+  context?: string;
+  /** Shown under the property on every screen that shows it. */
+  disclaimer?: string;
+  /** No photo is available: show a simple building icon in the thumbnail. */
+  icon?: 'building';
   /** Small context image and its credit, for the example properties only. */
   image?: { src: string; alt: string };
   credit?: { author: string; license: string; sourceUrl: string };
@@ -63,11 +86,23 @@ export interface PropertyInfo {
 }
 
 /**
- * Turns the address a lease carries into what the screen shows. "Example Apartment" is the fresh scenario;
- * the Park La Brea address is kept for older demo leases; any other address is shown exactly as stored.
+ * Turns the address a lease carries into what the screen shows. Marks Tower is the active demo property;
+ * "Example Apartment" and the Park La Brea address are kept for older demo leases; any other address is shown exactly as stored.
  */
 export function propertyFromAddress(address: string): PropertyInfo {
   const normalized = address.trim().toLowerCase();
+  if (normalized.includes('612 hellman way')) {
+    return {
+      label: MARKS_TOWER.name,
+      address: MARKS_TOWER.street,
+      isExample: true,
+      type: MARKS_TOWER.type,
+      context: MARKS_TOWER.context,
+      disclaimer: MARKS_TOWER.disclaimer,
+      icon: 'building',
+      evidenceNote: 'Staged demo photos, not documented conditions at Marks Tower.',
+    };
+  }
   if (normalized === EXAMPLE_APARTMENT.name.toLowerCase()) {
     return { label: EXAMPLE_APARTMENT.name, isExample: true, image: EXAMPLE_APARTMENT.image, credit: EXAMPLE_APARTMENT.image.credit };
   }

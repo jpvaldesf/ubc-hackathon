@@ -76,6 +76,11 @@ html {
   gap: var(--space-3);
 }
 
+.property__thumb--icon {
+  padding: 8px;
+  color: var(--color-teal, #0f766e);
+}
+
 .property__thumb {
   flex: none;
   width: 72px;
