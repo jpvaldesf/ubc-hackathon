@@ -66,7 +66,20 @@ export type LiveService = DepositService & {
   getUserId(): DevUserId;
   /** Switches the dev identity and makes every subscriber refetch. */
   setUserId(id: DevUserId): void;
+  /**
+   * Starts over for a new demo session: switches identity, drops cached requests, staged edits and the polling
+   * state of the old session, and makes subscribers refetch. Never calls the backend and never moves money.
+   */
+  resetSession(id: DevUserId): void;
+  /**
+   * Demo-only: performs the OTHER participant's next step by sending the real supported request with that
+   * participant's dev identity. On a live server these are real requests (and real testnet transactions for deposit,
+   * report send and accept). The caller must label them as simulated and run them only on an explicit click.
+   */
+  simulate(step: SimulatedStepKind, leaseId: string): Promise<void>;
 };
+
+export type SimulatedStepKind = 'pay_deposit' | 'start_report' | 'send_report' | 'accept' | 'appeal';
 
 export function createLiveService({
   baseUrl,
@@ -117,6 +130,41 @@ export function createLiveService({
     getUserId: () => userId,
     setUserId(id) {
       userId = id;
+      listeners.forEach((l) => l());
+    },
+    resetSession(id) {
+      userId = id;
+      inflight.clear();
+      staged.clear();
+      // Back to the slow default poll; the shared poll loop itself keeps running for whoever subscribes next.
+      lastStatus = undefined;
+      listeners.forEach((l) => l());
+    },
+    async simulate(step, leaseId) {
+      const opts = { keepServerMessage: true } as const;
+      switch (step) {
+        case 'pay_deposit':
+          await client.post(leasePath(leaseId, '/deposit'), 'tenant_demo', {}, opts);
+          break;
+        case 'start_report':
+          await client.post(leasePath(leaseId, '/report'), 'landlord_demo', {}, opts);
+          break;
+        case 'send_report':
+          // Sent as drafted: the simulated landlord makes no edits.
+          await client.post(leasePath(leaseId, '/report/send'), 'landlord_demo', {}, opts);
+          break;
+        case 'accept':
+          await client.post(leasePath(leaseId, '/accept'), 'tenant_demo', {}, opts);
+          break;
+        case 'appeal': {
+          const lease = await fetchLease(leaseId);
+          const ids = (lease.report?.findings ?? []).filter((f) => f.cost_cents > 0).map((f) => f.id);
+          if (ids.length === 0) throw new ServiceError('validation', 'There is no deduction to dispute.');
+          await client.post(leasePath(leaseId, '/appeal'), 'tenant_demo', { finding_ids: ids, reason: 'Simulated dispute (demo only).' }, opts);
+          break;
+        }
+      }
+      inflight.delete(leaseId);
       listeners.forEach((l) => l());
     },
     async getLease(leaseId) {

@@ -3,6 +3,7 @@ import { Outlet, useLocation, useMatch, useNavigationType, useOutletContext, use
 import { ErrorState } from '../../components/ErrorState';
 import { SiteTop } from '../../components/SiteTop';
 import { useLeaseData, type LeaseData } from '../../services/hooks';
+import { useServices } from '../../services/ServiceContext';
 
 export interface LeaseOutletContext extends LeaseData {
   reload: () => void;
@@ -22,12 +23,20 @@ export function useLeaseContext(): LeaseOutletContext {
 export function LeaseLayout() {
   const { leaseId = '' } = useParams();
   const { data, error, loading, reload, reloadNow } = useLeaseData(leaseId);
+  const { bundle, demo } = useServices();
   const location = useLocation();
   const navigationType = useNavigationType();
   const mainRef = useRef<HTMLElement>(null);
   const firstRender = useRef(true);
   // The overview names the property in its main content, so its header stays compact.
   const onOverview = useMatch({ path: '/leases/:leaseId', end: true }) !== null;
+
+  // Opening a lease from a link makes it the current demo session (same role). Runs only when the lease in the URL
+  // changes, never when the session changes, so a role switch or restart is not undone by the lease still on screen.
+  useEffect(() => {
+    if (bundle.live) demo.adoptLease(leaseId, bundle.live.getUserId() === 'landlord_demo' ? 'landlord' : 'tenant');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leaseId, bundle]);
 
   useEffect(() => {
     if (firstRender.current) {

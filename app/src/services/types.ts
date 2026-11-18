@@ -73,6 +73,8 @@ export interface Deadline {
 export interface Lease {
   id: string;
   property: import('../demo/demoProperty').PropertyInfo;
+  /** Live mode only: the backend's own lease status (docs/API.md state machine), used by demo-only controls. */
+  serverStatus?: string;
   participants: Participant[];
   viewer: { userId: string; role: Role };
   asset: { symbol: string; displayName: string };

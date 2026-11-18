@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AllTransactions, ProofHighlight } from '../../components/ProofLinks';
 import { PropertyHeader } from '../../components/PropertyHeader';
+import { DemoControls } from '../demo/DemoControls';
 import { Disclosure } from '../../components/Disclosure';
 import { LifecycleStatus } from '../../components/LifecycleTimeline';
 import { roleLabel } from '../../lib/format';
@@ -16,6 +17,9 @@ import { summarizeDeposit } from './summarizeDeposit';
 
 export function OverviewPage() {
   const { lease, proposal } = useLeaseContext();
+  const { bundle, demo } = useServices();
+  // Between move-in and move-out nothing external is required by the backend. The demo makes that wait explicit.
+  const moveOutGated = !!bundle.live && lease.serverStatus === 'move_in_recorded' && !demo.session.moveOutOpened;
   const next = describeLease(lease, proposal);
   const summary = summarizeDeposit(lease, proposal);
   const summaryId = useId();
@@ -31,9 +35,9 @@ export function OverviewPage() {
         <DepositSummaryPanel
           headingId={summaryId}
           summary={summary}
-          detail={summary.detail ?? next.detail}
+          detail={moveOutGated ? 'The lease is active. Nothing needs doing until move-out.' : (summary.detail ?? next.detail)}
           waiting={next.waiting}
-          action={next.primary && <ActionControl action={next.primary} />}
+          action={next.primary && !moveOutGated && <ActionControl action={next.primary} />}
           proof={<ProofHighlight lease={lease} />}
         />
       ) : (
@@ -42,6 +46,8 @@ export function OverviewPage() {
           <p>They don't add up to the original deposit, so we won't display numbers we can't stand behind. Reload to try again.</p>
         </section>
       )}
+
+      <DemoControls />
 
       {lease.unavailableNotice && (
         <p role="status" className="callout callout--caution">

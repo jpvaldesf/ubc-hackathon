@@ -1,4 +1,4 @@
-import { createLiveService, type LiveService } from './live';
+import { createLiveService, type LiveService, type SimulatedStepKind } from './live';
 import type { DevUserId } from './live/api';
 import { SAMPLE_LEASE_ID } from './sample/engine';
 import { createSampleService, type SampleControls } from './sample';
@@ -11,7 +11,13 @@ export interface ServiceBundle {
   /** Where "/" goes. Undefined in live mode: the API has no lease list, so the user enters a server-issued lease id. */
   defaultLeaseId?: string;
   /** Live mode only. The development identity (X-User-Id) is demo identity, not authentication. */
-  live?: { apiUrl: string; getUserId(): DevUserId; setUserId(id: DevUserId): void };
+  live?: {
+    apiUrl: string;
+    getUserId(): DevUserId;
+    setUserId(id: DevUserId): void;
+    resetSession(id: DevUserId): void;
+    simulate(step: SimulatedStepKind, leaseId: string): Promise<void>;
+  };
 }
 
 const IDENTITY_KEY = 'deposit-keeper.live.user';
@@ -68,6 +74,11 @@ export function createServices(): ServiceBundle {
           rememberIdentity(id);
           service.setUserId(id);
         },
+        resetSession(id) {
+          rememberIdentity(id);
+          service.resetSession(id);
+        },
+        simulate: (step, leaseId) => service.simulate(step, leaseId),
       },
     };
   }
