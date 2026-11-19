@@ -74,12 +74,12 @@ summary in spikes/vision/README.md.
 3. PR #26 follow-up: Create lease and the token.
 4. Rerun on a fresh lease with the final set (p1, p2, p3, p5, p7). Expect one damage finding ($1.20) and $8.80 sent, matching the demo script.
 5. Open the payout, accept and record-photos proof links on the fresh-lease rerun and confirm each.
-6. After that rerun, replace the `<..._TX_URL>` placeholders in docs/DEMO-VIDEO.md with its real explorer links.
+6. Done (Thu Nov 19): docs/DEMO-VIDEO.md tx links filled from lease 25 (all six, checked on the explorer); script table rebuilt from the v7 planned voiceover (trimmed) over the final silent cut (2:35).
 7. Devpost written answers (built / problem / how it works / unique / next).
 
 ## Blocked by / waiting on
 - Hosting: on Render as of Mon night, so the tunnel is no longer needed.
-- The app doesn't show the "Testnet demo: amounts scaled 1:100" note or simulated interest (Marcus). The video uses a caption for 1:100 and leaves interest out until the app has them.
+- The app shows the "Testnet demo: amounts scaled 1:100" note under the demo bar on every screen. Simulated interest is not in the app, so the video leaves it out.
 
 ## Requests from others (teammates write here instead of editing your files)
 - Mon Nov 16, 11 PM, from Pablo: **the demo now runs 24/7 without my laptop.** App: https://deposit-keeper-app.onrender.com · API: https://deposit-keeper-api.onrender.com. I'll send you a funded lease id by chat (start at move-in photos; `?as=landlord_demo` for the landlord), or make your own with one command. How to make more leases, the shot list, photo rules and daily limits: server/README.md, "Using the hosted demo". Please use your p1/p2/p3/p5/p7 pairs (JPEG, location off) so the result is the demo one ($1.20 wall mark, $0 nail holes, $8.80 back). Good for README screenshots and the video; finish each lease you start (each locks 10 testnet USDC).
