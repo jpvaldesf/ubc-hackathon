@@ -9,7 +9,7 @@ Built for the UBC 2026 blockchain hackathon. Track: Consumer. Chain: Arc testnet
 
 ## The problem
 
-In California a landlord has 21 days to return a deposit or send an itemized statement (Civil Code §1950.5). Since AB 2801, landlords must also keep move-out photos, and move-in photos for tenancies that began on or after July 1, 2025. Deposits still get held for weeks, deductions are hard to check, and disputes are slow.
+In California, landlords must photograph the unit at move-out and, for newer tenancies, at move-in (AB 2801). Under Civil Code §1950.5, they must return the deposit, or send an itemized statement of deductions with the remainder, within 21 days. Deposits still get held for weeks, deductions are hard to check, and disputes are slow.
 
 ## How it works
 
