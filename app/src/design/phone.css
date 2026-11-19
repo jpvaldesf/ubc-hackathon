@@ -76,6 +76,11 @@ html {
   gap: var(--space-3);
 }
 
+.property__thumb--icon {
+  padding: 8px;
+  color: var(--color-teal, #0f766e);
+}
+
 .property__thumb {
   flex: none;
   width: 72px;
@@ -415,6 +420,14 @@ video {
 
 .demo-bar__side--end {
   justify-self: end;
+}
+
+/* The 1:100 testnet note under the switch (video shot, D-002). */
+.demo-bar > .demo-bar__note {
+  margin: 0;
+  padding-bottom: 0;
+  text-align: center;
+  color: var(--color-muted);
 }
 
 .demo-bar__restart {

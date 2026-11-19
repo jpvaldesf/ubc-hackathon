@@ -2,19 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { DEMO_LEASE } from '../../services/live/demoLease';
 import { offersSamplePhotos, samplePhotoUrl } from './samplePhotos';
 
-const legacy = ['Living room wall, wide shot', 'Living room floor and wall', 'White brick wall below the light switch', 'Bedroom corner (lamp on/off)', 'Wall above the bed (picture hooks)'];
-const demoShots = legacy.map((label, i) => ({ id: `s${i + 1}`, room: 'x', label }));
+const demoShots = [1, 2, 3, 4, 5].map((n) => ({ id: `s${n}`, room: 'x', label: `Shot ${n}` }));
 const freshShots = DEMO_LEASE.shot_list.map((s) => ({ id: s.shot_id, room: s.room, label: s.label }));
 
 describe('sample photos', () => {
-  it('are never offered in the fresh apartment scenario', () => {
-    expect(offersSamplePhotos(freshShots)).toBe(false);
+  it('are offered on the Marks Tower demo lease shot list', () => {
+    expect(offersSamplePhotos(freshShots)).toBe(true);
   });
 
-  it('are offered only for the legacy demo shot list', () => {
+  it('are offered only for exactly the shots s1 to s5', () => {
     expect(offersSamplePhotos(demoShots)).toBe(true);
     expect(offersSamplePhotos(demoShots.slice(0, 4))).toBe(false);
-    expect(offersSamplePhotos(demoShots.map((s, i) => (i === 2 ? { ...s, label: 'Closet door' } : s)))).toBe(false);
+    expect(offersSamplePhotos(demoShots.map((s, i) => (i === 2 ? { ...s, id: 'closet' } : s)))).toBe(false);
   });
 
   it('map each shot to its pair: before for move-in, after for move-out', () => {

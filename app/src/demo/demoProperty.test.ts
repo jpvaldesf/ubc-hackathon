@@ -3,7 +3,7 @@ import { newestFirst, relevantProof } from '../components/ProofLinks';
 import { DEMO_LEASE } from '../services/live/demoLease';
 import { createSampleService } from '../services/sample';
 import type { Lease } from '../services/types';
-import { DEMO_PEOPLE, DEMO_PROPERTY, propertyFromAddress } from './demoProperty';
+import { DEMO_PEOPLE, DEMO_PROPERTY, MARKS_TOWER, propertyFromAddress } from './demoProperty';
 
 describe('canonical demo configuration', () => {
   it('names the fictional participants and the real example property', () => {
@@ -13,11 +13,19 @@ describe('canonical demo configuration', () => {
   });
 
   it('seeds the live demo lease from it', () => {
-    expect(DEMO_LEASE.address).toBe('Example Apartment');
+    expect(DEMO_LEASE.address).toBe('Marks Tower, 612 Hellman Way, Los Angeles, CA 90089');
+    expect(DEMO_LEASE.address).not.toMatch(/\b(room|rm|unit|apt)\s*#?\d/i);
     expect(DEMO_LEASE.tenant_name).toBe(DEMO_PEOPLE.tenantName);
   });
 
   it('gives the canonical address a short name and shows any other address as stored', () => {
+    expect(propertyFromAddress(MARKS_TOWER.address)).toMatchObject({
+      label: 'Marks Tower',
+      address: '612 Hellman Way, Los Angeles, CA 90089',
+      type: 'Dorm Room',
+      icon: 'building',
+    });
+    expect(propertyFromAddress(MARKS_TOWER.address).image).toBeUndefined();
     expect(propertyFromAddress('Example Apartment')).toMatchObject({ label: 'Example Apartment', isExample: true });
     expect(propertyFromAddress('Example Apartment').address).toBeUndefined();
     expect(propertyFromAddress(DEMO_PROPERTY.address)).toMatchObject({ label: 'Park La Brea', address: DEMO_PROPERTY.address, isExample: true });
@@ -29,7 +37,7 @@ describe('canonical demo configuration', () => {
     for (const role of ['tenant', 'landlord'] as const) {
       controls.setViewerRole(role);
       const lease = await service.getLease('sample-lease');
-      expect(lease.property.label).toBe('Example Apartment');
+      expect(lease.property.label).toBe('Marks Tower');
       expect(lease.participants.map((p) => p.displayName).sort()).toEqual(['Jane Doe', 'John Doe']);
     }
   });

@@ -48,7 +48,9 @@ export function GuidedStep({ row, moveInPhoto, position, count, phase, disabled,
       <h2 id={titleId} className="section-title">
         {spot}
       </h2>
-      <p className="step__rule">Match the reference angle and framing.</p>
+      <p className="step__rule">
+        {reference ? 'Match the reference angle and framing.' : 'Take this photo from a spot you can return to. The move-out photo will be matched to it.'}
+      </p>
       {phase === 'out' && moveInPhoto ? (
         <p className="step__hint">Stand where you stood for the move-in photo and line up the same landmarks.</p>
       ) : (

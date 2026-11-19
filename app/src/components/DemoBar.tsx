@@ -66,6 +66,8 @@ export function DemoBar() {
           )}
         </span>
       </div>
+      {/* Required on screen for the demo video (D-002): $10 here stands for a $1,000 deposit. */}
+      <p className="page demo-bar__note">Testnet demo: amounts scaled 1:100</p>
     </div>
   );
 }

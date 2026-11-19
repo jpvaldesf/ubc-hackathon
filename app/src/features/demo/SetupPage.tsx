@@ -3,28 +3,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Disclosure } from '../../components/Disclosure';
 import { LifecycleStatus } from '../../components/LifecycleTimeline';
 import { SiteTop } from '../../components/SiteTop';
-import { DEMO_PEOPLE, EXAMPLE_APARTMENT } from '../../demo/demoProperty';
+import { PropertyHeader } from '../../components/PropertyHeader';
+import { DEMO_PEOPLE, MARKS_TOWER, propertyFromAddress } from '../../demo/demoProperty';
 import { useMutation } from '../../services/hooks';
 import { DEMO_LEASE } from '../../services/live/demoLease';
 import { useServices } from '../../services/ServiceContext';
 
 const DEPOSIT = `$${(DEMO_LEASE.deposit_cents / 100).toFixed(2)}`;
 
-/** The apartment, as a small summary shared by the tenant's invitation and the landlord's lease details. */
-function ApartmentSummary({ children }: { children?: React.ReactNode }) {
-  const { image, name } = EXAMPLE_APARTMENT;
-  return (
-    <div className="property">
-      <img className="property__thumb" src={image.src} alt={image.alt} width={72} height={72} />
-      <div className="property__text">
-        <h2 className="property__name">{name}</h2>
-        {children}
-        <a className="property__credit" href={image.credit.sourceUrl} target="_blank" rel="noopener noreferrer">
-          Photo: {image.credit.author}, {image.credit.license}
-        </a>
-      </div>
-    </div>
-  );
+/** The property, as a small summary shared by the tenant's invitation and the landlord's lease details. */
+function PropertySummary({ person }: { person: string }) {
+  return <PropertyHeader lease={{ property: propertyFromAddress(MARKS_TOWER.address) }} other={person} headingLevel={2} />;
 }
 
 /**
@@ -63,7 +52,6 @@ export function SetupPage() {
           <dd className="fact__value">{DEPOSIT}</dd>
         </div>
       </dl>
-      <p className="small muted">Testnet demo: amounts scaled 1:100. No real money moves.</p>
     </>
   );
   const errorBox = error && (
@@ -86,10 +74,7 @@ export function SetupPage() {
                 <p className="muted">Create the lease for your tenant, then wait for their deposit.</p>
               </div>
               <LifecycleStatus stage="setup" complete={false} />
-              <ApartmentSummary>
-                <p className="property__meta">Tenant: {DEMO_PEOPLE.tenantName}</p>
-                <p className="property__meta">Example property · fictional demo lease</p>
-              </ApartmentSummary>
+              <PropertySummary person={`Tenant: ${DEMO_PEOPLE.tenantName}`} />
               {details}
               {errorBox}
               <div className="button-row">
@@ -107,10 +92,7 @@ export function SetupPage() {
                 <p className="muted">{DEMO_PEOPLE.landlordName} has prepared a deposit for you.</p>
               </div>
               <LifecycleStatus stage="setup" complete={false} />
-              <ApartmentSummary>
-                <p className="property__meta">Landlord: {DEMO_PEOPLE.landlordName}</p>
-                <p className="property__meta">Example property · fictional demo lease</p>
-              </ApartmentSummary>
+              <PropertySummary person={`Landlord: ${DEMO_PEOPLE.landlordName}`} />
               {details}
               <div className="button-row">
                 <button

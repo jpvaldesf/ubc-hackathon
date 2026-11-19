@@ -6,7 +6,7 @@
  * The engine plays the role the server will play later: it decides allowed actions,
  * validates totals, checks proposal versions and keeps funds in exactly one bucket.
  */
-import { DEMO_PEOPLE, EXAMPLE_APARTMENT, propertyFromAddress } from '../../demo/demoProperty';
+import { DEMO_PEOPLE, MARKS_TOWER, propertyFromAddress } from '../../demo/demoProperty';
 import { compareUnits, formatUsd, isPositive, isZero, subUnits, sumUnits, toBig, type BaseUnits } from '../../lib/money';
 import type { Funds } from '../../lib/funds';
 import { ServiceError } from '../errors';
@@ -64,21 +64,21 @@ function initialFindings(): Finding[] {
   return [
     {
       id: 'finding-wall',
-      label: 'Living room, north wall',
+      label: 'Room, wall beside the bed',
       observation: 'Scuff marks beside the light switch that are not visible in the move-in photo.',
       amount: '70000000',
       rationale: 'Repaint the marked section of the wall.',
       included: true,
-      photoPair: placeholderPair('the living room north wall'),
+      photoPair: placeholderPair('the wall beside the bed'),
     },
     {
       id: 'finding-carpet',
-      label: 'Bedroom, carpet',
+      label: 'Room, floor by the window',
       observation: 'A stain near the window that is not visible in the move-in photo.',
       amount: '50000000',
       rationale: 'Professional cleaning of the stained area.',
       included: true,
-      photoPair: placeholderPair('the bedroom carpet'),
+      photoPair: placeholderPair('the floor by the window'),
     },
   ];
 }
@@ -417,7 +417,7 @@ export function selectLease(s: SampleState, viewerRole: Role): Lease {
   const viewer = viewerRole === 'tenant' ? TENANT : LANDLORD;
   return {
     id: SAMPLE_LEASE_ID,
-    property: propertyFromAddress(EXAMPLE_APARTMENT.name),
+    property: propertyFromAddress(MARKS_TOWER.address),
     participants: [TENANT, LANDLORD],
     viewer: { userId: viewer.id, role: viewerRole },
     asset: { symbol: 'USDC', displayName: 'test USDC' },
