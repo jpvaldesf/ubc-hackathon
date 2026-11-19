@@ -422,6 +422,14 @@ video {
   justify-self: end;
 }
 
+/* The 1:100 testnet note under the switch (video shot, D-002). */
+.demo-bar > .demo-bar__note {
+  margin: 0;
+  padding-bottom: 0;
+  text-align: center;
+  color: var(--color-muted);
+}
+
 .demo-bar__restart {
   display: inline-flex;
   align-items: center;
